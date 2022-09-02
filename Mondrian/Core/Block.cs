@@ -1,13 +1,13 @@
 ﻿namespace Core
 {
-    public abstract class AbstractBlock
+    public abstract class Block
     {
         public string ID { get; private set; }
         public Point BottomLeft { get; private set; }
         public Point TopRight { get; private set; }
         public Point Size { get; private set; }
 
-        public AbstractBlock(string id, Point bottomLeft, Point topRight)
+        public Block(string id, Point bottomLeft, Point topRight)
         {
             ID = id;
             BottomLeft = bottomLeft;

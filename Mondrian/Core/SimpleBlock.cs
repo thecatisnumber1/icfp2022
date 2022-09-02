@@ -1,6 +1,6 @@
 ﻿namespace Core
 {
-    public class SimpleBlock : AbstractBlock
+    public class SimpleBlock : Block
     {
         public RGBA Color { get; private set; }
 

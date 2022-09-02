@@ -1,6 +1,6 @@
 ﻿namespace Core
 {
-    public class ComplexBlock : AbstractBlock
+    public class ComplexBlock : Block
     {
         public SimpleBlock[] SubBlocks { get; private set; }
 
