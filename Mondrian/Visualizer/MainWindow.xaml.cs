@@ -66,7 +66,7 @@ namespace Visualizer
             RGBA[,] r = new RGBA[400, 400];
             for (int i = 0; i < 400; i++)
             {
-                r[i, i] = new RGBA(255, 255, 255, 255);
+                r[i, i] = new RGBA(128, 128, 128, 255);
             }
             CoreImage ci = new CoreImage(r);
 
@@ -101,6 +101,8 @@ namespace Visualizer
         public void RenderImage(CoreImage image)
         {
             const int bitDepth = 4;
+            PixelFormat pf = PixelFormat.Format32bppArgb;
+
             int width = image.Width;
             int height = image.Height;
             // Convert the array into a pure byte array, 32bpp ARGB.
@@ -110,18 +112,19 @@ namespace Visualizer
                 for (int y = 0; y < height; y++)
                 {
                     RGBA pixel = image[x, y];
-                    int baseIndex = x * y * bitDepth;
+
+                    int baseIndex = (x + y * height) * bitDepth;
                     // TODO: Abuse struct
+                    imageBytes[baseIndex] = (byte)pixel.A;
                     imageBytes[baseIndex + 1] = (byte)pixel.R;
                     imageBytes[baseIndex + 2] = (byte)pixel.G;
                     imageBytes[baseIndex + 3] = (byte)pixel.B;
-                    imageBytes[baseIndex] = (byte)pixel.A;
                 }
             }
 
             // Copied from http://mapw.elte.hu/elek/bmpinmemory.html
-            Bitmap b = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
-            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+            Bitmap b = new Bitmap(image.Width, image.Height, pf);
+            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
             IntPtr ptr = bmpData.Scan0;
             Int32 psize = bmpData.Stride * height;
             System.Runtime.InteropServices.Marshal.Copy(imageBytes, 0, ptr, psize);
