@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -80,6 +81,11 @@ namespace Visualizer
             b.EndInit();
 
             ReferenceImage.Source = b;
+        }
+
+        public void RenderImage(Image image)
+        {
+            //Bitmap b = new Bitmap
         }
 
         internal void LogMessage(string message)

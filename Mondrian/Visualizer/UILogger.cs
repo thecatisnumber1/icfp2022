@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using Core;
 
 namespace Visualizer
@@ -18,7 +17,7 @@ namespace Visualizer
         private int _skippedFrames = 0;
         private long _rendering = 0;
         private ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
-        private Figure _nextFigure;
+        private Image _nextImage;
         private Task _renderPump;
 
         public bool Busy => Interlocked.Read(ref _rendering) != 0;
@@ -42,9 +41,10 @@ namespace Visualizer
                         bool addDebugMessages = true; // _mainUi.UIDebugSpewCheckbox.IsChecked.Value;
                         int skippedFrames = -1;
 
-                        Figure toRender = Interlocked.Exchange(ref _nextFigure, null);
+                        Image toRender = Interlocked.Exchange(ref _nextImage, null);
                         if (toRender != null)
                         {
+                            _mainUi.RenderImage(toRender);
                             skippedFrames = Interlocked.Exchange(ref _skippedFrames, 0);
                         }
 
@@ -77,9 +77,9 @@ namespace Visualizer
             }
         }
 
-        public void Show(Figure figure)
+        public override void Render(Image image)
         {
-            if (Interlocked.Exchange(ref _nextFigure, figure) != null)
+            if (Interlocked.Exchange(ref _nextImage, image) != null)
             {
                 Interlocked.Increment(ref _skippedFrames);
             }
