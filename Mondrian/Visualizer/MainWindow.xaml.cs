@@ -4,23 +4,18 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Path = System.IO.Path;
 using CoreImage = Core.Image;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Rectangle = System.Drawing.Rectangle;
 using Image = System.Drawing.Image;
+using System.Threading;
+using Mondrian;
+using System.Threading.Tasks;
+using Core;
 
 namespace Visualizer
 {
@@ -30,6 +25,11 @@ namespace Visualizer
     public partial class MainWindow : Window
     {
         private const string AllProblemsRelativePath = @"..\..\..\..\..\Problems";
+        private long _runCount = 0;
+
+        // Solver running in the visualizer goo
+        private Task _solverTask;
+        private CancellationTokenSource _tokenSource;
 
         public MainWindow(string[] args)
         {
@@ -39,6 +39,9 @@ namespace Visualizer
             List<int> problemStrings = problemFiles.Select(file => int.Parse(Path.GetFileNameWithoutExtension(file))).ToList();
             problemStrings.Sort();
             ProblemSelector.ItemsSource = problemStrings;
+
+            string[] solverList = Solvers.Names();
+            SolverSelector.ItemsSource = solverList;
 
             var otherArgs = new List<string>();
             // Parse args
@@ -60,6 +63,11 @@ namespace Visualizer
             if (ProblemSelector.SelectedIndex < 0)
             {
                 ProblemSelector.SelectedIndex = 0;
+            }
+
+            if (SolverSelector.SelectedIndex < 0)
+            {
+                SolverSelector.SelectedIndex = 0;
             }
         }
 
@@ -87,9 +95,9 @@ namespace Visualizer
 
             ReferenceImage.Source = b;
 
-            CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
-
-            RenderImage(ci);
+            // CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+            // 
+            // RenderImage(ci);
         }
 
         public void RenderImage(CoreImage image)
@@ -146,6 +154,61 @@ namespace Visualizer
         private void ProblemSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ResetProblem();
+        }
+
+        private void SolverSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ResetSolverButtons();
+        }
+
+        private void ResetSolverButtons()
+        {
+            SolverRunButton.IsEnabled = true;
+            SolverStopButton.IsEnabled = false;
+            if (Interlocked.Read(ref _runCount) == 0)
+            {
+                SolverResetButton.IsEnabled = false;
+            }
+        }
+
+        private void SolverRunButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            Solvers.Solver solver = Solvers.GetSolver(SolverSelector.SelectedItem.ToString());
+
+            SolverRunButton.IsEnabled = false;
+
+            SolverSelector.IsEnabled = false;
+            ProblemSelector.IsEnabled = false;
+
+            _tokenSource = new CancellationTokenSource();
+
+            LoggerBase logger = new UILogger(this, _tokenSource.Token);
+
+            // Load image etc.
+            CoreImage ci = Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+
+            _solverTask = Task.Run(() =>
+            {
+                Interlocked.Increment(ref _runCount);
+
+                solver.Invoke(new Picasso(ci), new AI.AIArgs(), logger);
+
+                // Solver has finished, but if they ran to completion, the UI logger might still be pumping. Kill it with our token.
+                if (!_tokenSource.IsCancellationRequested)
+                {
+                    _tokenSource.Cancel();
+                }
+
+                // Cleanup UI on the main thread.
+                Dispatcher.BeginInvoke(() =>
+                {
+                    LogVisualizerMessage("Done!");
+                    SolverSelector.IsEnabled = true;
+                    ProblemSelector.IsEnabled = true;
+
+                    ResetSolverButtons();
+                });
+            });
         }
     }
 }

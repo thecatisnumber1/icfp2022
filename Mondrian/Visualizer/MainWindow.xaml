@@ -25,8 +25,8 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="OutputImage" Grid.Column="0" />
-                <Image x:Name="ReferenceImage" Grid.Column="1" />
+                <Image x:Name="OutputImage" Grid.Column="0" Margin="5" />
+                <Image x:Name="ReferenceImage" Grid.Column="1" Margin="5" />
             </Grid>
         </Viewbox>
         <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
@@ -39,6 +39,14 @@
         <StackPanel Grid.Column="2" Grid.RowSpan="2" Orientation="Vertical">
             <Label Content="Problem" HorizontalAlignment="Right"/>
             <ComboBox HorizontalAlignment="Stretch" VerticalAlignment="Top" x:Name="ProblemSelector" SelectionChanged="ProblemSelector_OnSelectionChanged" />
+            <Label Content="Solver" HorizontalAlignment="Right"/>
+            <ComboBox HorizontalAlignment="Stretch" VerticalAlignment="Top" x:Name="SolverSelector" SelectionChanged="SolverSelector_OnSelectionChanged" />
+            <Separator />
+            <Label Content="Solver Stuff" />
+            <Button Content="Run" x:Name="SolverRunButton" Click="SolverRunButton_OnClick" IsEnabled="False" />
+            <Button Content="Stop" x:Name="SolverStopButton" IsEnabled="False" />
+            <Button Content="Reset" x:Name="SolverResetButton" IsEnabled="False" />
+            <Separator />
         </StackPanel>
     </Grid>
 </Window>
