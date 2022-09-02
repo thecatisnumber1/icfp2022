@@ -1,24 +1,19 @@
-﻿using Core;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using AI;
 
 namespace Mondrian
 {
-    public class Program
-    {
-        static void Main(string[] args)
-        {
-            LoggerBase logger = new ConsoleLogger();
-
-            logger.LogMessage("Hello, World!");
-        }
-
-        public record Args(
+    public record Args(
             string? algorithm,
             string user,
             int minProblemNumber,
             int maxProblemNumber,
-            AIArgs aiArgs);
-
+            AIArgs aiArgs)
+    {
         static Args ParseArgs(string[] args)
         {
             throw new NotImplementedException();
