@@ -15,17 +15,26 @@
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="120"/>
         </Grid.ColumnDefinitions>
-        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2">
+        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2" >
             <Grid x:Name="ViewportContainer" Background="White"><!-- Right now they use white -->
-                <Canvas x:Name="OutputLayer" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Canvas x:Name="OutputLayer" Grid.Column="0" Background="Red" />
+                <Image x:Name="ReferenceImage" Grid.Column="1" />
             </Grid>
         </Viewbox>
         <ScrollViewer x:Name="ConsoleLogScroller" Grid.Column="1" Grid.Row="1" Background="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TextBlock x:Name="ConsoleLogPanel" TextWrapping="Wrap" Foreground="White"/>
         </ScrollViewer>
+        <StackPanel Grid.Column="2" Grid.RowSpan="2" Orientation="Vertical">
+            <Label Content="Problem" HorizontalAlignment="Right"/>
+            <ComboBox HorizontalAlignment="Stretch" VerticalAlignment="Top" x:Name="ProblemSelector" SelectionChanged="ProblemSelector_OnSelectionChanged" />
+        </StackPanel>
     </Grid>
 </Window>
