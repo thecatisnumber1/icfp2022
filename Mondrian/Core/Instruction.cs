@@ -22,7 +22,12 @@
         {
             Typ = InstructionType.Nop;
         }
-    };
+
+        public override string ToString()
+        {
+            return "Nop";
+        }
+    }
 
     public class CommentInstruction : Instruction {
         public string Comment { get; private set; }
@@ -30,6 +35,11 @@
         {
             Typ = InstructionType.Comment;
             Comment = comment;
+        }
+
+        public override string ToString()
+        {
+            return $"# {Comment}";
         }
     }
 
@@ -43,8 +53,12 @@
             BlockId = blockId;
             Color = color;
         }
-    };
 
+        public override string ToString()
+        {
+            return $"Color [{BlockId}] {Color}";
+        }
+    }
     public class PointCutInstruction : Instruction
     {
         public string BlockId { get; private set; }
@@ -55,8 +69,12 @@
             BlockId = blockId;
             Point = point;
         }
-    };
 
+        public override string ToString()
+        {
+            return $"Cut [{BlockId}] {Point}";
+        }
+    }
     public class VerticalCutInstruction : Instruction
     {
         public string BlockId { get; private set; }
@@ -68,8 +86,12 @@
             BlockId = blockId;
             LineNumber = lineNumber;
         }
-    };
 
+        public override string ToString()
+        {
+            return $"Cut [{BlockId}] x [{LineNumber}]";
+        }
+    }
     public class HorizontalCutInstruction : Instruction
     {
         public string BlockId { get; private set; }
@@ -80,6 +102,11 @@
             Typ = InstructionType.HorizontalCut;
             BlockId = blockId;
             LineNumber = lineNumber;
+        }
+
+        public override string ToString()
+        {
+            return $"Cut [{BlockId}] y [{LineNumber}]";
         }
     };
 
@@ -93,6 +120,11 @@
             BlockId1 = blockId1;
             BlockId2 = blockId2;
         }
+
+        public override string ToString()
+        {
+            return $"Swap [{BlockId1}] [{BlockId2}]";
+        }
     };
 
     public class MergeInstruction : Instruction
@@ -104,6 +136,11 @@
             Typ = InstructionType.Merge;
             BlockId1 = blockId1;
             BlockId2 = blockId2;
+        }
+
+        public override string ToString()
+        {
+            return $"Merge [{BlockId1}] [{BlockId2}]";
         }
     };
 }

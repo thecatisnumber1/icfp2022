@@ -93,5 +93,10 @@ namespace Core
                 Undo();
             }
         }
+
+        public List<string> SerializeInstructions()
+        {
+            return instructions.Select(x => x.Item1.ToString()).Reverse().ToList();
+        }
     }
 }

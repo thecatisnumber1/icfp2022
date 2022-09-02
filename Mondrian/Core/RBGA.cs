@@ -16,5 +16,10 @@
             this.b = (byte)b;
             this.a = (byte)a;
         }
+
+        public override string ToString()
+        {
+            return $"[{R}, {G}, {B}, {A}]";
+        }
     }
 }

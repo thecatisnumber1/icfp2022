@@ -53,7 +53,8 @@ namespace Mondrian
                 algorithm,
                 user,
                 minProblemNumber,
-                maxProblemNumber);
+                maxProblemNumber,
+                new AIArgs());
         }
     }
 }
