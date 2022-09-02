@@ -1,4 +1,5 @@
 ﻿using static Core.InstructionCostCalculator;
+using static Core.Renderer;
 
 namespace Core
 {
@@ -24,8 +25,7 @@ namespace Core
         {
             get
             {
-                // TBD
-                return totalInstructionCost + 0;
+                return totalInstructionCost + GetImageCost(canvas, image);
             }
         }
 
