@@ -31,6 +31,9 @@ namespace Visualizer
         private Task _solverTask;
         private CancellationTokenSource _tokenSource;
 
+        private int _problemWidth;
+        private int _problemHeight;
+
         public MainWindow(string[] args)
         {
             InitializeComponent();
@@ -95,9 +98,12 @@ namespace Visualizer
 
             ReferenceImage.Source = b;
 
-            // CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
-            // 
-            // RenderImage(ci);
+            _problemWidth = (int)b.Width;
+            _problemHeight = (int)b.Height;
+
+            CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+
+            RenderImage(ci);
         }
 
         public void RenderImage(CoreImage image)
@@ -117,10 +123,10 @@ namespace Visualizer
 
                     int baseIndex = (x + y * height) * bitDepth;
                     // TODO: Abuse struct
-                    imageBytes[baseIndex] = (byte)pixel.A;
-                    imageBytes[baseIndex + 1] = (byte)pixel.R;
-                    imageBytes[baseIndex + 2] = (byte)pixel.G;
-                    imageBytes[baseIndex + 3] = (byte)pixel.B;
+                    imageBytes[baseIndex + 2] = (byte)pixel.R;
+                    imageBytes[baseIndex + 1] = (byte)pixel.G;
+                    imageBytes[baseIndex] = (byte)pixel.B;
+                    imageBytes[baseIndex + 3] = (byte)pixel.A;
                 }
             }
 
@@ -139,6 +145,15 @@ namespace Visualizer
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
+
+        public void RenderImage(Picasso image)
+        {
+            PixelFormat pf = PixelFormat.Format32bppArgb;
+            int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
+
+            Bitmap b = new Bitmap(_problemWidth, _problemHeight, pf);
+        }
+
 
         internal void LogMessage(string message)
         {

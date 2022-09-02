@@ -17,7 +17,7 @@ namespace Visualizer
         private int _skippedFrames = 0;
         private long _rendering = 0;
         private ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
-        private Image _nextImage;
+        private Picasso _nextImage;
         private Task _renderPump;
 
         public bool Busy => Interlocked.Read(ref _rendering) != 0;
@@ -41,10 +41,10 @@ namespace Visualizer
                         bool addDebugMessages = true; // _mainUi.UIDebugSpewCheckbox.IsChecked.Value;
                         int skippedFrames = -1;
 
-                        Image toRender = Interlocked.Exchange(ref _nextImage, null);
+                        Picasso toRender = Interlocked.Exchange(ref _nextImage, null);
                         if (toRender != null)
                         {
-                            _mainUi.RenderImage(toRender);
+                            //_mainUi.RenderImage(toRender);
                             skippedFrames = Interlocked.Exchange(ref _skippedFrames, 0);
                         }
 
@@ -77,7 +77,7 @@ namespace Visualizer
             }
         }
 
-        public override void Render(Image image)
+        public override void Render(Picasso image)
         {
             if (Interlocked.Exchange(ref _nextImage, image) != null)
             {

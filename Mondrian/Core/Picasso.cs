@@ -61,6 +61,8 @@ namespace Core
             }
         }
 
+        public IEnumerable<SimpleBlock> AllSimpleBlocks => canvas.Simplify();
+
         public void Color(Block block, RGBA color)
         {
             int cost = GetCost(InstructionType.Color, block.Size.GetScalarSize(), canvasSize);

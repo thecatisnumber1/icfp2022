@@ -2,7 +2,7 @@
 {
     public abstract class LoggerBase
     {
-        public abstract void Render(Image image);
+        public abstract void Render(Picasso image);
 
         public abstract void LogMessage(string logString);
 
@@ -11,7 +11,7 @@
 
     public class ConsoleLogger : LoggerBase
     {
-        public override void Render(Image image)
+        public override void Render(Picasso image)
         {
             // Do nothing for now.
         }
