@@ -1,18 +1,20 @@
 ﻿namespace Core
 {
-    public class RGBA
+    public struct RGBA
     {
-        public int R { get; private set; }
-        public int G { get; private set; }
-        public int B { get; private set; }
-        public int A { get; private set; }
+        private byte r, g, b, a;
+
+        public int R => (int)r;
+        public int G => (int)g;
+        public int B => (int)b;
+        public int A => (int)a;
 
         public RGBA(int r = 0, int g = 0, int b = 0, int a = 0)
         {
-            R = r;
-            G = g;
-            B = b;
-            A = a;
+            this.r = (byte)r;
+            this.g = (byte)g;
+            this.b = (byte)b;
+            this.a = (byte)a;
         }
     }
 }
