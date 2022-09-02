@@ -125,8 +125,7 @@ namespace Core
 
         public RGBA AverageTargetColor(Block block)
         {
-            // TBD
-            return new RGBA();
+            return image.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
         }
 
         public void Undo()

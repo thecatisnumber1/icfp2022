@@ -9,7 +9,7 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public static readonly int SAMPLE_SIZE = 2;
+        public static readonly int SAMPLE_SIZE = 5;
         public static Random r = new Random();
 
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
@@ -64,8 +64,8 @@ namespace AI
             foreach (Block subBlock in subBlocks)
             {
                 int preScore = canvas.Score;
-                //canvas.Color(subBlock, canvas.AverageTargetColor(subBlock));
-                canvas.Color(subBlock, new RGBA(r.Next(255), r.Next(255), r.Next(255), r.Next(255)));
+                canvas.Color(subBlock, canvas.AverageTargetColor(subBlock));
+                //canvas.Color(subBlock, new RGBA(r.Next(255), r.Next(255), r.Next(255), r.Next(255)));
                 int postScore = canvas.Score;
                 if (postScore < preScore)
                 {
