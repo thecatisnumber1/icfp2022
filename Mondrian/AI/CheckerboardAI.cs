@@ -14,7 +14,9 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            picasso.Color(picasso.AllBlocks.First(), new RGBA(12, 33, 99, 255));
+            picasso.Color(picasso.AllBlocks.First(), new RGBA(249, 105, 14, 255));
+            picasso.Undo();
+            picasso.Color(picasso.AllBlocks.First(), new RGBA(0, 0, 0, 255));
         }
 
         public void Solve(Canvas canvas, Block block)
