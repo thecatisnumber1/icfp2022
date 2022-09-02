@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Core;
+using System.Drawing;
 
 namespace Mondrian
 {
@@ -11,9 +12,26 @@ namespace Mondrian
     {
         private static string? problemsDir = null;
 
-        public static Image GetProblem(int problemNum)
+        public static Core.Image GetProblem(int num)
         {
-            throw new NotImplementedException();
+            return LoadFile(LocationFor($"{num}.png"));
+        }
+
+        public static Core.Image LoadFile(string path)
+        {
+            Bitmap original = new Bitmap(path);
+            Bitmap clone = new Bitmap(original.Width, original.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            RGBA[,] pixels = new RGBA[original.Width, original.Height];
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    var p = clone.GetPixel(x, y);
+                    pixels[x, y] = new RGBA(p.R, p.G, p.B, p.A);
+                }
+            }
+
+            return new Core.Image(pixels);
         }
 
         public static int ProblemCount()
@@ -21,7 +39,7 @@ namespace Mondrian
             throw new NotImplementedException();
         }
 
-        public static string ProblemsDirectory()
+        private static string ProblemsDirectory()
         {
             string FindProblemsDirectory()
             {
@@ -48,7 +66,7 @@ namespace Mondrian
             return problemsDir ??= FindProblemsDirectory();
         }
 
-        public static string LocationFor(string filename)
+        private static string LocationFor(string filename)
         {
             return Path.Join(ProblemsDirectory(), filename);
         }

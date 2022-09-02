@@ -10,6 +10,9 @@ namespace Mondrian
             LoggerBase logger = new ConsoleLogger();
 
             logger.LogMessage("Hello, World!");
+
+            Problems.GetProblem(1);
+            logger.LogMessage("It worked.");
         }
 
         public record Args(
