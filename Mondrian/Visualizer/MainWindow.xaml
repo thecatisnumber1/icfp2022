@@ -5,8 +5,27 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Visualizer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Visualize This" Height="450" Width="800"
+        WindowState="Maximized"
+        d:DesignHeight="1080" d:DesignWidth="1920">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="120"/>
+        </Grid.ColumnDefinitions>
+        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2">
+            <Grid x:Name="ViewportContainer" Background="White"><!-- Right now they use white -->
+                <Canvas x:Name="OutputLayer" />
+            </Grid>
+        </Viewbox>
+        <ScrollViewer x:Name="ConsoleLogScroller" Grid.Column="1" Grid.Row="1" Background="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock x:Name="ConsoleLogPanel" TextWrapping="Wrap" Foreground="White"/>
+        </ScrollViewer>
     </Grid>
 </Window>

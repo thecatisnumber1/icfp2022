@@ -24,5 +24,16 @@ namespace Visualizer
         {
             InitializeComponent();
         }
+
+        internal void LogMessage(string message)
+        {
+            ConsoleLogPanel.Text += $"{message}{Environment.NewLine}";
+            ConsoleLogScroller.ScrollToBottom();
+        }
+
+        private void LogVisualizerMessage(string message)
+        {
+            LogMessage($"[VIZ] {message}");
+        }
     }
 }
