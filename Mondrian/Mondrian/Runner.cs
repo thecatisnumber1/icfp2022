@@ -27,7 +27,11 @@ namespace Mondrian
                 Picasso picasso = new Picasso(problem);
                 solver(picasso, args.aiArgs, logger);
                 logger.LogMessage($"Score = {picasso.Score}, elapsed = {watch.Elapsed}");
-                // TODO: Need to add printing the solution that was found.
+                List<string> instructions = picasso.SerializeInstructions();
+                foreach (string s in instructions)
+                {
+                    Console.WriteLine(s);
+                }
             }
         }
     }

@@ -15,6 +15,10 @@
     public abstract class Instruction
     {
         public InstructionType Typ { get; protected set; }
+        public override string ToString()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class NopInstruction : Instruction {
@@ -39,7 +43,7 @@
 
         public override string ToString()
         {
-            return $"# {Comment}";
+            return "blah";
         }
     }
 

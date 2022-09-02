@@ -14,7 +14,7 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            throw new NotImplementedException();
+            picasso.Color(picasso.AllBlocks.First(), new RGBA(12, 33, 99, 255));
         }
 
         public void Solve(Canvas canvas, Block block)
