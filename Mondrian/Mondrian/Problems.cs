@@ -21,6 +21,10 @@ namespace Mondrian
         {
             Bitmap original = new Bitmap(path);
             Bitmap clone = new Bitmap(original.Width, original.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (Graphics gr = Graphics.FromImage(clone))
+            {
+                gr.DrawImage(original, new System.Drawing.Rectangle(0, 0, clone.Width, clone.Height));
+            }
             RGBA[,] pixels = new RGBA[original.Width, original.Height];
             for (int y = 0; y < original.Height; y++)
             {

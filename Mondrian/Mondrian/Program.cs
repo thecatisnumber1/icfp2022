@@ -11,7 +11,7 @@ namespace Mondrian
 
             logger.LogMessage("Hello, World!");
 
-            Problems.GetProblem(1);
+            var i = Problems.GetProblem(1);
             logger.LogMessage("It worked.");
         }
 
