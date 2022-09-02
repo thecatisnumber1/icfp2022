@@ -63,12 +63,14 @@ namespace Visualizer
             }
 
             // For testing
-            RGBA[,] r = new RGBA[400, 400];
-            for (int i = 0; i < 400; i++)
-            {
-                r[i, i] = new RGBA(128, 128, 128, 255);
-            }
-            CoreImage ci = new CoreImage(r);
+            //RGBA[,] r = new RGBA[400, 400];
+            //for (int i = 0; i < 400; i++)
+            //{
+            //    r[i, i] = new RGBA(128, 128, 128, 255);
+            //}
+            //CoreImage ci = new CoreImage(r);
+
+            CoreImage ci = Mondrian.Problems.GetProblem(1);
 
             RenderImage(ci);
         }
