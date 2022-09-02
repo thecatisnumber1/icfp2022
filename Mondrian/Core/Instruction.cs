@@ -43,7 +43,7 @@
 
         public override string ToString()
         {
-            return "blah";
+            return $"# {Comment}";
         }
     }
 
@@ -60,7 +60,7 @@
 
         public override string ToString()
         {
-            return $"Color [{BlockId}] {Color}";
+            return $"color [{BlockId}] {Color}";
         }
     }
     public class PointCutInstruction : Instruction
@@ -76,7 +76,7 @@
 
         public override string ToString()
         {
-            return $"Cut [{BlockId}] {Point}";
+            return $"cut [{BlockId}] {Point}";
         }
     }
     public class VerticalCutInstruction : Instruction
@@ -93,7 +93,7 @@
 
         public override string ToString()
         {
-            return $"Cut [{BlockId}] x [{LineNumber}]";
+            return $"cut [{BlockId}] x [{LineNumber}]";
         }
     }
     public class HorizontalCutInstruction : Instruction
@@ -110,7 +110,7 @@
 
         public override string ToString()
         {
-            return $"Cut [{BlockId}] y [{LineNumber}]";
+            return $"cut [{BlockId}] y [{LineNumber}]";
         }
     };
 
@@ -127,7 +127,7 @@
 
         public override string ToString()
         {
-            return $"Swap [{BlockId1}] [{BlockId2}]";
+            return $"swap [{BlockId1}] [{BlockId2}]";
         }
     };
 
@@ -144,7 +144,7 @@
 
         public override string ToString()
         {
-            return $"Merge [{BlockId1}] [{BlockId2}]";
+            return $"merge [{BlockId1}] [{BlockId2}]";
         }
     };
 }
