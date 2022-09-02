@@ -9,54 +9,52 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public readonly int SAMPLE_SIZE = 10;
+        public static readonly int SAMPLE_SIZE = 10;
         public static Random r = new Random();
 
-        public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
+        public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            picasso.Color(picasso.AllBlocks.First(), new RGBA(249, 105, 14, 255));
-            picasso.Undo();
-            picasso.Color(picasso.AllBlocks.First(), new RGBA(0, 0, 0, 255));
+            Solve(picasso, picasso.AllBlocks.First());
         }
 
-        public void Solve(Canvas canvas, Block block)
+        public static void Solve(Picasso picasso, Block block)
         {
-            Rectangle rect = block.Rect();
+            Rectangle rect = new Rectangle(block.BottomLeft, block.TopRight);
             List<Point> samples = new List<Point>();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
                 samples.Add(new Point(r.Next(rect.Left, rect.Right), r.Next(rect.Bottom, rect.Top)));
             }
 
-            int bestScore = canvas.Score;
+            int bestScore = picasso.Score;
             Point? bestPoint = null;
             foreach (Point p in samples)
             {
-                var results = SamplePoint(canvas, block, p);
+                var results = SamplePoint(picasso, block, p);
                 if (results.score < bestScore)
                 {
                     bestScore = results.score;
                     bestPoint = p;
                 }
 
-                canvas.RemoveInstructions(results.instructionsUsed);
+                picasso.Undo(results.instructionsUsed);
             }
 
 
             if (bestPoint != null)
             {
-                var best = SamplePoint(canvas, block, bestPoint);
+                var best = SamplePoint(picasso, block, bestPoint.Value);
                 foreach (Block subBlock in best.subBlocks)
                 {
-                    Solve(canvas, subBlock);
+                    Solve(picasso, subBlock);
                 }
             }
         }
 
 
-        public (int score, int instructionsUsed, List<Block> subBlocks) SamplePoint(Canvas canvas, Block block, Point p)
+        public static (int score, int instructionsUsed, List<Block> subBlocks) SamplePoint(Picasso canvas, Block block, Point p)
         {
-            List<Block> subBlocks = canvas.Cut(block, p);
+            List<Block> subBlocks = canvas.PointCut(block, p).ToList();
 
             // Color each the average of the canvas underneath
             int instructionsUsed = 1;
@@ -71,50 +69,11 @@ namespace AI
                 }
                 else
                 {
-                    canvas.RemoveInstructions(1);
+                    canvas.Undo(1);
                 }
             }
 
             return (canvas.Score, instructionsUsed, subBlocks);
         }
-    }
-
-    public interface Instruction
-    {
-        public Instruction CutInstruction(Point p);
-    }
-
-    public interface Canvas
-    {
-        public int Score { get; }
-        public List<Block> AllBlocks { get; }
-        public List<Block> Cut(Block block, Point point);
-        public void Color(Block block, Color color);
-        public Color AverageTargetColor(Block block);
-
-        // Remove the last two instructions
-        public void RemoveInstructions(int count);
-    }
-
-    public interface Block
-    {
-        public Rectangle Rect();
-    }
-
-    public class Point
-    {
-        public int X { get; }
-        public int Y { get; }
-
-        public Point(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
-    }
-
-    public interface Color
-    {
-
     }
 }

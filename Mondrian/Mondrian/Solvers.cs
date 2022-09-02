@@ -10,7 +10,7 @@ namespace Mondrian
 {
     public class Solvers
     {
-        public delegate void Solver(Picasso picasso, AIArgs args, LoggerBase logger);
+        public delegate void Solver(Core.Picasso picasso, AIArgs args, LoggerBase logger);
 
 
         private static Dictionary<string, Solver> solvers = new()
