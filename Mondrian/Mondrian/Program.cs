@@ -1,4 +1,4 @@
-﻿namespace Picasso
+﻿namespace Mondrian
 {
     internal class Program
     {
