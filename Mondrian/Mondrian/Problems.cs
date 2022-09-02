@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Core;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Numerics;
 
 namespace Mondrian
 {
@@ -20,18 +23,27 @@ namespace Mondrian
         public static Core.Image LoadFile(string path)
         {
             Bitmap original = new Bitmap(path);
-            Bitmap clone = new Bitmap(original.Width, original.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (Graphics gr = Graphics.FromImage(clone))
+            int width = original.Width;
+            int height = original.Height;
+
+            PixelFormat format = PixelFormat.Format32bppArgb;
+            int depth = System.Drawing.Image.GetPixelFormatSize(format) / 8; // Return size in bytes
+
+            byte[] imageBytes = new byte[original.Width * original.Height * depth];
+
+            BitmapData bmpData = original.LockBits(new System.Drawing.Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, format);
+            Marshal.Copy(bmpData.Scan0, imageBytes, 0, bmpData.Stride * height);
+
+            original.UnlockBits(bmpData);
+
+            RGBA[,] pixels = new RGBA[width, height];
+            for (int y = 0; y < height; y++)
             {
-                gr.DrawImage(original, new System.Drawing.Rectangle(0, 0, clone.Width, clone.Height));
-            }
-            RGBA[,] pixels = new RGBA[original.Width, original.Height];
-            for (int y = 0; y < original.Height; y++)
-            {
-                for (int x = 0; x < original.Width; x++)
+                for (int x = 0; x < width; x++)
                 {
-                    var p = clone.GetPixel(x, y);
-                    pixels[x, y] = new RGBA(p.R, p.G, p.B, p.A);
+                    int baseIndex = (x + y * height) * 4;
+                    // ARGB -> RGBA requires offsetting by 1, 2, 3, and then 0
+                    pixels[x, y] = new RGBA(imageBytes[baseIndex + 1], imageBytes[baseIndex + 2], imageBytes[baseIndex + 3], imageBytes[baseIndex]);
                 }
             }
 
