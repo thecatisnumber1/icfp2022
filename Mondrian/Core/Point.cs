@@ -1,9 +1,9 @@
 ﻿namespace Core
 {
-    public class Point
+    public struct Point
     {
-        public int X { get; private set; }
-        public int Y { get; private set; }
+        public readonly int X;
+        public readonly int Y;
 
         public Point(int x = 0, int y = 0)
         {
