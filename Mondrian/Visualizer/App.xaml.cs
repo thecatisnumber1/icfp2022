@@ -13,5 +13,10 @@ namespace Visualizer
     /// </summary>
     public partial class App : Application
     {
+        private void App_OnStartup(object sender, StartupEventArgs e)
+        {
+            MainWindow wnd = new MainWindow(e.Args);
+            wnd.Show();
+        }
     }
 }

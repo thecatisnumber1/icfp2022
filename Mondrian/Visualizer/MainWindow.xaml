@@ -15,8 +15,8 @@
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="120"/>
         </Grid.ColumnDefinitions>
         <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2" >
@@ -29,6 +29,10 @@
                 <Image x:Name="ReferenceImage" Grid.Column="1" />
             </Grid>
         </Viewbox>
+        <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
+            <Label DockPanel.Dock="Left">Args:</Label>
+            <TextBox x:Name="ArgumentsTextBox" VerticalContentAlignment="Center" Height="25" Width="Auto"/>
+        </DockPanel>
         <ScrollViewer x:Name="ConsoleLogScroller" Grid.Column="1" Grid.Row="1" Background="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TextBlock x:Name="ConsoleLogPanel" TextWrapping="Wrap" Foreground="White"/>
         </ScrollViewer>
