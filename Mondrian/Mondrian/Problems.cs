@@ -43,7 +43,7 @@ namespace Mondrian
                 {
                     int baseIndex = (x + y * height) * 4;
                     // ARGB -> RGBA requires offsetting by 1, 2, 3, and then 0
-                    pixels[x, y] = new RGBA(imageBytes[baseIndex + 1], imageBytes[baseIndex + 2], imageBytes[baseIndex + 3], imageBytes[baseIndex]);
+                    pixels[x, y] = new RGBA(imageBytes[baseIndex + 2], imageBytes[baseIndex + 1], imageBytes[baseIndex], imageBytes[baseIndex + 3]);
                 }
             }
 
