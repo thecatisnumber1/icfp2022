@@ -18,9 +18,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Path = System.IO.Path;
 using CoreImage = Core.Image;
-using Core;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Rectangle = System.Drawing.Rectangle;
+using Image = System.Drawing.Image;
 
 namespace Visualizer
 {
@@ -61,18 +61,6 @@ namespace Visualizer
             {
                 ProblemSelector.SelectedIndex = 0;
             }
-
-            // For testing
-            //RGBA[,] r = new RGBA[400, 400];
-            //for (int i = 0; i < 400; i++)
-            //{
-            //    r[i, i] = new RGBA(128, 128, 128, 255);
-            //}
-            //CoreImage ci = new CoreImage(r);
-
-            CoreImage ci = Mondrian.Problems.GetProblem(1);
-
-            RenderImage(ci);
         }
 
         private void SelectProblemFromId(List<int> problemStrings, string problemId)
@@ -98,12 +86,16 @@ namespace Visualizer
             b.EndInit();
 
             ReferenceImage.Source = b;
+
+            CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+
+            RenderImage(ci);
         }
 
         public void RenderImage(CoreImage image)
         {
-            const int bitDepth = 4;
             PixelFormat pf = PixelFormat.Format32bppArgb;
+            int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
 
             int width = image.Width;
             int height = image.Height;
@@ -113,7 +105,7 @@ namespace Visualizer
             {
                 for (int y = 0; y < height; y++)
                 {
-                    RGBA pixel = image[x, y];
+                    Core.RGBA pixel = image[x, y];
 
                     int baseIndex = (x + y * height) * bitDepth;
                     // TODO: Abuse struct
