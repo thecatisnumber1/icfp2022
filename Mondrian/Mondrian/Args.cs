@@ -14,10 +14,8 @@ namespace Mondrian
             int maxProblemNumber,
             AIArgs aiArgs)
     {
-        static Args ParseArgs(string[] args)
+        public static Args ParseArgs(string[] args)
         {
-            throw new NotImplementedException();
-            /*
             string? algorithm = null;
             string? user = null;
             int minProblemNumber = 1;
@@ -36,23 +34,10 @@ namespace Mondrian
                         user = args[++i];
                         break;
                     case "--min":
-                        minSize = int.Parse(args[++i]);
+                        minProblemNumber = int.Parse(args[++i]);
                         break;
                     case "--max":
-                        maxSize = int.Parse(args[++i]);
-                        break;
-                    case "--unwind":
-                        unwindAmount = int.Parse(args[++i]);
-                        break;
-                    case "--initialalgorithm":
-                        initialAlgorithm = args[++i];
-                        break;
-                    case "--beamwidth":
-                    case "-w":
-                        beamWidth = int.Parse(args[++i]);
-                        break;
-                    case "--lookahead":
-                        lookAhead = int.Parse(args[++i]);
+                        maxProblemNumber = int.Parse(args[++i]);
                         break;
                     default:
                         throw new ArgumentException($"Unrecognized argument: {args[i]}");
@@ -67,12 +52,8 @@ namespace Mondrian
             return new Args(
                 algorithm,
                 user,
-                minSize,
-                maxSize,
-                unwindAmount,
-                initialAlgorithm,
-                beamWidth,
-                lookAhead);*/
+                minProblemNumber,
+                maxProblemNumber);
         }
     }
 }
