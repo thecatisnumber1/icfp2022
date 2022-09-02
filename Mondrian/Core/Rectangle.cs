@@ -10,6 +10,8 @@ namespace Core
     {
         public readonly Point BottomLeft, TopRight;
 
+        //public Rectangle
+
         public Rectangle(Point bottomLeft, Point topRight)
         {
             BottomLeft = bottomLeft;
@@ -23,5 +25,11 @@ namespace Core
 
         public Point BottomRight => new Point(Right, Bottom);
         public Point TopLeft => new Point(Left, Top);
+
+        public int Width => Right - Left;
+
+        public int Height => Top - Bottom;
+
+        public int Area => Width * Height;
     }
 }
