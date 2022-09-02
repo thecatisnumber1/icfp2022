@@ -9,7 +9,7 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public static readonly int SAMPLE_SIZE = 5;
+        public static readonly int SAMPLE_SIZE = 20;
         public static Random r = new Random();
 
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
