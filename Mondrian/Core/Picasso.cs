@@ -1,15 +1,21 @@
-﻿namespace Core
+﻿using static Core.InstructionCostCalculator;
+
+namespace Core
 {
     public class Picasso
     {
         private Canvas canvas;
-        private Stack<Instruction> instructions;
+        private int canvasSize;
+        private Stack<Tuple<Instruction, int>> instructions;
+        private int totalInstructionCost;
+
         // Target Image
 
         public Picasso(int width, int height)
         {
             canvas = new Canvas(width, height, new RGBA());
-            instructions = new Stack<Instruction>();
+            canvasSize = width * height;
+            instructions = new Stack<Tuple<Instruction, int>>();
         }
 
         public int Score
@@ -17,7 +23,7 @@
             get
             {
                 // TBD
-                return 0;
+                return totalInstructionCost + 0;
             }
         }
 
@@ -29,11 +35,20 @@
             }
         }
 
+        private void AddInstruction(Instruction instruction, Block? block)
+        {
+            int cost = GetCost(InstructionType.PointCut, block?.Size.GetScalarSize() ?? 1, canvasSize);
+
+            instructions.Push(new Tuple<Instruction, int>(instruction, cost));
+            totalInstructionCost += cost;
+        }
+
         public IEnumerable<Block> PointCut(Block block, Point point)
         {
             // TBD update blocks
 
-            instructions.Push(new PointCutInstruction(block.ID, point));
+            AddInstruction(new PointCutInstruction(block.ID, point), block);
+
             return new Block[0];
         }
 
@@ -41,7 +56,7 @@
         {
             // TBD update blocks
 
-            instructions.Push(new ColorInstruction(block.ID, color));
+            AddInstruction(new ColorInstruction(block.ID, color), block);
         }
 
         public RGBA AverageTargetColor(Block block)
@@ -54,7 +69,8 @@
         {
             for (int i = 0; i < count && instructions.Count > 0; i++)
             {
-                instructions.Pop();
+                var instruction = instructions.Pop();
+                totalInstructionCost -= instruction.Item2;
             }
         }
     }
