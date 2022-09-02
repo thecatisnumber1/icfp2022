@@ -5,10 +5,24 @@ namespace Core
 {
     public class Picasso
     {
+        private struct Snack
+        {
+            public Instruction Instruction;
+            public int Cost;
+            public Block Backup;
+
+            public Snack(Instruction instruction, int cost, Block backup)
+            {
+                Instruction = instruction;
+                Cost = cost;
+                Backup = backup;
+            }
+        }
+
         private readonly Canvas canvas;
         private readonly int canvasSize;
 
-        private readonly Stack<Tuple<Instruction, int>> instructions;
+        private readonly Stack<Snack> instructions;
         private int totalInstructionCost;
 
         private readonly Image image;
@@ -18,7 +32,7 @@ namespace Core
             image = img;
             canvas = new Canvas(image.Width, image.Height, new RGBA());
             canvasSize = canvas.Size.GetScalarSize();
-            instructions = new Stack<Tuple<Instruction, int>>();
+            instructions = new Stack<Snack>();
         }
 
         public int Score
@@ -37,28 +51,26 @@ namespace Core
             }
         }
 
-        private void AddInstruction(Instruction instruction, Block? block)
+        public void Color(Block block, RGBA color)
         {
-            int cost = GetCost(InstructionType.PointCut, block?.Size.GetScalarSize() ?? 1, canvasSize);
+            int cost = GetCost(InstructionType.Color, block.Size.GetScalarSize(), canvasSize);
+            var snack = new Snack(new ColorInstruction(block.ID, color), cost, canvas.Blocks[block.ID]);
 
-            instructions.Push(new Tuple<Instruction, int>(instruction, cost));
+            instructions.Push(snack);
             totalInstructionCost += cost;
+
+            canvas.Blocks[block.ID] = new SimpleBlock(
+                block.ID,
+                block.BottomLeft.Clone(),
+                block.TopRight.Clone(),
+                color);
         }
 
         public IEnumerable<Block> PointCut(Block block, Point point)
         {
             // TBD update blocks
 
-            AddInstruction(new PointCutInstruction(block.ID, point), block);
-
             return new Block[0];
-        }
-
-        public void Color(Block block, RGBA color)
-        {
-            // TBD update blocks
-
-            AddInstruction(new ColorInstruction(block.ID, color), block);
         }
 
         public RGBA AverageTargetColor(Block block)
@@ -67,12 +79,18 @@ namespace Core
             return new RGBA();
         }
 
-        public void UndoInstructions(int count)
+        public void Undo()
+        {
+            var snack = instructions.Pop();
+            totalInstructionCost -= snack.Cost;
+            canvas.Blocks[snack.Backup.ID] = snack.Backup;
+        }
+
+        public void Undo(int count)
         {
             for (int i = 0; i < count && instructions.Count > 0; i++)
             {
-                var instruction = instructions.Pop();
-                totalInstructionCost -= instruction.Item2;
+                Undo();
             }
         }
     }
