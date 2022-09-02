@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mondrian", "Mondrian\Mondri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{677AF2BD-0309-4174-A827-C3F739AB805A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Visualizer", "Visualizer\Visualizer.csproj", "{0481AD3A-70C6-4B5B-BDF8-342913C08A7B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{677AF2BD-0309-4174-A827-C3F739AB805A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{677AF2BD-0309-4174-A827-C3F739AB805A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{677AF2BD-0309-4174-A827-C3F739AB805A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0481AD3A-70C6-4B5B-BDF8-342913C08A7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0481AD3A-70C6-4B5B-BDF8-342913C08A7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0481AD3A-70C6-4B5B-BDF8-342913C08A7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0481AD3A-70C6-4B5B-BDF8-342913C08A7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
