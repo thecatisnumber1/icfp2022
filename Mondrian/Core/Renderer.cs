@@ -16,7 +16,7 @@ namespace Core
             var frame = new RGBA[image.Width * image.Height];
             for (int i = 0; i < image.Width; i++)
             {
-                for (int j = 0; i < image.Height; j++)
+                for (int j = 0; j < image.Height; j++)
                 {
                     frame[i * image.Width + j] = image[i, j];
                 }

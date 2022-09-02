@@ -18,7 +18,7 @@
 
         public Point GetDiff(Point other)
         {
-            return new Point(Math.Min(X - other.X, 0), Math.Min(Y - other.Y, 0));
+            return new Point(Math.Max(X - other.X, 0), Math.Max(Y - other.Y, 0));
         }
 
         public bool IsStrictlyInside(Point bottomLeft, Point topRight)
