@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Path = System.IO.Path;
+using CoreImage = Core.Image;
+using Core;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace Visualizer
 {
@@ -56,6 +61,16 @@ namespace Visualizer
             {
                 ProblemSelector.SelectedIndex = 0;
             }
+
+            // For testing
+            RGBA[,] r = new RGBA[400, 400];
+            for (int i = 0; i < 400; i++)
+            {
+                r[i, i] = new RGBA(255, 255, 255, 255);
+            }
+            CoreImage ci = new CoreImage(r);
+
+            RenderImage(ci);
         }
 
         private void SelectProblemFromId(List<int> problemStrings, string problemId)
@@ -83,9 +98,41 @@ namespace Visualizer
             ReferenceImage.Source = b;
         }
 
-        public void RenderImage(Image image)
+        public void RenderImage(CoreImage image)
         {
-            //Bitmap b = new Bitmap
+            const int bitDepth = 4;
+            int width = image.Width;
+            int height = image.Height;
+            // Convert the array into a pure byte array, 32bpp ARGB.
+            byte[] imageBytes = new byte[width * height * bitDepth];
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    RGBA pixel = image[x, y];
+                    int baseIndex = x * y * bitDepth;
+                    // TODO: Abuse struct
+                    imageBytes[baseIndex + 1] = (byte)pixel.R;
+                    imageBytes[baseIndex + 2] = (byte)pixel.G;
+                    imageBytes[baseIndex + 3] = (byte)pixel.B;
+                    imageBytes[baseIndex] = (byte)pixel.A;
+                }
+            }
+
+            // Copied from http://mapw.elte.hu/elek/bmpinmemory.html
+            Bitmap b = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
+            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+            IntPtr ptr = bmpData.Scan0;
+            Int32 psize = bmpData.Stride * height;
+            System.Runtime.InteropServices.Marshal.Copy(imageBytes, 0, ptr, psize);
+            b.UnlockBits(bmpData);
+
+            // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
+            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                b.GetHbitmap(),
+                IntPtr.Zero,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
 
         internal void LogMessage(string message)

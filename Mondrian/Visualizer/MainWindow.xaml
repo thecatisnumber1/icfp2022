@@ -25,7 +25,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Canvas x:Name="OutputLayer" Grid.Column="0" Background="Red" />
+                <Image x:Name="OutputImage" Grid.Column="0" />
                 <Image x:Name="ReferenceImage" Grid.Column="1" />
             </Grid>
         </Viewbox>
