@@ -4,17 +4,19 @@ namespace Core
 {
     public class Picasso
     {
-        private Canvas canvas;
-        private int canvasSize;
-        private Stack<Tuple<Instruction, int>> instructions;
+        private readonly Canvas canvas;
+        private readonly int canvasSize;
+
+        private readonly Stack<Tuple<Instruction, int>> instructions;
         private int totalInstructionCost;
 
-        // Target Image
+        private readonly Image image;
 
-        public Picasso(int width, int height)
+        public Picasso(Image img)
         {
-            canvas = new Canvas(width, height, new RGBA());
-            canvasSize = width * height;
+            image = img;
+            canvas = new Canvas(image.Width, image.Height, new RGBA());
+            canvasSize = canvas.Size.GetScalarSize();
             instructions = new Stack<Tuple<Instruction, int>>();
         }
 

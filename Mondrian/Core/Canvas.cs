@@ -18,5 +18,18 @@
                 { "0", new SimpleBlock("0", new Point(0, 0), new Point(width, height), backgroundColor) }
             };
         }
+
+        public Point Size
+        {
+            get
+            {
+                return new Point(Width, Height);
+            }
+        }
+
+        public IEnumerable<SimpleBlock> Simplify()
+        {
+            return Blocks.Values.SelectMany(block => block.GetChildren());
+        }
     }
 }
