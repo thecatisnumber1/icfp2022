@@ -9,14 +9,24 @@ namespace Core
         {
             public Instruction Instruction;
             public int Cost;
-            public Block Backup;
+            public IEnumerable<Block> RemovedBlocks;
+            public IEnumerable<string> AddedIds;
 
-            public Snack(Instruction instruction, int cost, Block backup)
+            public Snack(Instruction instruction, int cost, IEnumerable<Block> removed, IEnumerable<string> added)
             {
                 Instruction = instruction;
                 Cost = cost;
-                Backup = backup;
+                RemovedBlocks = removed;
+                AddedIds = added;
             }
+
+            public Snack(Instruction instruction, int cost, Block removed, string added)
+                : this(instruction, cost, new List<Block>() { removed }, new List<string>() { added })
+            { }
+
+            public Snack(Instruction instruction, int cost, Block removed, IEnumerable<string> added)
+                : this(instruction, cost, new List<Block>() { removed }, added)
+            { }
         }
 
         private readonly Canvas canvas;
@@ -54,9 +64,6 @@ namespace Core
         public void Color(Block block, RGBA color)
         {
             int cost = GetCost(InstructionType.Color, block.Size.GetScalarSize(), canvasSize);
-            var snack = new Snack(new ColorInstruction(block.ID, color), cost, canvas.Blocks[block.ID]);
-
-            instructions.Push(snack);
             totalInstructionCost += cost;
 
             canvas.Blocks[block.ID] = new SimpleBlock(
@@ -64,13 +71,56 @@ namespace Core
                 block.BottomLeft.Clone(),
                 block.TopRight.Clone(),
                 color);
+
+            instructions.Push(new Snack(new ColorInstruction(block.ID, color), cost, block, block.ID));
         }
 
         public IEnumerable<Block> PointCut(Block block, Point point)
         {
-            // TBD update blocks
+            if (!point.IsStrictlyInside(block.BottomLeft, block.TopRight))
+            {
+                throw new Exception($"Point is outside [{block.ID}]! Block is from {block.BottomLeft} to {block.TopRight}, point is at {point}!");
+            }
 
-            return new Block[0];
+            int cost = GetCost(InstructionType.PointCut, block.Size.GetScalarSize(), canvasSize);
+            totalInstructionCost += cost;
+
+            var newBlocks = new List<Block>();
+
+            if (block is SimpleBlock sBlock) {
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".0",
+                    sBlock.BottomLeft,
+                    point,
+                    sBlock.Color
+                ));
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".1",
+                    new Point(point.X, sBlock.BottomLeft.Y),
+                    new Point(sBlock.TopRight.X, point.Y),
+                    sBlock.Color
+                ));
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".2",
+                    point,
+                    sBlock.TopRight,
+                    sBlock.Color
+                ));
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".3",
+                    new Point(sBlock.BottomLeft.X, point.Y),
+                    new Point(point.X, sBlock.TopRight.Y),
+                    sBlock.Color
+                ));
+                canvas.Blocks.Remove(sBlock.ID);
+                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
+            }
+
+            //... TBD complexblocks
+
+            instructions.Push(new Snack(new PointCutInstruction(block.ID, point), cost, block, newBlocks.Select(block => block.ID)));
+
+            return newBlocks;
         }
 
         public RGBA AverageTargetColor(Block block)
@@ -83,7 +133,16 @@ namespace Core
         {
             var snack = instructions.Pop();
             totalInstructionCost -= snack.Cost;
-            canvas.Blocks[snack.Backup.ID] = snack.Backup;
+
+            foreach (string id in snack.AddedIds)
+            {
+                canvas.Blocks.Remove(id);
+            }
+
+            foreach (var block in snack.RemovedBlocks)
+            {
+                canvas.Blocks[block.ID] = block;
+            }
         }
 
         public void Undo(int count)
