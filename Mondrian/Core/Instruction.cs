@@ -93,7 +93,7 @@
 
         public override string ToString()
         {
-            return $"cut [{BlockId}] x [{LineNumber}]";
+            return $"cut [{BlockId}] [x] [{LineNumber}]";
         }
     }
     public class HorizontalCutInstruction : Instruction
@@ -110,7 +110,7 @@
 
         public override string ToString()
         {
-            return $"cut [{BlockId}] y [{LineNumber}]";
+            return $"cut [{BlockId}] [y] [{LineNumber}]";
         }
     };
 

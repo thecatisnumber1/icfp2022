@@ -11,12 +11,11 @@ namespace AI
     {
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            picasso.Color(picasso.AllBlocks.First().ID, picasso.AverageTargetColor(picasso.AllBlocks.First()));
-            ScanBlock(picasso, picasso.AllBlocks.First());
+            ScanBlock(picasso, picasso.AllBlocks.First(), logger);
             logger.Render(picasso);
         }
 
-        public static void ScanBlock(Picasso picasso, Block block)
+        public static void ScanBlock(Picasso picasso, Block block, LoggerBase logger)
         {
             int bestScore = picasso.Score;
             bool verticalBest = false;
@@ -39,7 +38,7 @@ namespace AI
 
             for (int y = block.BottomLeft.Y + 1; y < block.TopRight.Y - 1; y++)
             {
-                List<Block> blocks = picasso.VerticalCut(block.ID, y).ToList();
+                List<Block> blocks = picasso.HorizontalCut(block.ID, y).ToList();
                 picasso.Color(blocks[0].ID, picasso.AverageTargetColor(blocks[0]));
                 picasso.Color(blocks[1].ID, picasso.AverageTargetColor(blocks[1]));
                 if (picasso.Score < bestScore)
@@ -61,14 +60,21 @@ namespace AI
             if (verticalBest)
             {
                 nextBlocks = picasso.VerticalCut(block.ID, index).ToList();
+                picasso.Color(nextBlocks[0].ID, picasso.AverageTargetColor(nextBlocks[0]));
+                picasso.Color(nextBlocks[1].ID, picasso.AverageTargetColor(nextBlocks[1]));
+                logger.Render(picasso);
             }
             else
             {
-                nextBlocks = picasso.VerticalCut(block.ID, index).ToList();
+                nextBlocks = picasso.HorizontalCut(block.ID, index).ToList();
+                picasso.Color(nextBlocks[0].ID, picasso.AverageTargetColor(nextBlocks[0]));
+                picasso.Color(nextBlocks[1].ID, picasso.AverageTargetColor(nextBlocks[1]));
+                logger.Render(picasso);
+
             }
 
-            ScanBlock(picasso, nextBlocks[0]);
-            ScanBlock(picasso, nextBlocks[1]);
+            ScanBlock(picasso, nextBlocks[0], logger);
+            ScanBlock(picasso, nextBlocks[1], logger);
         }
     }
 }
