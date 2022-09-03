@@ -19,14 +19,7 @@ namespace AI
                 rects.Add(RandomRect());
             }
 
-            PlaceAllRectangles(picasso, rects, logger);
-            int firstCall = picasso.Score;
-            int secondCall = picasso.Score;
-            ;
-
-            /*
             ClimbThatHill(picasso, rects, logger);
-            */
         }
 
         private static void ClimbThatHill(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
@@ -34,6 +27,7 @@ namespace AI
             bool improved = true;
             Picasso origCopy = new Picasso(picasso.TargetImage);
             PlaceAllRectangles(origCopy, rects, logger);
+            int nope = origCopy.Score;
             int bestScore = origCopy.Score;
             int limit = 20;
             while (improved)
@@ -51,11 +45,7 @@ namespace AI
                             rects.Insert(i, rm.Mutate());
                             Picasso temp = new Picasso(picasso.TargetImage);
                             PlaceAllRectangles(temp, rects, logger);
-                            logger.LogMessage(temp.Score.ToString());
-                            logger.LogMessage(temp.Score.ToString());
-                            logger.LogMessage(temp.Score.ToString());
-                            logger.LogMessage(temp.Score.ToString());
-                            logger.LogMessage(temp.Score.ToString());
+                            int throwaway = temp.Score;
                             Thread.Sleep(500);
                             if (temp.Score < bestScore)
                             {
