@@ -60,7 +60,7 @@ namespace Mondrian
                 minProblemNumber,
                 maxProblemNumber,
                 submit,
-                new AIArgs());
+                new AIArgs(-1));
         }
     }
 }

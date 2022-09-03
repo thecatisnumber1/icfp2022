@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace AI
 {
-    public record AIArgs();
+    public record AIArgs(int problemNum);
 }

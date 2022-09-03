@@ -15,6 +15,11 @@ namespace AI
         {
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             ClimbThatHill(picasso, rects, logger);
+            
+            if (args.problemNum != -1)
+            {
+                Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()));
+            }
         }
 
         private static void ClimbThatHill(Picasso picasso, List<Rectangle> rects, LoggerBase logger)

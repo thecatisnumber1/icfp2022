@@ -351,7 +351,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, new AI.AIArgs(), _loggerInstance);
+                solver.Invoke(_problem, new AI.AIArgs(int.Parse(ProblemSelector.SelectedItem.ToString())), _loggerInstance);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
