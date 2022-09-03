@@ -21,6 +21,7 @@ namespace Mondrian
             ["LinePrinterH"] = LinePrinter.SolveH,
             ["LinePrinterV"] = LinePrinter.SolveV,
             ["DotMatrix"] = LinePrinter.SolveD,
+            ["Swapmaster"] = Swapmaster5000.Solve,
         };
 
         public static Solver GetSolver(string algorithm)
