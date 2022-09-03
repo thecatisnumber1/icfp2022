@@ -142,6 +142,7 @@ namespace Tests
             picasso.Merge("4", "5");
             picasso.PointCut("6", new Point(11, 179));
             picasso.PointCut("6.2", new Point(247, 216));
+            picasso.Color("6.2.0", new RGBA(127, 127, 127, 255));
             picasso.Merge("6.2.1", "6.2.2");
             picasso.Merge("6.2.0", "6.2.3");
             picasso.Merge("7", "8");
