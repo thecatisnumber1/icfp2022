@@ -148,6 +148,96 @@ namespace Core
             return newBlocks;
         }
 
+        public IEnumerable<Block> VerticalCut(string blockId, int lineNumber)
+        {
+            if (!canvas.Blocks.ContainsKey(blockId))
+            {
+                throw new Exception($"Unknown blockId [{blockId}]");
+            }
+
+            var oldBlock = canvas.Blocks[blockId];
+
+            if (!(oldBlock.BottomLeft.X <= lineNumber && lineNumber <= oldBlock.TopRight.X))
+            {
+                throw new Exception($"Line number is outside [{blockId}]! Block is from {oldBlock.BottomLeft} to {oldBlock.TopRight}, line is at {lineNumber}!");
+            }
+
+            int cost = GetCost(InstructionType.VerticalCut, oldBlock.Size.GetScalarSize(), canvasSize);
+            totalInstructionCost += cost;
+
+            var newBlocks = new List<Block>();
+
+            if (oldBlock is SimpleBlock sBlock)
+            {
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".0",
+                    sBlock.BottomLeft.Clone(),
+                    new Point(lineNumber, sBlock.TopRight.Y),
+                    sBlock.Color
+                ));
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".1",
+                    new Point(lineNumber, sBlock.BottomLeft.Y),
+                    sBlock.TopRight.Clone(),
+                    sBlock.Color
+                ));
+
+                canvas.Blocks.Remove(sBlock.ID);
+                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
+            }
+
+            //... TBD complexblocks
+
+            instructions.Push(new Snack(new VerticalCutInstruction(blockId, lineNumber), cost, oldBlock, newBlocks.Select(block => block.ID)));
+
+            return newBlocks;
+        }
+
+        public IEnumerable<Block> HorizontalCut(string blockId, int lineNumber)
+        {
+            if (!canvas.Blocks.ContainsKey(blockId))
+            {
+                throw new Exception($"Unknown blockId [{blockId}]");
+            }
+
+            var oldBlock = canvas.Blocks[blockId];
+
+            if (!(oldBlock.BottomLeft.Y <= lineNumber && lineNumber <= oldBlock.TopRight.Y))
+            {
+                throw new Exception($"Line number is outside [{blockId}]! Block is from {oldBlock.BottomLeft} to {oldBlock.TopRight}, line is at {lineNumber}!");
+            }
+
+            int cost = GetCost(InstructionType.HorizontalCut, oldBlock.Size.GetScalarSize(), canvasSize);
+            totalInstructionCost += cost;
+
+            var newBlocks = new List<Block>();
+
+            if (oldBlock is SimpleBlock sBlock)
+            {
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".0",
+                    sBlock.BottomLeft.Clone(),
+                    new Point(sBlock.TopRight.X, lineNumber),
+                    sBlock.Color
+                ));
+                newBlocks.Add(new SimpleBlock(
+                    sBlock.ID + ".1",
+                    new Point(sBlock.BottomLeft.X, lineNumber),
+                    sBlock.TopRight.Clone(),
+                    sBlock.Color
+                ));
+
+                canvas.Blocks.Remove(sBlock.ID);
+                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
+            }
+
+            //... TBD complexblocks
+
+            instructions.Push(new Snack(new HorizontalCutInstruction(blockId, lineNumber), cost, oldBlock, newBlocks.Select(block => block.ID)));
+
+            return newBlocks;
+        }
+
         public RGBA AverageTargetColor(Block block)
         {
             return TargetImage.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
