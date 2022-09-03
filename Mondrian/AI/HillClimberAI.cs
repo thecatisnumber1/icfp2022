@@ -13,7 +13,6 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            logger.Break();
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             ClimbThatHill(picasso, rects, logger);
         }
@@ -23,7 +22,6 @@ namespace AI
             bool improved = true;
             Picasso origCopy = new Picasso(picasso.TargetImage);
             PlaceAllRectangles(origCopy, rects, logger);
-            int nope = origCopy.Score;
             int bestScore = origCopy.Score;
             int limit = 20;
             while (improved)
@@ -41,7 +39,6 @@ namespace AI
                             rects.Insert(i, rm.Mutate());
                             Picasso temp = new Picasso(picasso.TargetImage);
                             PlaceAllRectangles(temp, rects, logger);
-                            int throwaway = temp.Score;
                             if (temp.Score < bestScore)
                             {
                                 bestScore = temp.Score;
