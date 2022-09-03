@@ -29,6 +29,8 @@ namespace AI
             {
                 picasso.Color(block.ID, targetColor);
                 Logger.Render(picasso);
+                Logger.LogMessage("Pausing");
+                Logger.Break();
                 return;
             }
 

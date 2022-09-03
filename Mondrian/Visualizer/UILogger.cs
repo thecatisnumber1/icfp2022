@@ -20,7 +20,7 @@ namespace Visualizer
         private List<SimpleBlock> _nextImage;
         private Task _renderPump;
 
-        public bool Busy => Interlocked.Read(ref _rendering) != 0;
+        internal bool Paused;
 
         public UILogger(MainWindow mainUI, CancellationToken cancellationToken, Stack<Rectangle> selectedRects)
         {
@@ -75,6 +75,20 @@ namespace Visualizer
                 }
 
                 Task.Delay(20).Wait(); // Need something to stop us from constantly spamming the UI
+            }
+        }
+
+        public override void Break()
+        {
+            Paused = true;
+            _mainUi.Dispatcher.BeginInvoke(() =>
+            {
+                _mainUi.Break();
+            });
+
+            while (Paused && !_cancellationToken.IsCancellationRequested)
+            {
+                Task.Delay(20).Wait(); // Visualizer will eventually release.
             }
         }
 

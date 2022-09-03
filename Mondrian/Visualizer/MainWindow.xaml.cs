@@ -34,6 +34,7 @@ namespace Visualizer
         private CancellationTokenSource _tokenSource;
         private Picasso _problem;
         private Stack<Core.Rectangle> _selectedRects;
+        private UILogger _loggerInstance;
 
         private int _problemWidth;
         private int _problemHeight;
@@ -319,11 +320,7 @@ namespace Visualizer
         private void ResetSolverButtons()
         {
             SolverRunButton.IsEnabled = true;
-            SolverStopButton.IsEnabled = false;
-            if (Interlocked.Read(ref _runCount) == 0)
-            {
-                SolverResetButton.IsEnabled = false;
-            }
+            SolverResumeButton.IsEnabled = false;
         }
 
         private void SolverRunButton_OnClick(object sender, RoutedEventArgs e)
@@ -337,7 +334,7 @@ namespace Visualizer
 
             _tokenSource = new CancellationTokenSource();
 
-            LoggerBase logger = new UILogger(this, _tokenSource.Token, _selectedRects);
+            _loggerInstance = new UILogger(this, _tokenSource.Token, _selectedRects);
 
             // Load image etc.
             ResetProblem(); // Wipe all state.
@@ -346,7 +343,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, new AI.AIArgs(), logger);
+                solver.Invoke(_problem, new AI.AIArgs(), _loggerInstance);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
@@ -448,6 +445,17 @@ namespace Visualizer
 
                 return;
             }
+        }
+
+        internal void Break()
+        {
+            SolverResumeButton.IsEnabled = true;
+        }
+
+        private void SolverResumeButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            SolverResumeButton.IsEnabled = false;
+            _loggerInstance.Paused = false;
         }
     }
 }
