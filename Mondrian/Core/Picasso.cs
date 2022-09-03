@@ -88,6 +88,14 @@ namespace Core
             }
         }
 
+        public int BlockCount
+        {
+            get
+            {
+                return canvas.Blocks.Count;
+            }
+        }
+
         public IEnumerable<SimpleBlock> AllSimpleBlocks => canvas.Simplify();
 
         public void Color(string blockId, RGBA color)

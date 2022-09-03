@@ -11,8 +11,14 @@ namespace AI
     {
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            ScanBlock(picasso, picasso.AllBlocks.First(), logger);
+            picasso.Color(picasso.AllBlocks.First().ID, picasso.AverageTargetColor(picasso.AllBlocks.First()));
             logger.Render(picasso);
+            ScanBlock(picasso, picasso.AllBlocks.First(), logger);
+            //int scannerScore = picasso.Score;
+            //picasso.Undo(picasso.InstructionCount);
+            //CheckerboardAI.Solve(picasso, args, new ConsoleLogger());
+            //logger.LogMessage($"Scanner score = {scannerScore}, Checkerboard score = {picasso.Score}.");
+            //logger.Render(picasso);
         }
 
         public static void ScanBlock(Picasso picasso, Block block, LoggerBase logger)
