@@ -19,5 +19,11 @@
         {
             return new SimpleBlock(ID, BottomLeft.Clone(), TopRight.Clone(), Color);
         }
+
+        public override int GetHashCode()
+        {
+            // Do not consider HasRendered. It's not part of the actul state.
+            return HashCode.Combine(ID, BottomLeft, TopRight, Size, Color);
+        }
     }
 }

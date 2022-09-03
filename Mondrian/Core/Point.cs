@@ -81,7 +81,7 @@ namespace Core
 
         public override int GetHashCode()
         {
-            return X ^ Y * 314159;
+            return HashCode.Combine(X, Y);
         }
     }
 }

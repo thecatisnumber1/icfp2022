@@ -10,12 +10,15 @@ namespace AI
     public static class AllCutsAI
     {
         private static LoggerBase Logger;
-        private static Point MinRes = new Point(20, 20);
+        private static Point MinRes = new Point(5, 5);
 
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
         {
             Logger = logger;
-            Recurse(picasso, picasso.AllBlocks.Single() as SimpleBlock);
+            foreach (SimpleBlock sb in picasso.AllSimpleBlocks.ToList())
+            {
+                Recurse(picasso, sb);
+            }
         }
 
         private static void Recurse(Core.Picasso picasso, SimpleBlock block)

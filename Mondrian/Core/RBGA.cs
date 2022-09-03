@@ -36,6 +36,11 @@
             return !(a == b);
         }
 
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(r, g, b, a);
+        }
+
         public double Diff(RGBA other)
         {
             // Perf: use internal Byte instead of property Int

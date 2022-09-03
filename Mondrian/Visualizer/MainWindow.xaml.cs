@@ -17,6 +17,7 @@ using Mondrian;
 using System.Threading.Tasks;
 using Core;
 using System.Windows.Media.Media3D;
+using System.Windows.Markup;
 
 namespace Visualizer
 {
@@ -154,6 +155,67 @@ namespace Visualizer
             // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
             OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 b.GetHbitmap(),
+                IntPtr.Zero,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromWidthAndHeight(width, height));
+        }
+
+        // Yup. Putting a field here. Deal with it.
+        private HashSet<SimpleBlock> previouslyRenderedBlocks;
+        private Bitmap renderedBitmap;
+
+        public void RenderImageFast(List<SimpleBlock> blocks)
+        {
+            PixelFormat pf = PixelFormat.Format32bppArgb;
+            int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
+            int width = _problemWidth;
+            int height = _problemHeight;
+
+            if (renderedBitmap == null)
+            {
+                renderedBitmap = new Bitmap(width, height, pf);
+            }
+
+            previouslyRenderedBlocks ??= new HashSet<SimpleBlock>();
+            List<SimpleBlock> unrendered = blocks.Where(b => !previouslyRenderedBlocks.Contains(b)).ToList();
+
+            LogVisualizerMessage($"Full size: {blocks.Count}. Unrendered size: {unrendered.Count()}");
+
+            BitmapData bmpData = renderedBitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
+
+            foreach (SimpleBlock block in unrendered)
+            {
+                // Render
+                unsafe
+                {
+                    // Get starting pointer
+                    // Pointer of 0,0 + X offset (w/ bitdepth) + Y offset (stride handles bit depth; it's width * bit depth)
+                    byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (block.BottomLeft.Y * bmpData.Stride);
+                    for (int x = 0; x < block.Size.X; x++)
+                    {
+                        byte* drawptr = ptr;
+                        for (int y = 0; y < block.Size.Y; y++)
+                        {
+                            *(drawptr++) = (byte)block.Color.B;
+                            *(drawptr++) = (byte)block.Color.G;
+                            *(drawptr++) = (byte)block.Color.R;
+                            *(drawptr++) = (byte)block.Color.A;
+                        }
+                        ptr += bmpData.Stride;
+                    }
+                }
+            }
+
+            renderedBitmap.UnlockBits(bmpData);
+
+
+            // Throw away anything in the set. Because doing an action makes a new block, we don't want to
+            // be holding onto the reference.
+            previouslyRenderedBlocks = blocks.ToHashSet();
+
+            // While we can muck with it all we want, we still need to create a new source every time...
+            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                renderedBitmap.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
