@@ -16,6 +16,7 @@ namespace Mondrian
         {
             ["Checkerboard"] = CheckerboardAI.Solve,
             ["Scanner"] = ScannerAI.Solve,
+            ["BeamScanner"] = BeamScannerAI.Solve,
             ["AllCuts"] = AllCutsAI.Solve,
             ["LinePrinterH"] = LinePrinter.SolveH,
             ["LinePrinterV"] = LinePrinter.SolveV,
