@@ -415,6 +415,7 @@ namespace Visualizer
 
                 _selectedRects.Push(result);
                 RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
+                DrawSelectedRects();
 
                 _areaSelectOrigin = null;
                 return;
@@ -469,7 +470,28 @@ namespace Visualizer
                 {
                     LogVisualizerMessage($"Popped {popped}");
                     RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
+                    DrawSelectedRects();
                 }
+            }
+        }
+
+        private void DrawSelectedRects()
+        {
+            SelectedRectCanvas.Children.Clear();
+            foreach (Core.Rectangle rect in _selectedRects)
+            {
+                // Draw a box
+                var stackRect = new System.Windows.Shapes.Rectangle();
+                stackRect.Stroke = new SolidColorBrush(Colors.Green);
+                stackRect.StrokeThickness = 0.1;
+                stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
+                stackRect.Opacity = 0.40;
+                // Be less stupid about this...
+                stackRect.Width = Math.Abs(rect.Width);
+                stackRect.Height = Math.Abs(rect.Height);
+                System.Windows.Controls.Canvas.SetLeft(stackRect, rect.Left);
+                System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
+                SelectedRectCanvas.Children.Add(stackRect);
             }
         }
     }
