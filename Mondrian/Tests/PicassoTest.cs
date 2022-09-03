@@ -109,116 +109,46 @@ namespace Tests
         [TestMethod]
         public void MergeTest()
         {
+            /*
+            cut [0] [256, 238]
+            cut [0.2] [335, 383]
+            color [0.2.0] [128, 128, 128, 255]
+            merge [0.2.1] [0.2.2]
+            merge [0.2.0] [0.2.3]
+            merge [1] [2]
+            merge [3] [0.1]
+            merge [0.0] [0.3]
+            merge [4] [5]
+            cut [6] [11, 179]
+            cut [6.2] [247, 216]
+            color [6.2.0] [127, 127, 127, 255]
+            merge [6.2.1] [6.2.2]
+            merge [6.2.0] [6.2.3]
+            merge [7] [8]
+            merge [9] [6.1]
+            merge [6.0] [6.3]
+            merge [10] [11] 
+            cost = 194338
+            */
             Picasso picasso = new Picasso(Problems.GetProblem(1));
-            List<Rectangle> rects = new List<Rectangle>();
-            for (int i = 0; i < 2; i++)
-            {
-                rects.Add(RandomRect());
-            }
-
-            PlaceAllRectangles(picasso, rects);
-            int firstCall = picasso.Score;
-            int secondCall = picasso.Score;
-            Assert.AreEqual(firstCall, secondCall);
-        }
-
-        private static Random r = new Random();
-
-        private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects)
-        {
-            foreach (Rectangle rect in rects)
-            {
-                PlaceRectangle(picasso, rect);
-            }
-        }
-
-        private static void PlaceRectangle(Picasso picasso, Rectangle rect)
-        {
-            if (picasso.BlockCount > 1)
-            {
-                throw new Exception("Can't place a rectangle on a complex canvas!");
-            }
-
-            FirstCut(picasso, rect);
-
-            if (picasso.BlockCount > 1)
-            {
-                throw new Exception("Can't place a rectangle on a complex canvas!");
-            }
-        }
-
-        private static void FirstCut(Picasso picasso, Rectangle rect)
-        {
-            if (rect.Left != 0 && rect.Bottom != 0)
-            {
-                List<Block> blocks0 = picasso.PointCut(picasso.AllBlocks.First().ID, rect.BottomLeft).ToList();
-                Block zeroDotTwo = SecondCut(picasso, rect, blocks0[2]);
-                Block firstMerge = picasso.Merge(zeroDotTwo.ID, blocks0[1].ID);
-                Block secondMerge = picasso.Merge(blocks0[0].ID, blocks0[3].ID);
-                picasso.Merge(firstMerge.ID, secondMerge.ID);
-            }
-            else if (rect.Left != 0 && rect.Bottom == 0)
-            {
-                List<Block> blocks = picasso.VerticalCut(picasso.AllBlocks.First().ID, rect.Left).ToList();
-                Block right = SecondCut(picasso, rect, blocks[1]);
-                picasso.Merge(right.ID, blocks[0].ID);
-            }
-            else if (rect.Left == 0 && rect.Bottom != 0)
-            {
-                List<Block> blocks = picasso.HorizontalCut(picasso.AllBlocks.First().ID, rect.Bottom).ToList();
-                Block top = SecondCut(picasso, rect, blocks[1]);
-                picasso.Merge(top.ID, blocks[0].ID);
-            }
-            else
-            {
-                SecondCut(picasso, rect, picasso.AllBlocks.First());
-            }
-        }
-
-        private static Block SecondCut(Picasso picasso, Rectangle rect, Block block)
-        {
-            if (rect.Right != 400 && rect.Top != 400)
-            {
-                List<Block> blocks1 = picasso.PointCut(block.ID, rect.TopRight).ToList();
-                picasso.Color(blocks1[0].ID, picasso.AverageTargetColor(blocks1[0]));
-                Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
-                Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
-                return picasso.Merge(firstMerge.ID, secondMerge.ID);
-            }
-            else if (rect.Right != 400 && rect.Top == 400)
-            {
-                List<Block> blocks1 = picasso.VerticalCut(block.ID, rect.Right).ToList();
-                picasso.Color(blocks1[0].ID, picasso.AverageTargetColor(blocks1[0]));
-                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-            }
-            else if (rect.Right == 400 && rect.Top != 400)
-            {
-                List<Block> blocks1 = picasso.HorizontalCut(block.ID, rect.Top).ToList();
-                picasso.Color(blocks1[0].ID, picasso.AverageTargetColor(blocks1[0]));
-                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-            }
-            else
-            {
-                picasso.Color(block.ID, picasso.AverageTargetColor(block));
-                return block;
-            }
-        }
-
-        private static Rectangle RandomRect()
-        {
-            Point p = RandomPoint();
-            Point q = RandomPoint();
-            while (q.X == p.X || q.Y == p.Y)
-            {
-                q = RandomPoint();
-            }
-
-            return new Rectangle(new Point(Math.Min(p.X, q.X), Math.Min(p.Y, q.Y)), new Point(Math.Max(p.X, q.X), Math.Max(p.Y, q.Y)));
-        }
-
-        private static Point RandomPoint()
-        {
-            return new Point(r.Next(0, 400), r.Next(0, 400));
+            List<Block> blocks0 = picasso.PointCut("0", new Point(256, 238)).ToList();
+            List<Block> blocks1 = picasso.PointCut("0.2", new Point(335, 383)).ToList();
+            picasso.Color("0.2.0", new RGBA(128, 128, 128, 255));
+            picasso.Merge("0.2.1", "0.2.2");
+            picasso.Merge("0.2.0", "0.2.3");
+            picasso.Merge("1", "2");
+            picasso.Merge("3", "0.1");
+            picasso.Merge("0.0", "0.3");
+            picasso.Merge("4", "5");
+            picasso.PointCut("6", new Point(11, 179));
+            picasso.PointCut("6.2", new Point(247, 216));
+            picasso.Merge("6.2.1", "6.2.2");
+            picasso.Merge("6.2.0", "6.2.3");
+            picasso.Merge("7", "8");
+            picasso.Merge("9", "6.1");
+            picasso.Merge("6.0", "6.3");
+            picasso.Merge("10", "11");
+            Assert.AreEqual(194338, picasso.Score);
         }
     }
 }

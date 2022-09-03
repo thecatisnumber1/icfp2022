@@ -19,7 +19,9 @@ namespace AI
                 rects.Add(RandomRect());
             }
 
-            ClimbThatHill(picasso, rects, logger);
+            PlaceAllRectangles(picasso, rects, logger);
+
+            //ClimbThatHill(picasso, rects, logger);
         }
 
         private static void ClimbThatHill(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
@@ -46,7 +48,6 @@ namespace AI
                             Picasso temp = new Picasso(picasso.TargetImage);
                             PlaceAllRectangles(temp, rects, logger);
                             int throwaway = temp.Score;
-                            Thread.Sleep(500);
                             if (temp.Score < bestScore)
                             {
                                 bestScore = temp.Score;
@@ -88,11 +89,6 @@ namespace AI
             }
 
             FirstCut(picasso, rect);
-
-            if (picasso.BlockCount > 1)
-            {
-                throw new Exception("Can't place a rectangle on a complex canvas!");
-            }
         }
 
         private static void FirstCut(Picasso picasso, Rectangle rect)
