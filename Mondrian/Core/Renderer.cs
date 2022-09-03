@@ -45,8 +45,8 @@
                 if (!block.HasRendered)
                 {
                     block.HasRendered = true;
-                    var frameTopLeft = new Point(block.BottomLeft.X, canvas.Height - block.TopRight.Y);
-                    var frameBottomRight = new Point(block.TopRight.X, canvas.Height - block.BottomLeft.Y);
+                    var frameTopLeft = new Point(block.BottomLeft.X, block.TopRight.Y);
+                    var frameBottomRight = new Point(block.TopRight.X, block.BottomLeft.Y);
                     size += (frameBottomRight.X - frameTopLeft.X) * (frameBottomRight.Y - frameTopLeft.Y);
 
                     for (var y = frameTopLeft.Y; y < frameBottomRight.Y; y++)
