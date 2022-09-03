@@ -54,6 +54,14 @@ namespace Core
             }
         }
 
+        public int InstructionCount
+        {
+            get
+            {
+                return instructions.Count;
+            }
+        }
+
         public IEnumerable<Block> AllBlocks
         {
             get

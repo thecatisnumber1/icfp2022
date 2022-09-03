@@ -9,38 +9,48 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        //public static readonly int SAMPLE_SIZE = 20;
         public static readonly int LEVELS = 5;
-        public static Random r = new Random();
 
-        public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
+        public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            RecursiveSolveBad(picasso, picasso.AllBlocks.First(), 0);
+            RecursiveSolveBad(picasso, picasso.AllBlocks.First(), 0, picasso.Score);
         }
 
-        public static void RecursiveSolveBad(Picasso picasso, Block block, int level)
+        public static bool RecursiveSolveBad(Picasso picasso, Block block, int level, int scoreToBeat)
         {
             if (level == LEVELS)
             {
-                return;
+                return false;
             }
 
-            Rectangle rect = new Rectangle(block.BottomLeft, block.TopRight);
-            Point bestPoint = new Point((block.TopRight.X - block.BottomLeft.X) / 2 + block.BottomLeft.X, (block.TopRight.Y - block.BottomLeft.Y) / 2 + block.BottomLeft.Y);
-            var best = SamplePoint(picasso, block, bestPoint);
-            foreach (Block subBlock in best.subBlocks)
+            Point center = new Point((block.TopRight.X - block.BottomLeft.X) / 2 + block.BottomLeft.X, (block.TopRight.Y - block.BottomLeft.Y) / 2 + block.BottomLeft.Y);
+            var sample = SamplePoint(picasso, block, center);
+            bool improved = false;
+            if (picasso.Score < scoreToBeat)
             {
-                RecursiveSolveBad(picasso, subBlock, level + 1);
+                scoreToBeat = picasso.Score;
+                improved = true;
             }
+            foreach (Block subBlock in sample.subBlocks)
+            {
+                improved |= RecursiveSolveBad(picasso, subBlock, level + 1, scoreToBeat);
+            }
+
+            if (!improved)
+            {
+                picasso.Undo(sample.instructionsUsed + 1);
+            }
+
+            return improved;
         }
 
 
-        public static (int score, int instructionsUsed, List<Block> subBlocks) SamplePoint(Picasso picasso, Block block, Point p)
+        public static (int instructionsUsed, List<Block> subBlocks) SamplePoint(Picasso picasso, Block block, Point p)
         {
             List<Block> subBlocks = picasso.PointCut(block, p).ToList();
 
             // Color each the average of the canvas underneath
-            int instructionsUsed = 1;
+            int instructionsUsed = 0;
             foreach (Block subBlock in subBlocks)
             {
                 int preScore = picasso.Score;
@@ -56,7 +66,7 @@ namespace AI
                 }
             }
 
-            return (picasso.Score, instructionsUsed, subBlocks);
+            return (instructionsUsed, subBlocks);
         }
     }
 }

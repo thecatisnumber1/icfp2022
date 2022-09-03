@@ -24,7 +24,7 @@ namespace Mondrian
                 Stopwatch watch = Stopwatch.StartNew();
                 logger.LogMessage($"Considering problem #{problemNum}");
                 Image problem = Problems.GetProblem(problemNum);
-                Core.Picasso picasso = new Core.Picasso(problem);
+                Core.Picasso picasso = new Picasso(problem);
                 solver(picasso, args.aiArgs, logger);
                 logger.LogMessage($"Score = {picasso.Score}, elapsed = {watch.Elapsed}");
                 List<string> instructions = picasso.SerializeInstructions();
