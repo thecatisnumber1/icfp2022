@@ -136,7 +136,7 @@ namespace Visualizer
             _problem = new Picasso(ci, initialConfig);
             _selectedRects = new Stack<Core.Rectangle>();
 
-            RenderImage(_problem.AllSimpleBlocks.ToList());
+            RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
         }
 
         public void RenderImage(CoreImage image)
@@ -240,7 +240,7 @@ namespace Visualizer
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
 
-        public void RenderImage(List<SimpleBlock> blocks)
+        public void RenderImage(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
@@ -274,6 +274,9 @@ namespace Visualizer
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
+
+            // Make sure to copy this into other implementations.
+            ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: { totalInstructionCost / (double)score * 100.0}";
         }
 
         private static RGBA[] BlocksToRGBAArray(List<SimpleBlock> blocks, int width, int height)

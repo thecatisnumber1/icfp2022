@@ -54,6 +54,10 @@
             <StatusBarItem>
                 <TextBlock x:Name="CursorPositionText" />
             </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="ScoreStatusText" />
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>
