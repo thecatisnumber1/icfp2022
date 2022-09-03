@@ -38,7 +38,6 @@
         private void CanvasToFrame()
         {
             var blocks = canvas.Simplify();
-            int size = 0;
 
             foreach (var block in blocks)
             {
@@ -47,9 +46,8 @@
                     block.HasRendered = true;
                     var frameTopLeft = new Point(block.BottomLeft.X, block.TopRight.Y);
                     var frameBottomRight = new Point(block.TopRight.X, block.BottomLeft.Y);
-                    size += (frameBottomRight.X - frameTopLeft.X) * (frameBottomRight.Y - frameTopLeft.Y);
 
-                    for (var y = frameTopLeft.Y; y < frameBottomRight.Y; y++)
+                    for (var y = frameBottomRight.Y; y < frameTopLeft.Y; y++)
                     {
                         for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
                         {
