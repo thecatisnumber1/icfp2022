@@ -354,7 +354,7 @@ namespace Core
             var oldBlock2 = canvas.Blocks[blockId2];
 
             int cost = GetCost(InstructionType.Merge, Math.Max(oldBlock1.Size.GetScalarSize(), oldBlock2.Size.GetScalarSize()), canvasSize);
-            totalInstructionCost += cost;
+            TotalInstructionCost += cost;
 
             bool bottomToTop = (oldBlock1.BottomLeft.Y == oldBlock2.TopRight.Y || oldBlock1.TopRight.Y == oldBlock2.BottomLeft.Y) &&
                     oldBlock1.BottomLeft.X == oldBlock2.BottomLeft.X &&
