@@ -33,6 +33,7 @@ namespace Visualizer
         private Task _solverTask;
         private CancellationTokenSource _tokenSource;
         private Picasso _problem;
+        private int _problemId;
         private Stack<Core.Rectangle> _selectedRects;
         private UILogger _loggerInstance;
 
@@ -127,9 +128,9 @@ namespace Visualizer
 
             ReferenceImage.Source = b;
 
-            int problemNum = int.Parse(ProblemSelector.SelectedItem.ToString());
-            CoreImage ci = Problems.GetProblem(problemNum);
-            InitialConfig initialConfig = InitialConfigs.GetInitialConfig(problemNum);
+            _problemId = int.Parse(ProblemSelector.SelectedItem.ToString());
+            CoreImage ci = Problems.GetProblem(_problemId);
+            InitialConfig initialConfig = InitialConfigs.GetInitialConfig(_problemId);
             _problemWidth = ci.Width;
             _problemHeight = ci.Height;
 
@@ -445,7 +446,6 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetTop(selectionRect, Math.Min(cursorPosition.Y, origin.Y));
 
                 ManualDrawCanvas.Children.Add(selectionRect);
-
                 return;
             }
         }
