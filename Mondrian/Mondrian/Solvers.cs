@@ -18,6 +18,9 @@ namespace Mondrian
             ["Checkerboard"] = CheckerboardAI.Solve,
             ["Scanner"] = ScannerAI.Solve,
             ["AllCuts"] = AllCutsAI.Solve,
+            ["LinePrinterH"] = LinePrinter.SolveH,
+            ["LinePrinterV"] = LinePrinter.SolveV,
+            ["DotMatrix"] = LinePrinter.SolveD,
         };
 
         public static Solver GetSolver(string algorithm)

@@ -123,25 +123,25 @@ namespace Core
 
             if (oldBlock is SimpleBlock sBlock) {
                 newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".0",
+                    sBlock.ID + ".3",
                     sBlock.BottomLeft.Clone(),
                     point.Clone(),
                     sBlock.Color
                 ));
                 newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".1",
+                    sBlock.ID + ".2",
                     new Point(point.X, sBlock.BottomLeft.Y),
                     new Point(sBlock.TopRight.X, point.Y),
                     sBlock.Color
                 ));
                 newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".2",
+                    sBlock.ID + ".1",
                     point.Clone(),
                     sBlock.TopRight.Clone(),
                     sBlock.Color
                 ));
                 newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".3",
+                    sBlock.ID + ".0",
                     new Point(sBlock.BottomLeft.X, point.Y),
                     new Point(point.X, sBlock.TopRight.Y),
                     sBlock.Color
@@ -271,28 +271,28 @@ namespace Core
                 }
 
                 newBlocks.Add(new ComplexBlock(
-                    cBlock.ID + ".0",
+                    cBlock.ID + ".3",
                     cBlock.BottomLeft.Clone(),
                     point.Clone(),
-                    bottomLeftBlocks.ToArray()
-                ));
-                newBlocks.Add(new ComplexBlock(
-                    cBlock.ID + ".1",
-                    new Point(point.X, cBlock.BottomLeft.Y),
-                    new Point(cBlock.TopRight.X, point.Y),
-                    bottomRightBlocks.ToArray()
+                    bottomLeftBlocks.Where((b) => b.Size.GetScalarSize() > 0).ToArray()
                 ));
                 newBlocks.Add(new ComplexBlock(
                     cBlock.ID + ".2",
-                    point.Clone(),
-                    cBlock.TopRight.Clone(),
-                    topRightBlocks.ToArray()
+                    new Point(point.X, cBlock.BottomLeft.Y),
+                    new Point(cBlock.TopRight.X, point.Y),
+                    bottomRightBlocks.Where((b) => b.Size.GetScalarSize() > 0).ToArray()
                 ));
                 newBlocks.Add(new ComplexBlock(
-                    cBlock.ID + ".3",
+                    cBlock.ID + ".1",
+                    point.Clone(),
+                    cBlock.TopRight.Clone(),
+                    topRightBlocks.Where((b) => b.Size.GetScalarSize() > 0).ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".0",
                     new Point(cBlock.BottomLeft.X, point.Y),
                     new Point(point.X, cBlock.TopRight.Y),
-                    topLeftBlocks.ToArray()
+                    topLeftBlocks.Where((b) => b.Size.GetScalarSize() > 0).ToArray()
                 ));
 
             }

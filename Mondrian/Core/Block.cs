@@ -21,10 +21,13 @@
                 throw new Exception("Invalid Block");
             }
 
-            if (Size.GetScalarSize() == 0)
-            {
-                throw new Exception("Block size cannot be 0!");
-            }
+            // For ComplexBlocks, this can happen.
+            // Probably should modify the point split code
+
+            //if (Size.GetScalarSize() == 0)
+            //{
+            //    throw new Exception("Block size cannot be 0!");
+            //}
         }
 
         public abstract SimpleBlock[] GetChildren();

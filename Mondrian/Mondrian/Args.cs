@@ -12,6 +12,7 @@ namespace Mondrian
             string user,
             int minProblemNumber,
             int maxProblemNumber,
+            bool submit,
             AIArgs aiArgs)
     {
         public static Args ParseArgs(string[] args)
@@ -20,6 +21,7 @@ namespace Mondrian
             string? user = null;
             int minProblemNumber = 1;
             int maxProblemNumber = Problems.ProblemCount();
+            bool submit = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -39,6 +41,9 @@ namespace Mondrian
                     case "--max":
                         maxProblemNumber = int.Parse(args[++i]);
                         break;
+                    case "--submit":
+                        submit = true;
+                        break;
                     default:
                         throw new ArgumentException($"Unrecognized argument: {args[i]}");
                 }
@@ -54,6 +59,7 @@ namespace Mondrian
                 user,
                 minProblemNumber,
                 maxProblemNumber,
+                submit,
                 new AIArgs());
         }
     }
