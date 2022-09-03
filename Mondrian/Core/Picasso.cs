@@ -146,14 +146,159 @@ namespace Core
                     new Point(point.X, sBlock.TopRight.Y),
                     sBlock.Color
                 ));
-                canvas.Blocks.Remove(sBlock.ID);
-                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
             }
 
             if (oldBlock is ComplexBlock cBlock)
             {
-                throw new Exception("Point Cut of Complext Blocks not implemented yet");
+                var bottomLeftBlocks = new List<SimpleBlock>();
+                var bottomRightBlocks = new List<SimpleBlock>();
+                var topLeftBlocks = new List<SimpleBlock>();
+                var topRightBlocks = new List<SimpleBlock>();
+
+                foreach (var block in cBlock.SubBlocks)
+                {
+                    if (block.BottomLeft.X >= point.X && block.BottomLeft.Y >= point.Y)
+                    {
+                        topRightBlocks.Add(block);
+                    }
+                    else if (block.TopRight.X <= point.X && block.TopRight.Y <= point.Y)
+                    {
+                        bottomLeftBlocks.Add(block);
+                    }
+                    else if (block.TopRight.X <= point.X && block.BottomLeft.Y >= point.Y)
+                    {
+                        topLeftBlocks.Add(block);
+                    }
+                    else if (block.BottomLeft.X >= point.X && block.TopRight.Y <= point.Y)
+                    {
+                        bottomRightBlocks.Add(block);
+                    }
+                    else if (point.IsInside(block.BottomLeft, block.TopRight))
+                    {
+                        bottomLeftBlocks.Add(new SimpleBlock(
+                            "bl_child",
+                            block.BottomLeft.Clone(),
+                            point,
+                            block.Color
+                        ));
+                        bottomRightBlocks.Add(new SimpleBlock(
+                            "br_child",
+                            new Point(point.X, block.BottomLeft.Y),
+                            new Point(block.TopRight.X, point.Y),
+                            block.Color
+                        ));
+                        topRightBlocks.Add(new SimpleBlock(
+                            "tr_child",
+                            point,
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                        topLeftBlocks.Add(new SimpleBlock(
+                            "tl_child",
+                            new Point(block.BottomLeft.X, point.Y),
+                            new Point(point.X, block.TopRight.Y),
+                            block.Color
+                        ));
+                    }
+                    else if (block.BottomLeft.X <= point.X && 
+                        point.X <= block.TopRight.X &&
+                        point.Y < block.BottomLeft.Y)
+                    {
+                        topLeftBlocks.Add(new SimpleBlock(
+                            "case2_tl_child",
+                            block.BottomLeft.Clone(),
+                            new Point(point.X, block.TopRight.Y),
+                            block.Color
+                        ));
+                        topRightBlocks.Add(new SimpleBlock(
+                            "case2_tr_child",
+                            new Point(point.X, block.BottomLeft.Y),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                    else if (block.BottomLeft.X <= point.X &&
+                        point.X <= block.TopRight.X &&
+                        point.Y > block.TopRight.Y)
+                    {
+                        bottomLeftBlocks.Add(new SimpleBlock(
+                            "case8_bl_child",
+                            block.BottomLeft.Clone(),
+                            new Point(point.X, block.TopRight.Y),
+                            block.Color
+                        ));
+                        bottomRightBlocks.Add(new SimpleBlock(
+                            "case8_br_child",
+                            new Point(point.X, block.BottomLeft.Y),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                    else if (block.BottomLeft.Y <= point.Y &&
+                        point.Y <= block.TopRight.Y &&
+                        point.X < block.BottomLeft.X)
+                    {
+                        bottomRightBlocks.Add(new SimpleBlock(
+                            "case4_br_child",
+                            block.BottomLeft.Clone(),
+                            new Point(block.TopRight.X, point.Y),
+                            block.Color
+                        ));
+                        topRightBlocks.Add(new SimpleBlock(
+                            "case4_tr_child",
+                            new Point(block.BottomLeft.X, point.Y),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                    else if (block.BottomLeft.Y <= point.Y &&
+                        point.Y <= block.TopRight.Y &&
+                        point.X > block.TopRight.X)
+                    {
+                        bottomLeftBlocks.Add(new SimpleBlock(
+                            "case6_bl_child",
+                            block.BottomLeft.Clone(),
+                            new Point(block.TopRight.X, point.Y),
+                            block.Color
+                        ));
+                        topLeftBlocks.Add(new SimpleBlock(
+                            "case6_br_child",
+                            new Point(block.BottomLeft.X, point.Y),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                }
+
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".0",
+                    cBlock.BottomLeft.Clone(),
+                    point.Clone(),
+                    bottomLeftBlocks.ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".1",
+                    new Point(point.X, cBlock.BottomLeft.Y),
+                    new Point(cBlock.TopRight.X, point.Y),
+                    bottomRightBlocks.ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".2",
+                    point.Clone(),
+                    cBlock.TopRight.Clone(),
+                    topRightBlocks.ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".3",
+                    new Point(cBlock.BottomLeft.X, point.Y),
+                    new Point(point.X, cBlock.TopRight.Y),
+                    topLeftBlocks.ToArray()
+                ));
+
             }
+
+            canvas.Blocks.Remove(blockId);
+            newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
 
             instructions.Push(new Snack(new PointCutInstruction(blockId, point), cost, oldBlock, newBlocks.Select(block => block.ID)));
 
