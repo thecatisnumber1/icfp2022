@@ -40,7 +40,7 @@ namespace Core
         public Picasso(Image img)
         {
             image = img;
-            canvas = new Canvas(image.Width, image.Height, new RGBA());
+            canvas = new Canvas(image.Width, image.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.
             canvasSize = canvas.Size;
             renderer = new Renderer(canvas, image);
             instructions = new Stack<Snack>();
