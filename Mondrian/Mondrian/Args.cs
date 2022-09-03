@@ -19,7 +19,7 @@ namespace Mondrian
             string? algorithm = null;
             string? user = null;
             int minProblemNumber = 1;
-            int maxProblemNumber = 15;
+            int maxProblemNumber = Problems.ProblemCount();
 
             for (int i = 0; i < args.Length; i++)
             {

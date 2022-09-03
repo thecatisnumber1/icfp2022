@@ -14,6 +14,7 @@ namespace Mondrian
     public class Problems
     {
         private static string? problemsDir = null;
+        private static int? problemCount = null;
 
         public static Core.Image GetProblem(int num)
         {
@@ -52,7 +53,7 @@ namespace Mondrian
 
         public static int ProblemCount()
         {
-            throw new NotImplementedException();
+            return problemCount ??= Directory.GetFiles(ProblemsDirectory()).Length;
         }
 
         private static string ProblemsDirectory()
