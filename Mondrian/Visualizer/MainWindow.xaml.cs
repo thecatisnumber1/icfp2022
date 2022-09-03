@@ -260,7 +260,9 @@ namespace Visualizer
             LoggerBase logger = new UILogger(this, _tokenSource.Token);
 
             // Load image etc.
-            CoreImage ci = Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+            int problemNum = int.Parse(ProblemSelector.SelectedItem.ToString());
+            CoreImage ci = Problems.GetProblem(problemNum);
+            InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
             _problemWidth = ci.Width;
             _problemHeight = ci.Height;
 
@@ -268,7 +270,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(new Picasso(ci), new AI.AIArgs(), logger);
+                solver.Invoke(new Picasso(ci, initialConfig), new AI.AIArgs(), logger);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
