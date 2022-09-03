@@ -24,5 +24,10 @@
                 block.Color
                )).ToArray();
         }
+
+        public ComplexBlock Clone()
+        {
+            return new ComplexBlock(ID, BottomLeft.Clone(), TopRight.Clone(), SubBlocks.Select(block => block.Clone()).ToArray());
+        }
     }
 }

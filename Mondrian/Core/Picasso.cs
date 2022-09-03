@@ -26,7 +26,13 @@ namespace Core
             public Snack(Instruction instruction, int cost, Block removed, IEnumerable<string> added)
                 : this(instruction, cost, new List<Block>() { removed }, added)
             { }
+
+            public Snack(Instruction instruction, int cost, IEnumerable<Block> removed, string added)
+                : this(instruction, cost, removed, new List<string>() { added })
+            { }
         }
+
+        private int topLevelIdCounter = 0;
 
         private readonly Canvas canvas;
         private readonly int canvasSize;
@@ -141,7 +147,10 @@ namespace Core
                 newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
             }
 
-            //... TBD complexblocks
+            if (oldBlock is ComplexBlock cBlock)
+            {
+                throw new Exception("Point Cut of Complext Blocks not implemented yet");
+            }
 
             instructions.Push(new Snack(new PointCutInstruction(blockId, point), cost, oldBlock, newBlocks.Select(block => block.ID)));
 
@@ -181,12 +190,56 @@ namespace Core
                     sBlock.TopRight.Clone(),
                     sBlock.Color
                 ));
-
-                canvas.Blocks.Remove(sBlock.ID);
-                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
             }
 
-            //... TBD complexblocks
+            if (oldBlock is ComplexBlock cBlock)
+            {
+                var leftBlocks = new List<SimpleBlock>();
+                var rightBlocks = new List<SimpleBlock>();
+
+                foreach (var block in cBlock.SubBlocks)
+                {
+                    if (block.BottomLeft.X >= lineNumber)
+                    {
+                        rightBlocks.Add(block);
+                    }
+                    else if (block.TopRight.X <= lineNumber)
+                    {
+                        leftBlocks.Add(block);
+                    }
+                    else
+                    {
+                        leftBlocks.Add(new SimpleBlock(
+                            "child",
+                            block.BottomLeft.Clone(),
+                            new Point(lineNumber, block.TopRight.Y),
+                            block.Color
+                        ));
+                        rightBlocks.Add(new SimpleBlock(
+                            "child",
+                            new Point(lineNumber, block.BottomLeft.Y),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                }
+
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".0",
+                    cBlock.BottomLeft.Clone(),
+                    new Point(lineNumber, cBlock.TopRight.Y),
+                    leftBlocks.ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".1",
+                    new Point(lineNumber, cBlock.BottomLeft.Y),
+                    cBlock.TopRight.Clone(),
+                    rightBlocks.ToArray()
+                ));
+            }
+
+            canvas.Blocks.Remove(blockId);
+            newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
 
             instructions.Push(new Snack(new VerticalCutInstruction(blockId, lineNumber), cost, oldBlock, newBlocks.Select(block => block.ID)));
 
@@ -226,19 +279,140 @@ namespace Core
                     sBlock.TopRight.Clone(),
                     sBlock.Color
                 ));
-
-                canvas.Blocks.Remove(sBlock.ID);
-                newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
             }
 
-            //... TBD complexblocks
+            if (oldBlock is ComplexBlock cBlock)
+            {
+                var bottomBlocks = new List<SimpleBlock>();
+                var topBlocks = new List<SimpleBlock>();
+
+                foreach (var block in cBlock.SubBlocks)
+                {
+                    if (block.BottomLeft.Y >= lineNumber)
+                    {
+                        topBlocks.Add(block);
+                    }
+                    else if (block.TopRight.Y <= lineNumber)
+                    {
+                        bottomBlocks.Add(block);
+                    }
+                    else
+                    {
+                        bottomBlocks.Add(new SimpleBlock(
+                            "child",
+                            block.BottomLeft.Clone(),
+                            new Point(block.TopRight.X, lineNumber),
+                            block.Color
+                        ));
+                        topBlocks.Add(new SimpleBlock(
+                            "child",
+                            new Point(block.BottomLeft.X, lineNumber),
+                            block.TopRight.Clone(),
+                            block.Color
+                        ));
+                    }
+                }
+
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".0",
+                    cBlock.BottomLeft.Clone(),
+                    new Point(cBlock.TopRight.X, lineNumber),
+                    bottomBlocks.ToArray()
+                ));
+                newBlocks.Add(new ComplexBlock(
+                    cBlock.ID + ".1",
+                    new Point(cBlock.BottomLeft.X, lineNumber),
+                    cBlock.TopRight.Clone(),
+                    topBlocks.ToArray()
+                ));
+            }
+
+            canvas.Blocks.Remove(blockId);
+            newBlocks.ForEach(block => canvas.Blocks[block.ID] = block);
 
             instructions.Push(new Snack(new HorizontalCutInstruction(blockId, lineNumber), cost, oldBlock, newBlocks.Select(block => block.ID)));
 
             return newBlocks;
         }
 
-        public RGBA AverageTargetColor(Block block)
+        public ComplexBlock Merge(string blockId1, string blockId2)
+        {
+            if (!canvas.Blocks.ContainsKey(blockId1))
+            {
+                throw new Exception($"Unknown blockId1 [{blockId1}]");
+            }
+
+            if (!canvas.Blocks.ContainsKey(blockId2))
+            {
+                throw new Exception($"Unknown blockId2 [{blockId2}]");
+            }
+
+            var oldBlock1 = canvas.Blocks[blockId1];
+            var oldBlock2 = canvas.Blocks[blockId2];
+
+            int cost = GetCost(InstructionType.Merge, Math.Max(oldBlock1.Size.GetScalarSize(), oldBlock2.Size.GetScalarSize()), canvasSize);
+            totalInstructionCost += cost;
+
+            bool bottomToTop = (oldBlock1.BottomLeft.Y == oldBlock2.TopRight.Y || oldBlock1.TopRight.Y == oldBlock2.BottomLeft.Y) &&
+                    oldBlock1.BottomLeft.X == oldBlock2.BottomLeft.X &&
+                    oldBlock1.TopRight.X == oldBlock2.TopRight.X;
+
+            bool leftToRight = (oldBlock1.BottomLeft.X == oldBlock2.TopRight.X || oldBlock1.TopRight.X == oldBlock2.BottomLeft.X) &&
+                    oldBlock1.BottomLeft.Y == oldBlock2.BottomLeft.Y &&
+                    oldBlock1.TopRight.Y == oldBlock2.TopRight.Y;
+
+            if (!bottomToTop && !leftToRight)
+            {
+                throw new Exception($"Blocks [{blockId1}] and [{blockId2}] are not mergable.");
+            }
+
+            topLevelIdCounter++;
+            Point newBottomLeft, newTopRight;
+
+            if (bottomToTop)
+            {
+                if (oldBlock1.BottomLeft.Y < oldBlock2.BottomLeft.Y)
+                {
+                    newBottomLeft = oldBlock1.BottomLeft;
+                    newTopRight = oldBlock2.TopRight;
+                }
+                else
+                {
+                    newBottomLeft = oldBlock2.BottomLeft;
+                    newTopRight = oldBlock1.TopRight;
+                }
+            }
+            else
+            {
+                if (oldBlock1.BottomLeft.X < oldBlock2.BottomLeft.X)
+                {
+                    newBottomLeft = oldBlock1.BottomLeft;
+                    newTopRight = oldBlock2.TopRight;
+                }
+                else
+                {
+                    newBottomLeft = oldBlock2.BottomLeft;
+                    newTopRight = oldBlock1.TopRight;
+                }
+            }
+
+            var newBlock = new ComplexBlock(
+                    $"{topLevelIdCounter}",
+                    newBottomLeft.Clone(),
+                    newTopRight.Clone(),
+                    oldBlock1.GetChildren().Concat(oldBlock2.GetChildren()).Select(block => block.Clone()).ToArray()
+                );
+
+            canvas.Blocks.Remove(blockId1);
+            canvas.Blocks.Remove(blockId2);
+            canvas.Blocks[newBlock.ID] = newBlock;
+
+            instructions.Push(new Snack(new MergeInstruction(blockId1, blockId2), cost, new List<Block>() { oldBlock1, oldBlock2 }, newBlock.ID));
+
+            return newBlock;
+        }
+
+            public RGBA AverageTargetColor(Block block)
         {
             return TargetImage.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
         }

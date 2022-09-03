@@ -14,5 +14,10 @@
         {
             return new SimpleBlock[] { this };
         }
+
+        public SimpleBlock Clone()
+        {
+            return new SimpleBlock(ID, BottomLeft.Clone(), TopRight.Clone(), Color);
+        }
     }
 }
