@@ -35,7 +35,7 @@
 
             foreach (var block in blocks)
             {
-                if (!block.HasRendered)
+                if (!block.HasRendered || blocks.Count(x => x.ID == block.ID) > 1)
                 {
                     RenderBlock(block);
                 }
