@@ -276,7 +276,7 @@ namespace Visualizer
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
 
             // Make sure to copy this into other implementations.
-            ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: { totalInstructionCost / (double)score * 100.0}";
+            ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
         }
 
         private static RGBA[] BlocksToRGBAArray(List<SimpleBlock> blocks, int width, int height)
