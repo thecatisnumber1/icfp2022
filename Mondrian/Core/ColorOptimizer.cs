@@ -8,9 +8,9 @@ namespace Core
 {
     public class ColorOptimizer
     {
-        public List<RGBA?> ChooseColors(List<Rectangle> regions)
+        public List<RGBA?> ChooseColors(List<Rectangle> regions, Image target)
         {
-            return new();
+            return (from r in regions select (RGBA?)target.AverageColor(r)).ToList();
         }
     }
 }
