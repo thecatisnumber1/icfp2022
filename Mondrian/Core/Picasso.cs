@@ -46,10 +46,19 @@ namespace Core
         public readonly Image TargetImage;
         private readonly Renderer renderer;
 
-        public Picasso(Image img, InitialConfig? initialConfig)
+        public Picasso(Image img, InitialConfig? initialConfig = null)
         {
             TargetImage = img;
-            canvas = new Canvas(TargetImage.Width, TargetImage.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.
+
+            if (initialConfig != null)
+            {
+                canvas = new Canvas(initialConfig);
+            }
+            else
+            {
+                canvas = new Canvas(TargetImage.Width, TargetImage.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.
+            }
+
             canvasSize = canvas.Size;
             renderer = new Renderer(canvas, TargetImage);
             instructions = new Stack<Snack>();
