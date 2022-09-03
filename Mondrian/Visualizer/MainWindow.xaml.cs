@@ -32,6 +32,7 @@ namespace Visualizer
         // Solver running in the visualizer goo
         private Task _solverTask;
         private CancellationTokenSource _tokenSource;
+        private Picasso _problem;
 
         private int _problemWidth;
         private int _problemHeight;
@@ -118,6 +119,16 @@ namespace Visualizer
             b.EndInit();
 
             ReferenceImage.Source = b;
+
+            int problemNum = int.Parse(ProblemSelector.SelectedItem.ToString());
+            CoreImage ci = Problems.GetProblem(problemNum);
+            InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
+            _problemWidth = ci.Width;
+            _problemHeight = ci.Height;
+
+            _problem = new Picasso(ci, initialConfig);
+
+            RenderImage(_problem.AllSimpleBlocks.ToList());
         }
 
         public void RenderImage(CoreImage image)
@@ -322,17 +333,13 @@ namespace Visualizer
             LoggerBase logger = new UILogger(this, _tokenSource.Token);
 
             // Load image etc.
-            int problemNum = int.Parse(ProblemSelector.SelectedItem.ToString());
-            CoreImage ci = Problems.GetProblem(problemNum);
-            InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
-            _problemWidth = ci.Width;
-            _problemHeight = ci.Height;
+
 
             _solverTask = Task.Run(() =>
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(new Picasso(ci, initialConfig), new AI.AIArgs(), logger);
+                solver.Invoke(_problem, new AI.AIArgs(), logger);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
