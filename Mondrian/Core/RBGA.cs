@@ -21,5 +21,18 @@
         {
             return $"[{R}, {G}, {B}, {A}]";
         }
+
+        public static bool operator == (RGBA a, RGBA b)
+        {
+            return (a.R == b.R
+                && a.G == b.G
+                && a.B == b.B
+                && a.A == b.A);
+        }
+
+        public static bool operator != (RGBA a, RGBA b)
+        {
+            return !(a == b);
+        }
     }
 }
