@@ -51,10 +51,17 @@ namespace Visualizer
             // Parse args
             for (int i = 0; i < args.Length; i++)
             {
-                if (args[i].Equals("/Problem", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-problem", StringComparison.OrdinalIgnoreCase))
                 {
                     string problemId = args[++i];
                     SelectProblemFromId(problemStrings, problemId);
+                    continue;
+                }
+
+                if (args[i].Equals("-a", StringComparison.OrdinalIgnoreCase))
+                {
+                    string solverName = args[++i];
+                    SelectSolverFromName(solverList, solverName);
                     continue;
                 }
 
@@ -82,6 +89,18 @@ namespace Visualizer
                 if (problemStrings[idx].ToString().Equals(problemId, StringComparison.OrdinalIgnoreCase))
                 {
                     ProblemSelector.SelectedIndex = idx;
+                    break;
+                }
+            }
+        }
+
+        private void SelectSolverFromName(string[] solverList, string solverName)
+        {
+            for (int idx = 0; idx < solverList.Length; idx++)
+            {
+                if (solverList[idx].ToString().Equals(solverName, StringComparison.OrdinalIgnoreCase))
+                {
+                    SolverSelector.SelectedIndex = idx;
                     break;
                 }
             }
