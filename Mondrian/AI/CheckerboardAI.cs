@@ -47,14 +47,14 @@ namespace AI
 
         public static (int instructionsUsed, List<Block> subBlocks) SamplePoint(Picasso picasso, Block block, Point p)
         {
-            List<Block> subBlocks = picasso.PointCut(block, p).ToList();
+            List<Block> subBlocks = picasso.PointCut(block.ID, p).ToList();
 
             // Color each the average of the canvas underneath
             int instructionsUsed = 0;
             foreach (Block subBlock in subBlocks)
             {
                 int preScore = picasso.Score;
-                picasso.Color(subBlock, picasso.AverageTargetColor(subBlock));
+                picasso.Color(subBlock.ID, picasso.AverageTargetColor(subBlock));
                 int postScore = picasso.Score;
                 if (postScore < preScore)
                 {

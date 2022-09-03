@@ -10,7 +10,7 @@ namespace Tests
         public void BlackSquareTest()
         {
             Picasso p = new Picasso(Problems.GetProblem(1));
-            p.Color(p.AllBlocks.First(), new RGBA(0, 0, 0, 255));
+            p.Color(p.AllBlocks.First().ID, new RGBA(0, 0, 0, 255));
             Assert.AreEqual(170668, p.Score);
         }
 
@@ -20,8 +20,8 @@ namespace Tests
             // cut [0] [355, 113]
             // color[0.0][131, 131, 132, 255]
             Picasso p = new Picasso(Problems.GetProblem(1));
-            List<Block> blocks = p.PointCut(p.AllBlocks.First(), new Point(355, 113)).ToList();
-            p.Color(blocks[0], new RGBA(131, 131, 132, 255));
+            List<Block> blocks = p.PointCut(p.AllBlocks.First().ID, new Point(355, 113)).ToList();
+            p.Color(blocks[0].ID, new RGBA(131, 131, 132, 255));
             Assert.AreEqual(178128, p.Score);
         }
 
@@ -35,10 +35,10 @@ namespace Tests
             color [0.2] [100, 116, 137, 255]
             */
             Picasso p = new Picasso(Problems.GetProblem(1));
-            List<Block> blocks = p.PointCut(p.AllBlocks.First(), new Point(200, 200)).ToList();
-            p.Color(blocks[0], new RGBA(100, 116, 137, 255));
-            p.Color(blocks[1], new RGBA(68, 99, 141, 255));
-            p.Color(blocks[2], new RGBA(100, 116, 137, 255));
+            List<Block> blocks = p.PointCut(p.AllBlocks.First().ID, new Point(200, 200)).ToList();
+            p.Color(blocks[0].ID, new RGBA(100, 116, 137, 255));
+            p.Color(blocks[1].ID, new RGBA(68, 99, 141, 255));
+            p.Color(blocks[2].ID, new RGBA(100, 116, 137, 255));
             Assert.AreEqual(152672, p.Score);
         }
 
@@ -57,15 +57,15 @@ namespace Tests
             color [0.0.3] [122, 122, 122, 255]  
             */
             Picasso p = new Picasso(Problems.GetProblem(1));
-            List<Block> blocks = p.PointCut(p.AllBlocks.First(), new Point(200, 200)).ToList();
-            p.Color(blocks[0], new RGBA(100, 116, 137, 255));
-            p.Color(blocks[1], new RGBA(68, 99, 141, 255));
-            p.Color(blocks[2], new RGBA(100, 116, 137, 255));
-            blocks = p.PointCut(blocks[0], new Point(100, 100)).ToList();
-            p.Color(blocks[0], new RGBA(78, 110, 152, 255));
-            p.Color(blocks[1], new RGBA(78, 109, 152, 255));
-            p.Color(blocks[2], new RGBA(122, 122, 123, 255));
-            p.Color(blocks[3], new RGBA(122, 122, 122, 255));
+            List<Block> blocks = p.PointCut(p.AllBlocks.First().ID, new Point(200, 200)).ToList();
+            p.Color(blocks[0].ID, new RGBA(100, 116, 137, 255));
+            p.Color(blocks[1].ID, new RGBA(68, 99, 141, 255));
+            p.Color(blocks[2].ID, new RGBA(100, 116, 137, 255));
+            blocks = p.PointCut(blocks[0].ID, new Point(100, 100)).ToList();
+            p.Color(blocks[0].ID, new RGBA(78, 110, 152, 255));
+            p.Color(blocks[1].ID, new RGBA(78, 109, 152, 255));
+            p.Color(blocks[2].ID, new RGBA(122, 122, 123, 255));
+            p.Color(blocks[3].ID, new RGBA(122, 122, 122, 255));
             Assert.AreEqual(152060, p.Score);
         }
 
@@ -86,19 +86,23 @@ namespace Tests
             color [0.0.0.0] [28, 92, 177, 255]
             color [0.0.0.1] [15, 78, 164, 255]
             */
+
+            // From Test 2
             Picasso p = new Picasso(Problems.GetProblem(1));
-            List<Block> blocks = p.PointCut(p.AllBlocks.First(), new Point(200, 200)).ToList();
-            p.Color(blocks[0], new RGBA(100, 116, 137, 255));
-            p.Color(blocks[1], new RGBA(68, 99, 141, 255));
-            p.Color(blocks[2], new RGBA(100, 116, 137, 255));
-            blocks = p.PointCut(blocks[0], new Point(100, 100)).ToList();
-            p.Color(blocks[0], new RGBA(78, 110, 152, 255));
-            p.Color(blocks[1], new RGBA(78, 109, 152, 255));
-            p.Color(blocks[2], new RGBA(122, 122, 123, 255));
-            p.Color(blocks[3], new RGBA(122, 122, 122, 255));
-            blocks = p.PointCut(blocks[0], new Point(50, 50)).ToList();
-            p.Color(blocks[0], new RGBA(28, 92, 177, 255));
-            p.Color(blocks[1], new RGBA(15, 78, 164, 255));
+            List<Block> blocks = p.PointCut(p.AllBlocks.First().ID, new Point(200, 200)).ToList();
+            p.Color(blocks[0].ID, new RGBA(100, 116, 137, 255));
+            p.Color(blocks[1].ID, new RGBA(68, 99, 141, 255));
+            p.Color(blocks[2].ID, new RGBA(100, 116, 137, 255));
+            blocks = p.PointCut(blocks[0].ID, new Point(100, 100)).ToList();
+            p.Color(blocks[0].ID, new RGBA(78, 110, 152, 255));
+            p.Color(blocks[1].ID, new RGBA(78, 109, 152, 255));
+            p.Color(blocks[2].ID, new RGBA(122, 122, 123, 255));
+            p.Color(blocks[3].ID, new RGBA(122, 122, 122, 255));
+
+            // New stuff for Test 3
+            blocks = p.PointCut(blocks[0].ID, new Point(50, 50)).ToList();
+            p.Color(blocks[0].ID, new RGBA(28, 92, 177, 255));
+            p.Color(blocks[1].ID, new RGBA(15, 78, 164, 255));
             Assert.AreEqual(151591, p.Score);
         }
     }

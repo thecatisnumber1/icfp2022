@@ -72,33 +72,47 @@ namespace Core
 
         public IEnumerable<SimpleBlock> AllSimpleBlocks => canvas.Simplify();
 
-        public void Color(Block block, RGBA color)
+        public void Color(string blockId, RGBA color)
         {
-            int cost = GetCost(InstructionType.Color, block.Size.GetScalarSize(), canvasSize);
-            totalInstructionCost += cost;
-
-            canvas.Blocks[block.ID] = new SimpleBlock(
-                block.ID,
-                block.BottomLeft.Clone(),
-                block.TopRight.Clone(),
-                color);
-
-            instructions.Push(new Snack(new ColorInstruction(block.ID, color), cost, block, block.ID));
-        }
-
-        public IEnumerable<Block> PointCut(Block block, Point point)
-        {
-            if (!point.IsStrictlyInside(block.BottomLeft, block.TopRight))
+            if (!canvas.Blocks.ContainsKey(blockId))
             {
-                throw new Exception($"Point is outside [{block.ID}]! Block is from {block.BottomLeft} to {block.TopRight}, point is at {point}!");
+                throw new Exception($"Unknown blockId [{blockId}]");
             }
 
-            int cost = GetCost(InstructionType.PointCut, block.Size.GetScalarSize(), canvasSize);
+            var oldBlock = canvas.Blocks[blockId];
+
+            int cost = GetCost(InstructionType.Color, oldBlock.Size.GetScalarSize(), canvasSize);
+            totalInstructionCost += cost;
+
+            canvas.Blocks[blockId] = new SimpleBlock(
+                blockId,
+                oldBlock.BottomLeft.Clone(),
+                oldBlock.TopRight.Clone(),
+                color);
+
+            instructions.Push(new Snack(new ColorInstruction(blockId, color), cost, oldBlock, blockId));
+        }
+
+        public IEnumerable<Block> PointCut(string blockId, Point point)
+        {
+            if (!canvas.Blocks.ContainsKey(blockId))
+            {
+                throw new Exception($"Unknown blockId [{blockId}]");
+            }
+
+            var oldBlock = canvas.Blocks[blockId];
+
+            if (!point.IsStrictlyInside(oldBlock.BottomLeft, oldBlock.TopRight))
+            {
+                throw new Exception($"Point is outside [{blockId}]! Block is from {oldBlock.BottomLeft} to {oldBlock.TopRight}, point is at {point}!");
+            }
+
+            int cost = GetCost(InstructionType.PointCut, oldBlock.Size.GetScalarSize(), canvasSize);
             totalInstructionCost += cost;
 
             var newBlocks = new List<Block>();
 
-            if (block is SimpleBlock sBlock) {
+            if (oldBlock is SimpleBlock sBlock) {
                 newBlocks.Add(new SimpleBlock(
                     sBlock.ID + ".0",
                     sBlock.BottomLeft.Clone(),
@@ -129,7 +143,7 @@ namespace Core
 
             //... TBD complexblocks
 
-            instructions.Push(new Snack(new PointCutInstruction(block.ID, point), cost, block, newBlocks.Select(block => block.ID)));
+            instructions.Push(new Snack(new PointCutInstruction(blockId, point), cost, oldBlock, newBlocks.Select(block => block.ID)));
 
             return newBlocks;
         }

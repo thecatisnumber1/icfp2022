@@ -24,7 +24,7 @@ namespace AI
 
             if (block.Size.X <= MinRes.X && block.Size.Y <= MinRes.Y)
             {
-                picasso.Color(block, targetColor);
+                picasso.Color(block.ID, targetColor);
                 Logger.Render(picasso);
                 return;
             }
@@ -34,7 +34,7 @@ namespace AI
                 // Get center point of block for cut
                 Point blockCenter = new Point(block.BottomLeft.X + block.Size.X / 2, block.BottomLeft.Y + block.Size.Y / 2);
                 // Split in 4 and recurse.
-                List<SimpleBlock> blocks = picasso.PointCut(block, blockCenter).Cast<SimpleBlock>().ToList();
+                List<SimpleBlock> blocks = picasso.PointCut(block.ID, blockCenter).Cast<SimpleBlock>().ToList();
 
                 foreach(var subBlock in blocks)
                 {
