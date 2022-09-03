@@ -16,6 +16,7 @@ using System.Threading;
 using Mondrian;
 using System.Threading.Tasks;
 using Core;
+using System.Windows.Media.Media3D;
 
 namespace Visualizer
 {
@@ -97,13 +98,6 @@ namespace Visualizer
             b.EndInit();
 
             ReferenceImage.Source = b;
-
-            _problemWidth = (int)b.Width;
-            _problemHeight = (int)b.Height;
-
-            CoreImage ci = Mondrian.Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
-
-            RenderImage(ci);
         }
 
         public void RenderImage(CoreImage image)
@@ -146,14 +140,61 @@ namespace Visualizer
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
 
-        public void RenderImage(Picasso image)
+        public void RenderImage(List<SimpleBlock> blocks)
         {
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
+            int width = _problemWidth;
+            int height = _problemHeight;
 
-            Bitmap b = new Bitmap(_problemWidth, _problemHeight, pf);
+            RGBA[] pixels = BlocksToRGBAArray(blocks, width, height);
+
+            byte[] imageBytes = new byte[width * height * bitDepth];
+            for (int i = 0; i < pixels.Length; i++ )
+            {
+                Core.RGBA pixel = pixels[i];
+
+                int baseIndex = i * bitDepth;
+                imageBytes[baseIndex + 2] = (byte)pixel.R;
+                imageBytes[baseIndex + 1] = (byte)pixel.G;
+                imageBytes[baseIndex] = (byte)pixel.B;
+                imageBytes[baseIndex + 3] = (byte)pixel.A;
+            }
+
+            Bitmap b = new Bitmap(width, height, pf);
+            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
+            IntPtr ptr = bmpData.Scan0;
+            Int32 psize = bmpData.Stride * height;
+            System.Runtime.InteropServices.Marshal.Copy(imageBytes, 0, ptr, psize);
+            b.UnlockBits(bmpData);
+
+            // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
+            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                b.GetHbitmap(),
+                IntPtr.Zero,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
 
+        private static RGBA[] BlocksToRGBAArray(List<SimpleBlock> blocks, int width, int height)
+        {
+            RGBA[] frame = new RGBA[width * height];
+            foreach (var block in blocks)
+            {
+                var frameTopLeft = new Core.Point(block.BottomLeft.X, height - block.TopRight.Y);
+                var frameBottomRight = new Core.Point(block.TopRight.X, height - block.BottomLeft.Y);
+
+                for (var y = frameTopLeft.Y; y < frameBottomRight.Y; y++)
+                {
+                    for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
+                    {
+                        frame[y * width + x] = block.Color;
+                    }
+                }
+            }
+
+            return frame;
+        }
 
         internal void LogMessage(string message)
         {
@@ -201,12 +242,17 @@ namespace Visualizer
 
             // Load image etc.
             CoreImage ci = Problems.GetProblem(int.Parse(ProblemSelector.SelectedItem.ToString()));
+            _problemWidth = ci.Width;
+            _problemHeight = ci.Height;
 
             _solverTask = Task.Run(() =>
             {
                 Interlocked.Increment(ref _runCount);
 
                 solver.Invoke(new Picasso(ci), new AI.AIArgs(), logger);
+
+                // This will totally screw me over later, but it lets a final Render call go through.
+                Task.Delay(50).Wait();
 
                 // Solver has finished, but if they ran to completion, the UI logger might still be pumping. Kill it with our token.
                 if (!_tokenSource.IsCancellationRequested)
