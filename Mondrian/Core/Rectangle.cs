@@ -10,7 +10,12 @@ namespace Core
     {
         public readonly Point BottomLeft, TopRight;
 
-        //public Rectangle
+        public static Rectangle FromPoints(Point p1, Point p2)
+        {
+            int left = Math.Min(p1.X, p2.X);
+            int bottom = Math.Min(p1.Y, p2.Y);
+            return new Rectangle(new Point(left, bottom), new Point(p1.X + p2.X - left, p1.Y + p2.Y - bottom));
+        }
 
         public Rectangle(Point bottomLeft, Point topRight)
         {
