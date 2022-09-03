@@ -2,6 +2,8 @@
 {
     public abstract class LoggerBase
     {
+        public Stack<Rectangle> UserSelectedRectangles = new Stack<Rectangle>();
+
         public abstract void Render(Picasso image);
 
         public abstract void LogMessage(string logString);

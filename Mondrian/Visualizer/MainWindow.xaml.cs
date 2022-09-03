@@ -33,6 +33,7 @@ namespace Visualizer
         private Task _solverTask;
         private CancellationTokenSource _tokenSource;
         private Picasso _problem;
+        private UILogger _loggerInstance;
 
         private int _problemWidth;
         private int _problemHeight;
@@ -335,7 +336,7 @@ namespace Visualizer
 
             _tokenSource = new CancellationTokenSource();
 
-            LoggerBase logger = new UILogger(this, _tokenSource.Token);
+            _loggerInstance = new UILogger(this, _tokenSource.Token);
 
             // Load image etc.
             ResetProblem(); // Wipe all state.
@@ -344,7 +345,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, new AI.AIArgs(), logger);
+                solver.Invoke(_problem, new AI.AIArgs(), _loggerInstance);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
@@ -404,6 +405,8 @@ namespace Visualizer
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
                 LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
                 LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
+
+                _loggerInstance.UserSelectedRectangles.Push(result);
 
                 _areaSelectOrigin = null;
                 return;
