@@ -77,19 +77,26 @@ namespace AI
                     {
                         var vc = virtualCanvas[x, y];
                         var vi = virtualImage[x, y];
-                        var targetColor = vi.PreferredColors.First();
 
-                        if (vc.Color != targetColor)
+                        foreach (var targetColor in vi.PreferredColors)
                         {
-                            var (xx, yy) = FindSwapPartner(x + 1, y, targetColor);
-                            
+                            if (vc.Color == targetColor)
+                            {
+                                break;
+                            }
+
+                            var (xx, yy) = FindSwapPartner(x, y, targetColor);
+
                             if (xx != -1)
                             {
                                 PerformSwap(x, y, xx, yy);
-                                Thread.Sleep(100);
                                 logger.Render(picasso);
+                                Thread.Sleep(100);
+                                break;
                             }
                         }
+
+                        
                     }
                 }
 
@@ -100,9 +107,13 @@ namespace AI
             {
                 for (int y = startY; y < virtualSize; y++)
                 {
-                    for (int x = startX; x < virtualSize; x++)
+                    for (int x = (y == startY ? startX + 1 : 0); x < virtualSize; x++)
                     {
-                        if (virtualCanvas[x, y].Color == targetColor)
+                        var color = virtualCanvas[x, y].Color;
+
+                        //logger.LogMessage($"Checking {x}, {y}");
+                        
+                        if (color == targetColor && virtualImage[x, y].PreferredColors.First() != color)
                         {
                             return (x, y);
                         }
@@ -114,6 +125,7 @@ namespace AI
 
             private void PerformSwap(int x1, int y1, int x2, int y2)
             {
+                //logger.LogMessage($"Swap {x1},{y1} with {x2},{y2}");
                 var block1 = virtualCanvas[x1, y1];
                 var block2 = virtualCanvas[x2, y2];
 
@@ -125,12 +137,13 @@ namespace AI
 
             private void GenerateVirtualImage(Image image, IEnumerable<RGBA> colorSet)
             {
-                // Dumb version, take color of middle pixel
                 for (int x = 0; x < virtualSize; x++)
                 {
                     for (int y = 0; y < virtualSize; y++)
                     {
-                        var color = image[x * blockSize + blockSize / 2, y * blockSize + blockSize / 2];
+                        var color = image.AverageColor(new Rectangle(
+                            new Point(x*blockSize, y*blockSize),
+                            new Point(x*blockSize+blockSize, y*blockSize+blockSize)));
 
                         virtualImage[x, y] = new VirtualBlock()
                         {
