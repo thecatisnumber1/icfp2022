@@ -16,14 +16,14 @@ namespace AI
             private class VirtualBlock
             {
                 public RGBA Color { get; set; }
-                public string? ActualBlockId { get; set; }
-                public IEnumerable<RGBA>? PreferredColors { get; set; }
+                public string ActualBlockId { get; set; }
+                public bool Locked { get; set; }
             }
 
             private Picasso picasso;
             private LoggerBase logger;
             private VirtualBlock[,] virtualCanvas;
-            private VirtualBlock[,] virtualImage;
+            private List<RGBA>[,] virtualImage;
             private int virtualSize;
             private int blockSize;
 
@@ -57,7 +57,7 @@ namespace AI
                 virtualSize = picasso.TargetImage.Width / blockSize;
 
                 virtualCanvas = new VirtualBlock[virtualSize, virtualSize];
-                virtualImage = new VirtualBlock[virtualSize, virtualSize];
+                virtualImage = new List<RGBA>[virtualSize, virtualSize];
             }
 
             public void Initialize()
@@ -67,40 +67,51 @@ namespace AI
 
                 GenerateVirtualCanvas(blocks);
                 GenerateVirtualImage(picasso.TargetImage, colorSet);
-            }
 
-            public void Run()
-            {
+                // Initial lock pass
                 for (int y = 0; y < virtualSize; y++)
                 {
                     for (int x = 0; x < virtualSize; x++)
                     {
                         var vc = virtualCanvas[x, y];
                         var vi = virtualImage[x, y];
+                        vc.Locked = vc.Color == vi.First();
+                    }
+                }
 
-                        foreach (var targetColor in vi.PreferredColors)
+                logger.Render(picasso);
+            }
+
+            public void Run()
+            {
+                for (int pri = 0; pri < virtualImage[0,0].Count; pri++)
+                {
+                    PriorityPass(pri);
+                }
+
+                logger.LogMessage(string.Join("\n", picasso.SerializeInstructions()));
+            }
+
+            private void PriorityPass(int priority)
+            {
+                for (int y = 0; y < virtualSize; y++)
+                {
+                    for (int x = 0; x < virtualSize; x++)
+                    {
+                        var vc = virtualCanvas[x, y];
+                        var targetColor = virtualImage[x, y][priority];
+
+                        if (!vc.Locked && vc.Color != targetColor)
                         {
-                            if (vc.Color == targetColor)
-                            {
-                                break;
-                            }
-
                             var (xx, yy) = FindSwapPartner(x, y, targetColor);
 
                             if (xx != -1)
                             {
                                 PerformSwap(x, y, xx, yy);
-                                logger.Render(picasso);
-                                Thread.Sleep(100);
-                                break;
                             }
                         }
-
-                        
                     }
                 }
-
-                logger.Render(picasso);
             }
 
             private (int, int) FindSwapPartner(int startX, int startY, RGBA targetColor)
@@ -109,11 +120,7 @@ namespace AI
                 {
                     for (int x = (y == startY ? startX + 1 : 0); x < virtualSize; x++)
                     {
-                        var color = virtualCanvas[x, y].Color;
-
-                        //logger.LogMessage($"Checking {x}, {y}");
-                        
-                        if (color == targetColor && virtualImage[x, y].PreferredColors.First() != color)
+                        if (!virtualCanvas[x, y].Locked && virtualCanvas[x, y].Color == targetColor)
                         {
                             return (x, y);
                         }
@@ -129,9 +136,33 @@ namespace AI
                 var block1 = virtualCanvas[x1, y1];
                 var block2 = virtualCanvas[x2, y2];
 
+                /*if (x1 == 0 && y1 == 0)
+                {
+                    logger.LogMessage($"Swapping as the first: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
+                }
+                else if (block1.ActualBlockId == "0")
+                {
+                    logger.LogMessage($"Swapping as the first by blockId 0: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
+                }
+
+
+                if (x2 == 0 && y2 == 0)
+                {
+                    logger.LogMessage($"Swapping as the second: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
+                }
+                else if (block2.ActualBlockId == "0")
+                {
+                    logger.LogMessage($"Swapping as the second by blockId 0: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
+                }*/
+
                 picasso.Swap(block1.ActualBlockId, block2.ActualBlockId);
                 virtualCanvas[x1, y1] = block2;
                 virtualCanvas[x2, y2] = block1;
+
+                block2.Locked = true;
+
+                logger.Render(picasso);
+                //Thread.Sleep(100);
             }
 
 
@@ -145,11 +176,7 @@ namespace AI
                             new Point(x*blockSize, y*blockSize),
                             new Point(x*blockSize+blockSize, y*blockSize+blockSize)));
 
-                        virtualImage[x, y] = new VirtualBlock()
-                        {
-                            Color = color,
-                            PreferredColors = colorSet.OrderBy(x => x.Diff(color)).ToArray()
-                        };
+                        virtualImage[x, y] = colorSet.OrderBy(x => x.Diff(color)).ToList();
                     }
                 }
             }
