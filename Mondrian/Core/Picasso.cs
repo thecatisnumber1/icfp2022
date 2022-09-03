@@ -34,15 +34,15 @@ namespace Core
         private readonly Stack<Snack> instructions;
         private int totalInstructionCost;
 
-        private readonly Image image;
+        public readonly Image TargetImage;
         private readonly Renderer renderer;
 
         public Picasso(Image img)
         {
-            image = img;
-            canvas = new Canvas(image.Width, image.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.
+            TargetImage = img;
+            canvas = new Canvas(TargetImage.Width, TargetImage.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.
             canvasSize = canvas.Size;
-            renderer = new Renderer(canvas, image);
+            renderer = new Renderer(canvas, TargetImage);
             instructions = new Stack<Snack>();
         }
 
@@ -150,7 +150,7 @@ namespace Core
 
         public RGBA AverageTargetColor(Block block)
         {
-            return image.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
+            return TargetImage.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
         }
 
         public void Undo()
