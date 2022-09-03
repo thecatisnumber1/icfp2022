@@ -1,14 +1,24 @@
-﻿using System.Reflection;
-
-namespace Core
+﻿namespace Core
 {
-    public static class Renderer
+    public class Renderer
     {
-        public static int GetImageCost(Canvas canvas, Image image)
+        private readonly Canvas canvas;
+        private readonly RGBA[] imageFrame;
+        private readonly RGBA[] canvasFrame;
+        private readonly HashSet<int> hasPixelDiff;
+
+        public Renderer(Canvas canvas, Image image)
         {
-            var cFrame = CanvasToFrame(canvas);
-            var iFrame = ImageToFrame(image);
-            return ImageDiff(iFrame, cFrame);
+            this.canvas = canvas;
+            imageFrame = ImageToFrame(image);
+            canvasFrame = new RGBA[canvas.Width * canvas.Height];
+            hasPixelDiff = new HashSet<int>();
+        }
+
+        public int GetImageCost()
+        {
+            CanvasToFrame();
+            return ImageDiff();
         }
 
         private static RGBA[] ImageToFrame(Image image)
@@ -25,40 +35,46 @@ namespace Core
         }
 
         // Was Painter.draw(canvas)
-        private static RGBA[] CanvasToFrame(Canvas canvas)
+        private void CanvasToFrame()
         {
             var blocks = canvas.Simplify();
-            var frame = new RGBA[canvas.Width * canvas.Height];
             int size = 0;
 
             foreach (var block in blocks)
             {
-                var frameTopLeft = new Point(block.BottomLeft.X, canvas.Height - block.TopRight.Y);
-                var frameBottomRight = new Point(block.TopRight.X, canvas.Height - block.BottomLeft.Y);
-                size += (frameBottomRight.X - frameTopLeft.X) * (frameBottomRight.Y - frameTopLeft.Y);
-
-                for (var y = frameTopLeft.Y; y < frameBottomRight.Y; y++)
+                if (!block.HasRendered)
                 {
-                    for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
+                    block.HasRendered = true;
+                    var frameTopLeft = new Point(block.BottomLeft.X, canvas.Height - block.TopRight.Y);
+                    var frameBottomRight = new Point(block.TopRight.X, canvas.Height - block.BottomLeft.Y);
+                    size += (frameBottomRight.X - frameTopLeft.X) * (frameBottomRight.Y - frameTopLeft.Y);
+
+                    for (var y = frameTopLeft.Y; y < frameBottomRight.Y; y++)
                     {
-                        frame[y * canvas.Width + x] = block.Color;
+                        for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
+                        {
+                            canvasFrame[y * canvas.Width + x] = block.Color;
+                            hasPixelDiff.Remove(y * canvas.Width + x);
+                        }
                     }
                 }
             }
-
-            return frame;
         }
 
         // was SimilarityChecker.imageDiff
-        private static int ImageDiff(RGBA[] f1, RGBA[] f2)
+        private int ImageDiff()
         { 
             double diff = 0;
             double alpha = 0.005;
-            for (int index = 0; index < f1.Length; index++)
+            for (int index = 0; index < imageFrame.Length; index++)
             {
-                var p1 = f1[index];
-                var p2 = f2[index];
-                diff += PixelDiff(p1, p2);
+                if (!hasPixelDiff.Contains(index))
+                {
+                    var p1 = imageFrame[index];
+                    var p2 = canvasFrame[index];
+                    diff += PixelDiff(p1, p2);
+                    hasPixelDiff.Add(index);
+                }
             }
             return (int)Math.Round(diff * alpha);
           }

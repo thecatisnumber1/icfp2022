@@ -7,6 +7,8 @@
         public Point TopRight { get; private set; }
         public Point Size { get; private set; }
 
+        public bool HasRendered { get; internal set; }
+
         public Block(string id, Point bottomLeft, Point topRight)
         {
             ID = id;

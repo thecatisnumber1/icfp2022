@@ -1,5 +1,4 @@
 ﻿using static Core.InstructionCostCalculator;
-using static Core.Renderer;
 
 namespace Core
 {
@@ -36,12 +35,14 @@ namespace Core
         private int totalInstructionCost;
 
         private readonly Image image;
+        private readonly Renderer renderer;
 
         public Picasso(Image img)
         {
             image = img;
             canvas = new Canvas(image.Width, image.Height, new RGBA());
             canvasSize = canvas.Size.GetScalarSize();
+            renderer = new Renderer(canvas, image);
             instructions = new Stack<Snack>();
         }
 
@@ -49,7 +50,7 @@ namespace Core
         {
             get
             {
-                return totalInstructionCost + GetImageCost(canvas, image);
+                return totalInstructionCost + renderer.GetImageCost();
             }
         }
 
@@ -142,6 +143,7 @@ namespace Core
 
             foreach (var block in snack.RemovedBlocks)
             {
+                block.HasRendered = false;
                 canvas.Blocks[block.ID] = block;
             }
         }
