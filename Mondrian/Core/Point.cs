@@ -1,4 +1,6 @@
-﻿namespace Core
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Core
 {
     public struct Point
     {
@@ -60,6 +62,26 @@
         public override string ToString()
         {
             return $"[{X}, {Y}]";
+        }
+
+        public static bool operator ==(Point p1, Point p2)
+        {
+            return p1.X == p2.X && p1.Y == p2.Y;
+        }
+
+        public static bool operator !=(Point p1, Point p2)
+        {
+            return !(p1 == p2);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj != null && obj is Point p && this == p;
+        }
+
+        public override int GetHashCode()
+        {
+            return X ^ Y * 314159;
         }
     }
 }
