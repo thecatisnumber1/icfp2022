@@ -46,14 +46,14 @@ namespace AI
                 int preScore = canvas.Score;
                 canvas.Color(subBlock, canvas.AverageTargetColor(subBlock));
                 int postScore = canvas.Score;
-                //if (postScore < preScore)
-                //{
+                if (postScore < preScore)
+                {
                     instructionsUsed++;
-                //}
-                //else
-                //{
-                //    canvas.Undo(1);
-                //}
+                }
+                else
+                {
+                    canvas.Undo(1);
+                }
             }
 
             return (canvas.Score, instructionsUsed, subBlocks);
