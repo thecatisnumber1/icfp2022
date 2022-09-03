@@ -46,7 +46,7 @@ namespace Core
         public readonly Image TargetImage;
         private readonly Renderer renderer;
 
-        public Picasso(Image img)
+        public Picasso(Image img, InitialConfig? initialConfig)
         {
             TargetImage = img;
             canvas = new Canvas(TargetImage.Width, TargetImage.Height, new RGBA(255, 255, 255, 255)); // This is FFFFFFFF per spec.

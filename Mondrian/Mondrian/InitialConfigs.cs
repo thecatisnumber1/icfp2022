@@ -15,6 +15,11 @@ namespace Mondrian
 
         public static InitialConfig? LoadFile(string path)
         {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
             string text = File.ReadAllText(path);
             return JsonSerializer.Deserialize<InitialConfig>(text);
         }
