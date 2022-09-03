@@ -68,7 +68,7 @@
                     {
                         var p1 = image[x, y];
                         var p2 = renderCanvas[x, y];
-                        pixelCost[x, y] = PixelDiff(p1, p2);
+                        pixelCost[x, y] = p1.Diff(p2);
                     }
 
                     cost += pixelCost[x, y];

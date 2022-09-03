@@ -24,15 +24,27 @@
 
         public static bool operator == (RGBA a, RGBA b)
         {
-            return (a.R == b.R
-                && a.G == b.G
-                && a.B == b.B
-                && a.A == b.A);
+            // Perf: use internal Byte instead of property Int
+            return (a.r == b.r
+                && a.g == b.g
+                && a.b == b.b
+                && a.a == b.a);
         }
 
         public static bool operator !=(RGBA a, RGBA b)
         {
             return !(a == b);
+        }
+
+        public double Diff(RGBA other)
+        {
+            // Perf: use internal Byte instead of property Int
+            var rDist = (r - other.r) * (r - other.r);
+            var gDist = (g - other.g) * (g - other.g);
+            var bDist = (b - other.b) * (b - other.b);
+            var aDist = (a - other.a) * (a - other.a);
+            var distance = Math.Sqrt(rDist + gDist + bDist + aDist);
+            return distance;
         }
     }
 }
