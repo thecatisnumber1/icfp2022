@@ -33,7 +33,7 @@ namespace Visualizer
         private Task _solverTask;
         private CancellationTokenSource _tokenSource;
         private Picasso _problem;
-        private UILogger _loggerInstance;
+        private Stack<Core.Rectangle> _selectedRects;
 
         private int _problemWidth;
         private int _problemHeight;
@@ -133,6 +133,7 @@ namespace Visualizer
             _problemHeight = ci.Height;
 
             _problem = new Picasso(ci, initialConfig);
+            _selectedRects = new Stack<Core.Rectangle>();
 
             RenderImage(_problem.AllSimpleBlocks.ToList());
         }
@@ -336,7 +337,7 @@ namespace Visualizer
 
             _tokenSource = new CancellationTokenSource();
 
-            _loggerInstance = new UILogger(this, _tokenSource.Token);
+            LoggerBase logger = new UILogger(this, _tokenSource.Token, _selectedRects);
 
             // Load image etc.
             ResetProblem(); // Wipe all state.
@@ -345,7 +346,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, new AI.AIArgs(), _loggerInstance);
+                solver.Invoke(_problem, new AI.AIArgs(), logger);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
@@ -406,7 +407,8 @@ namespace Visualizer
                 LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
                 LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
-                _loggerInstance.UserSelectedRectangles.Push(result);
+                _selectedRects.Push(result);
+                LogVisualizerMessage($"Stack size: {_selectedRects.Count}");
 
                 _areaSelectOrigin = null;
                 return;

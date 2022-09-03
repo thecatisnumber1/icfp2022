@@ -22,11 +22,12 @@ namespace Visualizer
 
         public bool Busy => Interlocked.Read(ref _rendering) != 0;
 
-        public UILogger(MainWindow mainUI, CancellationToken cancellationToken)
+        public UILogger(MainWindow mainUI, CancellationToken cancellationToken, Stack<Rectangle> selectedRects)
         {
             _mainUi = mainUI;
             _cancellationToken = cancellationToken;
             _renderPump = Task.Run(RenderLoop);
+            UserSelectedRectangles = selectedRects ?? UserSelectedRectangles;
         }
 
         private void RenderLoop()
