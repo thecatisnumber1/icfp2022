@@ -9,7 +9,7 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public static readonly int LEVELS = 5;
+        public static readonly int LEVELS = 6;
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
