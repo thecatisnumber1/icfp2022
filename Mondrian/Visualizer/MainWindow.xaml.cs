@@ -12,12 +12,12 @@ using CoreImage = Core.Image;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Rectangle = System.Drawing.Rectangle;
 using Image = System.Drawing.Image;
+using DrawingPoint = System.Windows.Point;
 using System.Threading;
 using Mondrian;
 using System.Threading.Tasks;
 using Core;
-using System.Windows.Media.Media3D;
-using System.Windows.Markup;
+using System.Windows.Media;
 
 namespace Visualizer
 {
@@ -36,6 +36,11 @@ namespace Visualizer
 
         private int _problemWidth;
         private int _problemHeight;
+
+        // Special request fun zone
+        // Area select
+        private DrawingPoint? _areaSelectOrigin;
+        private bool _leftMouseDown;
 
         public MainWindow(string[] args)
         {
@@ -333,7 +338,7 @@ namespace Visualizer
             LoggerBase logger = new UILogger(this, _tokenSource.Token);
 
             // Load image etc.
-
+            ResetProblem(); // Wipe all state.
 
             _solverTask = Task.Run(() =>
             {
@@ -360,6 +365,79 @@ namespace Visualizer
                     ResetSolverButtons();
                 });
             });
+        }
+
+        private void ManualMove_OnMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_leftMouseDown)
+            {
+                return;
+            }
+
+            _leftMouseDown = true;
+
+            // Necessary to deal with hit-testing and rounding garbage
+            DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+            Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
+            CursorPositionText.Text = $"{gridPosition} Mouse down";
+
+            // Only overwrite this if it's not already set.
+            _areaSelectOrigin ??= cursorPosition;
+        }
+
+        private void ManualMove_OnMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _leftMouseDown = false;
+
+            if (_areaSelectOrigin != null)
+            {
+                // Log area
+                ManualDrawCanvas.Children.Clear();
+
+                DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+                Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
+                Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
+
+                Core.Point bottomLeft = new Core.Point(Math.Min(startPosition.X, endPosition.X), Math.Min(startPosition.Y, endPosition.Y));
+                Core.Point topRight = new Core.Point(Math.Max(startPosition.X, endPosition.X), Math.Max(startPosition.Y, endPosition.Y));
+
+                Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
+                LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
+                LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
+
+                _areaSelectOrigin = null;
+                return;
+            }
+        }
+
+        private void ManualMove_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+            Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
+            CursorPositionText.Text = gridPosition.ToString();
+
+            ManualDrawCanvas.Children.Clear();
+
+            // Handle area select
+            if (_areaSelectOrigin != null)
+            {
+                DrawingPoint origin = _areaSelectOrigin.Value;
+                // Draw a box
+                var selectionRect = new System.Windows.Shapes.Rectangle();
+                selectionRect.Stroke = new SolidColorBrush(Colors.Navy);
+                selectionRect.StrokeThickness = 0.1;
+                selectionRect.Fill = new SolidColorBrush(Colors.LightSkyBlue);
+                selectionRect.Opacity = 0.40;
+                // Be less stupid about this...
+                selectionRect.Width = Math.Abs(cursorPosition.X - origin.X);
+                selectionRect.Height = Math.Abs(cursorPosition.Y - origin.Y);
+                System.Windows.Controls.Canvas.SetLeft(selectionRect, Math.Min(cursorPosition.X, origin.X));
+                System.Windows.Controls.Canvas.SetTop(selectionRect, Math.Min(cursorPosition.Y, origin.Y));
+
+                ManualDrawCanvas.Children.Add(selectionRect);
+
+                return;
+            }
         }
     }
 }
