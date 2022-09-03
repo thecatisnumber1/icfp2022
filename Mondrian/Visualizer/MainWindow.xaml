@@ -29,7 +29,7 @@
                 <Image x:Name="ReferenceImage" Grid.Column="1" Margin="5" />
                 <!-- We just put our manual cursor here on top of the image -->
                 <Canvas x:Name="ManualDrawCanvas" Grid.Column="1" Margin="5" />
-                <Grid Background="Transparent" Grid.Column="1" Margin="5" x:Name="MouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" />
+                <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" />
             </Grid>
         </Viewbox>
         <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">

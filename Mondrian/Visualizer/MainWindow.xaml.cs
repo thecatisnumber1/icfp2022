@@ -128,7 +128,7 @@ namespace Visualizer
 
             int problemNum = int.Parse(ProblemSelector.SelectedItem.ToString());
             CoreImage ci = Problems.GetProblem(problemNum);
-            InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
+            InitialConfig initialConfig = InitialConfigs.GetInitialConfig(problemNum);
             _problemWidth = ci.Width;
             _problemHeight = ci.Height;
 
@@ -400,8 +400,13 @@ namespace Visualizer
                 Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
                 Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
 
-                Core.Point bottomLeft = new Core.Point(Math.Min(startPosition.X, endPosition.X), Math.Min(startPosition.Y, endPosition.Y));
-                Core.Point topRight = new Core.Point(Math.Max(startPosition.X, endPosition.X), Math.Max(startPosition.Y, endPosition.Y));
+                // Also clamp
+                Core.Point bottomLeft = new Core.Point(
+                    Math.Min(_problemWidth, Math.Max(0, Math.Min(startPosition.X, endPosition.X))),
+                    Math.Min(_problemHeight, Math.Max(0, Math.Min(startPosition.Y, endPosition.Y))));
+                Core.Point topRight = new Core.Point(
+                    Math.Min(_problemWidth, Math.Max(0, Math.Max(startPosition.X, endPosition.X))),
+                    Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
 
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
                 LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
