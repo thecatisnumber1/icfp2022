@@ -5,14 +5,14 @@
         private readonly Canvas canvas;
         private readonly RGBA[] imageFrame;
         private readonly RGBA[] canvasFrame;
-        private readonly HashSet<int> hasPixelDiff;
+        private readonly Dictionary<int, double> pixelDiffs;
 
         public Renderer(Canvas canvas, Image image)
         {
             this.canvas = canvas;
             imageFrame = ImageToFrame(image);
             canvasFrame = new RGBA[canvas.Width * canvas.Height];
-            hasPixelDiff = new HashSet<int>();
+            pixelDiffs = new Dictionary<int, double>();
         }
 
         public int GetImageCost()
@@ -54,7 +54,7 @@
                         for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
                         {
                             canvasFrame[y * canvas.Width + x] = block.Color;
-                            hasPixelDiff.Remove(y * canvas.Width + x);
+                            pixelDiffs.Remove(y * canvas.Width + x);
                         }
                     }
                 }
@@ -68,13 +68,14 @@
             double alpha = 0.005;
             for (int index = 0; index < imageFrame.Length; index++)
             {
-                if (!hasPixelDiff.Contains(index))
+                if (!pixelDiffs.ContainsKey(index))
                 {
                     var p1 = imageFrame[index];
                     var p2 = canvasFrame[index];
-                    diff += PixelDiff(p1, p2);
-                    hasPixelDiff.Add(index);
+                    pixelDiffs[index] = PixelDiff(p1, p2);
                 }
+
+                diff += pixelDiffs[index];
             }
             return (int)Math.Round(diff * alpha);
           }
