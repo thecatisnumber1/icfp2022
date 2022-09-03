@@ -16,6 +16,7 @@ namespace Mondrian
         private static Dictionary<string, Solver> solvers = new()
         {
             ["Checkerboard"] = CheckerboardAI.Solve,
+            ["Scanner"] = ScannerAI.Solve,
             ["AllCuts"] = AllCutsAI.Solve,
         };
 

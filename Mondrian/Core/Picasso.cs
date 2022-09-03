@@ -175,7 +175,7 @@ namespace Core
             }
 
             int cost = GetCost(InstructionType.VerticalCut, oldBlock.Size.GetScalarSize(), canvasSize);
-            totalInstructionCost += cost;
+            TotalInstructionCost += cost;
 
             var newBlocks = new List<Block>();
 
@@ -264,7 +264,7 @@ namespace Core
             }
 
             int cost = GetCost(InstructionType.HorizontalCut, oldBlock.Size.GetScalarSize(), canvasSize);
-            totalInstructionCost += cost;
+            TotalInstructionCost += cost;
 
             var newBlocks = new List<Block>();
 
