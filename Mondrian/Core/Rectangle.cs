@@ -30,5 +30,10 @@
         public int Height => Top - Bottom;
 
         public int Area => Width * Height;
+
+        public override string ToString()
+        {
+            return $"({BottomLeft},{TopRight})";
+        }
     }
 }

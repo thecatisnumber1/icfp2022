@@ -413,7 +413,7 @@ namespace Visualizer
                 LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
                 _selectedRects.Push(result);
-                LogVisualizerMessage($"Stack size: {_selectedRects.Count}");
+                RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
 
                 _areaSelectOrigin = null;
                 return;
@@ -459,6 +459,18 @@ namespace Visualizer
         {
             SolverResumeButton.IsEnabled = false;
             _loggerInstance.Paused = false;
+        }
+
+        private void Execute_Undo(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        {
+            if (_selectedRects != null)
+            {
+                if (_selectedRects.TryPop(out Core.Rectangle popped))
+                {
+                    LogVisualizerMessage($"Popped {popped}");
+                    RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
+                }
+            }
         }
     }
 }

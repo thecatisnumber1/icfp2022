@@ -8,6 +8,9 @@
         Title="Visualize This" Height="450" Width="800"
         WindowState="Maximized"
         d:DesignHeight="1080" d:DesignWidth="1920">
+    <Window.CommandBindings>
+        <CommandBinding Command="Undo" Executed="Execute_Undo" />
+    </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -49,6 +52,7 @@
             <Button Content="Run" x:Name="SolverRunButton" Click="SolverRunButton_OnClick" IsEnabled="False" />
             <Button Content="Resume" x:Name="SolverResumeButton" Click="SolverResumeButton_OnClick" IsEnabled="False" />
             <Separator />
+            <TextBlock x:Name="RectStack" />
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>
