@@ -12,7 +12,6 @@ namespace Mondrian
     {
         public delegate void Solver(Core.Picasso picasso, AIArgs args, LoggerBase logger);
 
-
         private static Dictionary<string, Solver> solvers = new()
         {
             ["Checkerboard"] = CheckerboardAI.Solve,
@@ -22,6 +21,7 @@ namespace Mondrian
             ["LinePrinterV"] = LinePrinter.SolveV,
             ["DotMatrix"] = LinePrinter.SolveD,
             ["Swapmaster"] = Swapmaster5000.Solve,
+            ["HillClimberAI"] = HillClimberAI.Solve,
         };
 
         public static Solver GetSolver(string algorithm)
