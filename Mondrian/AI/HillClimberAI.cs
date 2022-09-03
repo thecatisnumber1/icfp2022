@@ -13,12 +13,8 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Rectangle> rects = new List<Rectangle>();
-            for (int i = 0; i < 20; i++)
-            {
-                rects.Add(RandomRect());
-            }
-
+            logger.Break();
+            List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             ClimbThatHill(picasso, rects, logger);
         }
 
