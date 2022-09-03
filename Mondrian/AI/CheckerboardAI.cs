@@ -9,14 +9,16 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public static readonly int LEVELS = 6;
+        public static readonly int LEVELS = 7;
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            RecursiveSolveBad(picasso, picasso.AllBlocks.First(), 0, picasso.Score);
+            picasso.Color(picasso.AllBlocks.First().ID, picasso.AverageTargetColor(picasso.AllBlocks.First()));
+            RecursiveSolve(picasso, picasso.AllBlocks.First(), 0, picasso.Score);
+            logger.Render(picasso);
         }
 
-        public static bool RecursiveSolveBad(Picasso picasso, Block block, int level, int scoreToBeat)
+        public static bool RecursiveSolve(Picasso picasso, Block block, int level, int scoreToBeat)
         {
             if (level == LEVELS)
             {
@@ -33,7 +35,7 @@ namespace AI
             }
             foreach (Block subBlock in sample.subBlocks)
             {
-                improved |= RecursiveSolveBad(picasso, subBlock, level + 1, scoreToBeat);
+                improved |= RecursiveSolve(picasso, subBlock, level + 1, scoreToBeat);
             }
 
             if (!improved)

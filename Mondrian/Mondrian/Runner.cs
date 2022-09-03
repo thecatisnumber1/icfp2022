@@ -26,12 +26,9 @@ namespace Mondrian
                 Image problem = Problems.GetProblem(problemNum);
                 Core.Picasso picasso = new Picasso(problem);
                 solver(picasso, args.aiArgs, logger);
-                logger.LogMessage($"Score = {picasso.Score}, elapsed = {watch.Elapsed}");
+                logger.LogMessage($"Score = {picasso.Score}, instructionCost = {(picasso.TotalInstructionCost / ((double)picasso.Score)).ToString("0.00")} = {watch.Elapsed}");
                 List<string> instructions = picasso.SerializeInstructions();
-                foreach (string s in instructions)
-                {
-                    Console.WriteLine(s);
-                }
+                File.WriteAllLines($"{problemNum}.sol", instructions);
             }
         }
     }

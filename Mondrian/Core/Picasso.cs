@@ -38,7 +38,10 @@ namespace Core
         private readonly int canvasSize;
 
         private readonly Stack<Snack> instructions;
-        private int totalInstructionCost;
+        public int TotalInstructionCost
+        {
+            get; private set;
+        }
 
         public readonly Image TargetImage;
         private readonly Renderer renderer;
@@ -56,7 +59,7 @@ namespace Core
         {
             get
             {
-                return totalInstructionCost + renderer.GetImageCost();
+                return TotalInstructionCost + renderer.GetImageCost();
             }
         }
 
@@ -88,7 +91,7 @@ namespace Core
             var oldBlock = canvas.Blocks[blockId];
 
             int cost = GetCost(InstructionType.Color, oldBlock.Size.GetScalarSize(), canvasSize);
-            totalInstructionCost += cost;
+            TotalInstructionCost += cost;
 
             canvas.Blocks[blockId] = new SimpleBlock(
                 blockId,
@@ -114,7 +117,7 @@ namespace Core
             }
 
             int cost = GetCost(InstructionType.PointCut, oldBlock.Size.GetScalarSize(), canvasSize);
-            totalInstructionCost += cost;
+            TotalInstructionCost += cost;
 
             var newBlocks = new List<Block>();
 
@@ -422,7 +425,7 @@ namespace Core
             if (instructions.Count > 0)
             {
                 var snack = instructions.Pop();
-                totalInstructionCost -= snack.Cost;
+                TotalInstructionCost -= snack.Cost;
 
                 foreach (string id in snack.AddedIds)
                 {
