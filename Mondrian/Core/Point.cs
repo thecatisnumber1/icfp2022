@@ -49,7 +49,7 @@
 
         public Point Add(Point other)
         {
-            return new Point(X + other.X, Y + Y);
+            return new Point(X + other.X, Y + other.Y);
         }
 
         public Point Subtract(Point other)

@@ -30,7 +30,7 @@
                 && a.A == b.A);
         }
 
-        public static bool operator != (RGBA a, RGBA b)
+        public static bool operator !=(RGBA a, RGBA b)
         {
             return !(a == b);
         }

@@ -41,7 +41,7 @@ namespace Core
         {
             image = img;
             canvas = new Canvas(image.Width, image.Height, new RGBA());
-            canvasSize = canvas.Size.GetScalarSize();
+            canvasSize = canvas.Size;
             renderer = new Renderer(canvas, image);
             instructions = new Stack<Snack>();
         }
@@ -93,8 +93,8 @@ namespace Core
             if (block is SimpleBlock sBlock) {
                 newBlocks.Add(new SimpleBlock(
                     sBlock.ID + ".0",
-                    sBlock.BottomLeft,
-                    point,
+                    sBlock.BottomLeft.Clone(),
+                    point.Clone(),
                     sBlock.Color
                 ));
                 newBlocks.Add(new SimpleBlock(
@@ -105,8 +105,8 @@ namespace Core
                 ));
                 newBlocks.Add(new SimpleBlock(
                     sBlock.ID + ".2",
-                    point,
-                    sBlock.TopRight,
+                    point.Clone(),
+                    sBlock.TopRight.Clone(),
                     sBlock.Color
                 ));
                 newBlocks.Add(new SimpleBlock(
@@ -133,24 +133,27 @@ namespace Core
 
         public void Undo()
         {
-            var snack = instructions.Pop();
-            totalInstructionCost -= snack.Cost;
-
-            foreach (string id in snack.AddedIds)
+            if (instructions.Count > 0)
             {
-                canvas.Blocks.Remove(id);
-            }
+                var snack = instructions.Pop();
+                totalInstructionCost -= snack.Cost;
 
-            foreach (var block in snack.RemovedBlocks)
-            {
-                block.HasRendered = false;
-                canvas.Blocks[block.ID] = block;
+                foreach (string id in snack.AddedIds)
+                {
+                    canvas.Blocks.Remove(id);
+                }
+
+                foreach (var block in snack.RemovedBlocks)
+                {
+                    block.HasRendered = false;
+                    canvas.Blocks[block.ID] = block;
+                }
             }
         }
 
         public void Undo(int count)
         {
-            for (int i = 0; i < count && instructions.Count > 0; i++)
+            for (int i = 0; i < count; i++)
             {
                 Undo();
             }

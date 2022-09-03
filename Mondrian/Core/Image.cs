@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core
+﻿namespace Core
 {
     public class Image
     {
-        private RGBA[,] pixels;
-        private SumElement[,] summedAreaTable;
+        private readonly RGBA[,] pixels;
+        private readonly SumElement[,] summedAreaTable;
 
         public Image(RGBA[,] pixels)
         {
