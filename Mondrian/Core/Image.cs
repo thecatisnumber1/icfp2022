@@ -71,7 +71,7 @@ namespace Core
             {
                 int div(int num)
                 {
-                    return (2 * num + denom + 1) / (2 * denom);
+                    return (2 * num + denom - 1) / (2 * denom);
                 }
 
                 return new RGBA(div(e.R), div(e.G), div(e.B), div(e.A));
