@@ -560,7 +560,78 @@ namespace Core
             return newBlock;
         }
 
-            public RGBA AverageTargetColor(Block block)
+        public IEnumerable<Block> Swap(string blockId1, string blockId2)
+        {
+            if (!canvas.Blocks.ContainsKey(blockId1))
+            {
+                throw new Exception($"Unknown blockId1 [{blockId1}]");
+            }
+
+            if (!canvas.Blocks.ContainsKey(blockId2))
+            {
+                throw new Exception($"Unknown blockId2 [{blockId2}]");
+            }
+
+            var oldBlock1 = canvas.Blocks[blockId1];
+            var oldBlock2 = canvas.Blocks[blockId2];
+
+            int cost = GetCost(InstructionType.Swap, oldBlock1.Size.GetScalarSize(), canvasSize);
+            TotalInstructionCost += cost;
+
+            if (oldBlock1.Size.X != oldBlock2.Size.X || oldBlock1.Size.Y != oldBlock2.Size.Y)
+            {
+                throw new Exception($"Blocks are not the same size, [${blockId1}] has size[${oldBlock1.Size.X},${oldBlock1.Size.Y}] while [${blockId2}] has size[${oldBlock2.Size.X},${oldBlock2.Size.Y}]");
+            }
+
+            Block newBlock1, newBlock2;
+
+            if (oldBlock1 is SimpleBlock sBlock1)
+            {
+                newBlock2 = new SimpleBlock(
+                    blockId1,
+                    oldBlock2.BottomLeft.Clone(),
+                    oldBlock2.TopRight.Clone(),
+                    sBlock1.Color
+                );
+            }
+            else// if (oldBlock1 is ComplexBlock cBlock1)
+            {
+                newBlock2 = new ComplexBlock(
+                    blockId1,
+                    oldBlock2.BottomLeft.Clone(),
+                    oldBlock2.TopRight.Clone(),
+                    ((ComplexBlock)oldBlock1).OffsetChildren(oldBlock2.BottomLeft)
+                );
+            }
+
+            if (oldBlock2 is SimpleBlock sBlock2)
+            {
+                newBlock1 = new SimpleBlock(
+                    blockId2,
+                    oldBlock1.BottomLeft.Clone(),
+                    oldBlock1.TopRight.Clone(),
+                    sBlock2.Color
+                );
+            }
+            else// if (oldBlock2 is ComplexBlock cBlock2)
+            {
+                newBlock1 = new ComplexBlock(
+                    blockId2,
+                    oldBlock1.BottomLeft.Clone(),
+                    oldBlock1.TopRight.Clone(),
+                    ((ComplexBlock)oldBlock2).OffsetChildren(oldBlock1.BottomLeft)
+                );
+            }
+
+            canvas.Blocks[blockId1] = newBlock1;
+            canvas.Blocks[blockId2] = newBlock2;
+
+            instructions.Push(new Snack(new SwapInstruction(blockId1, blockId2), cost, new List<Block>() { oldBlock1, oldBlock2 }, new List<string>() { newBlock1.ID, newBlock2.ID }));
+
+            return new List<Block>() { newBlock1, newBlock2 };
+        }
+
+        public RGBA AverageTargetColor(Block block)
         {
             return TargetImage.AverageColor(new Rectangle(block.BottomLeft, block.TopRight));
         }
