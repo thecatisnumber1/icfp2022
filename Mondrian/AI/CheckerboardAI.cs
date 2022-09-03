@@ -9,48 +9,28 @@ namespace AI
 {
     public class CheckerboardAI
     {
-        public static readonly int SAMPLE_SIZE = 20;
+        //public static readonly int SAMPLE_SIZE = 20;
+        public static readonly int LEVELS = 5;
         public static Random r = new Random();
 
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            Solve(picasso, picasso.AllBlocks.First());
+            RecursiveSolveBad(picasso, picasso.AllBlocks.First(), 0);
         }
 
-        public static void Solve(Picasso picasso, Block block)
+        public static void RecursiveSolveBad(Picasso picasso, Block block, int level)
         {
+            if (level == LEVELS)
+            {
+                return;
+            }
+
             Rectangle rect = new Rectangle(block.BottomLeft, block.TopRight);
-            List<Point> samples = new List<Point>();
-            for (int i = 0; i < SAMPLE_SIZE; i++)
+            Point bestPoint = new Point((block.TopRight.X - block.BottomLeft.X) / 2 + block.BottomLeft.X, (block.TopRight.Y - block.BottomLeft.Y) / 2 + block.BottomLeft.Y);
+            var best = SamplePoint(picasso, block, bestPoint);
+            foreach (Block subBlock in best.subBlocks)
             {
-                if (rect.Left + 1 < rect.Right - 1 && rect.Bottom + 1 < rect.Top - 1)
-                {
-                    samples.Add(new Point(r.Next(rect.Left + 1, rect.Right - 1), r.Next(rect.Bottom + 1, rect.Top - 1)));
-                }
-            }
-
-            int bestScore = picasso.Score;
-            Point? bestPoint = null;
-            foreach (Point p in samples)
-            {
-                var results = SamplePoint(picasso, block, p);
-                if (results.score < bestScore)
-                {
-                    bestScore = results.score;
-                    bestPoint = p;
-                }
-
-                picasso.Undo(results.instructionsUsed);
-            }
-
-
-            if (bestPoint != null)
-            {
-                var best = SamplePoint(picasso, block, bestPoint.Value);
-                foreach (Block subBlock in best.subBlocks)
-                {
-                    Solve(picasso, subBlock);
-                }
+                RecursiveSolveBad(picasso, subBlock, level + 1);
             }
         }
 
@@ -65,16 +45,15 @@ namespace AI
             {
                 int preScore = canvas.Score;
                 canvas.Color(subBlock, canvas.AverageTargetColor(subBlock));
-                //canvas.Color(subBlock, new RGBA(r.Next(255), r.Next(255), r.Next(255), r.Next(255)));
                 int postScore = canvas.Score;
-                if (postScore < preScore)
-                {
+                //if (postScore < preScore)
+                //{
                     instructionsUsed++;
-                }
-                else
-                {
-                    canvas.Undo(1);
-                }
+                //}
+                //else
+                //{
+                //    canvas.Undo(1);
+                //}
             }
 
             return (canvas.Score, instructionsUsed, subBlocks);
