@@ -53,6 +53,7 @@ namespace Core
             if (initialConfig != null)
             {
                 canvas = new Canvas(initialConfig);
+                topLevelIdCounter = int.Parse(initialConfig.blocks.Last().blockId);
             }
             else
             {
