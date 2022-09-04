@@ -18,6 +18,11 @@ namespace Mondrian
                 throw new Exception("Specify algorithm to run.");
             }
 
+            if (args.submit)
+            {
+                Rest.CacheBests();
+            }
+
             var solver = Solvers.GetSolver(args.algorithm);
             for (int problemNum = args.minProblemNumber; problemNum <= args.maxProblemNumber; problemNum++)
             {
@@ -33,7 +38,7 @@ namespace Mondrian
 
                 if (args.submit)
                 {
-                    Rest.Upload(problemNum, String.Join("\n", instructions));
+                    Rest.Upload(problemNum, String.Join("\n", instructions), picasso.Score);
                 }
             }
         }
