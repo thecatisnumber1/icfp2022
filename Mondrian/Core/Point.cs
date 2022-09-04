@@ -9,6 +9,8 @@ namespace Core
         [JsonInclude]
         public readonly int Y;
 
+        public static readonly Point ORIGIN = new(0, 0);
+
         [JsonConstructor]
         public Point(int x = 0, int y = 0)
         {

@@ -17,44 +17,6 @@ namespace Core
 
         public ComplexRegion UnionRegion(Rectangle r)
         {
-            Edge[] rectEdges = new Edge[] {
-                new(r.Left, r.Right, r.Top, true),
-                new(r.Top, r.Bottom, r.Right, false),
-                new(r.Right, r.Left, r.Bottom, true),
-                new(r.Bottom, r.Top, r.Left, false)
-            };
-
-            List<Point>[] intersections = new List<Point>[4];
-            int i;
-            for (i = 0; i < 4; i++) intersections[i] = new();
-
-            Dictionary<Point, Junction> junctions = new();
-            
-            List<List<Edge>> splitRegions = new(regions.Count);
-
-            i = 0;
-            foreach (Edge rectEdge in rectEdges)
-            {
-                foreach (var region in regions)
-                {
-                    List<Edge> splitRegion = new();
-                    foreach (Edge regEdge in region)
-                    {
-                        if (Intersects(regEdge, rectEdge))
-                        {
-                            Point intersection = Intersection(regEdge, rectEdge);
-                            intersections[i].Add(intersection);
-                            splitRegion.AddRange(Split(regEdge, intersection));
-                        }
-                        else
-                        {
-                            splitRegion.Add(regEdge);
-                        }
-                    }
-                }
-                ++i;
-            }
-
             return new();
         }
 
@@ -105,22 +67,16 @@ namespace Core
                         return Math.Max(-1, Math.Min(1, c));
                     }
                     Point diff = End.Subtract(Start);
-                    return new Point(clamp(diff.X), clamp(diff.Y));
+                    var result = new Point(clamp(diff.X), clamp(diff.Y));
+
+                    if (result.ManhattanDist(Point.ORIGIN) != 1) throw new Exception("fun");
+
+                    return result;
                 }
             }
         }
 
-        private record Junction(EdgeList.Node N1, EdgeList.Node N2)
-        {
-            public EdgeList.Node OutputNode
-            {
-                get
-                {
-                    //Point d1 = N1.NextE.
-                    return N1;
-                }
-            }
-        }
+        private record Junction(EdgeList.Node OutputNode, EdgeList.Node InputNode);
 
         private class EdgeList
         {
@@ -144,9 +100,27 @@ namespace Core
                 prev.LinkTo(Head);
             }
 
-            public static void Trace(Junction j)
+            public static List<Point> Trace(Junction initialJunc, Dictionary<Point, Junction> junctions)
             {
-                
+                List<Point> result = new List<Point>();
+
+                Node start = initialJunc.OutputNode;
+                Node curr = start;
+                do
+                {
+                    result.Add(curr.P);
+                    curr = curr.Next;
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+                    if (junctions.TryGetValue(curr.P, out Junction junction))
+                    {
+                        if (junction.InputNode != curr) throw new Exception("fun");
+                        curr = junction.OutputNode;
+                        junctions.Remove(curr.P);
+                    }
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+                } while (curr != start);
+
+                return result;
             }
 
             public Dictionary<Point, Junction> Split(EdgeList other)
@@ -164,6 +138,18 @@ namespace Core
                     Node n2 = SplitEdge(n.Prev, n, iPoint);
                     if (n1.P != n2.P) throw new Exception("fun");
                     if (n1.NextE.isHoriz == n2.NextE.isHoriz) throw new Exception("fun");
+
+                    Point dir1 = n1.NextE.Dir;
+                    Point dir2 = n2.NextE.Dir;
+                    Point dir2ccw = new Point(-dir2.Y, dir2.X);
+
+                    if (dir2ccw != dir1)
+                    {
+                        var temp = n1;
+                        n1 = n2;
+                        n2 = temp;
+                    }
+
                     result.Add(iPoint, new Junction(n1, n2));
                 }
 
