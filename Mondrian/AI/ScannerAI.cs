@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Core;
@@ -19,42 +20,79 @@ namespace AI
             //CheckerboardAI.Solve(picasso, args, new ConsoleLogger());
             //logger.LogMessage($"Scanner score = {scannerScore}, Checkerboard score = {picasso.Score}.");
             //logger.Render(picasso);
+            logger.LogMessage($"Scanner score = {picasso.Score}.");
         }
 
         public static void ScanBlock(Picasso picasso, Block block, LoggerBase logger)
         {
             int bestScore = picasso.Score;
             bool verticalBest = false;
+            bool colorFirstBest = false;
+            bool colorSecondBest = false;
             int index = -1;
+
+            bool colorFirst;
+            bool colorSecond;
+            int movesToUndo;
 
             for (int x = block.BottomLeft.X + 1; x < block.TopRight.X - 1; x++)
             {
+                colorFirst = false;
+                colorSecond = false;
+                movesToUndo = 1;
+
                 List<Block> blocks = picasso.VerticalCut(block.ID, x).ToList();
-                picasso.Color(blocks[0].ID, picasso.AverageTargetColor(blocks[0]));
-                picasso.Color(blocks[1].ID, picasso.AverageTargetColor(blocks[1]));
+                if (ColorAndTest(picasso, blocks[0]))
+                {
+                    colorFirst = true;
+                    ++movesToUndo;
+                }
+                if (ColorAndTest(picasso, blocks[1]))
+                {
+                    colorSecond = true;
+                    ++movesToUndo;
+                }
+
                 if (picasso.Score < bestScore)
                 {
                     verticalBest = true;
+                    colorFirstBest = colorFirst;
+                    colorSecondBest = colorSecond;
                     bestScore = picasso.Score;
                     index = x;
                 }
 
-                picasso.Undo(3);
+                picasso.Undo(movesToUndo);
             }
 
             for (int y = block.BottomLeft.Y + 1; y < block.TopRight.Y - 1; y++)
             {
+                colorFirst = false;
+                colorSecond = false;
+                movesToUndo = 1;
+
                 List<Block> blocks = picasso.HorizontalCut(block.ID, y).ToList();
-                picasso.Color(blocks[0].ID, picasso.AverageTargetColor(blocks[0]));
-                picasso.Color(blocks[1].ID, picasso.AverageTargetColor(blocks[1]));
+                if (ColorAndTest(picasso, blocks[0]))
+                {
+                    colorFirst = true;
+                    ++movesToUndo;
+                }
+                if (ColorAndTest(picasso, blocks[1]))
+                {
+                    colorSecond = true;
+                    ++movesToUndo;
+                }
+
                 if (picasso.Score < bestScore)
                 {
                     verticalBest = false;
+                    colorFirstBest = colorFirst;
+                    colorSecondBest = colorSecond;
                     bestScore = picasso.Score;
                     index = y;
                 }
 
-                picasso.Undo(3);
+                picasso.Undo(movesToUndo);
             }
 
             if (bestScore >= picasso.Score)
@@ -63,24 +101,29 @@ namespace AI
             }
 
             List<Block> nextBlocks;
-            if (verticalBest)
-            {
-                nextBlocks = picasso.VerticalCut(block.ID, index).ToList();
-                picasso.Color(nextBlocks[0].ID, picasso.AverageTargetColor(nextBlocks[0]));
-                picasso.Color(nextBlocks[1].ID, picasso.AverageTargetColor(nextBlocks[1]));
-                logger.Render(picasso);
-            }
-            else
-            {
-                nextBlocks = picasso.HorizontalCut(block.ID, index).ToList();
-                picasso.Color(nextBlocks[0].ID, picasso.AverageTargetColor(nextBlocks[0]));
-                picasso.Color(nextBlocks[1].ID, picasso.AverageTargetColor(nextBlocks[1]));
-                logger.Render(picasso);
+            if (verticalBest) nextBlocks = picasso.VerticalCut(block.ID, index).ToList();
+            else nextBlocks = picasso.HorizontalCut(block.ID, index).ToList();
 
-            }
+            if (colorFirstBest) picasso.Color(nextBlocks[0].ID, picasso.AverageTargetColor(nextBlocks[0]));
+            if (colorSecondBest) picasso.Color(nextBlocks[1].ID, picasso.AverageTargetColor(nextBlocks[1]));
+            logger.Render(picasso);
 
             ScanBlock(picasso, nextBlocks[0], logger);
             ScanBlock(picasso, nextBlocks[1], logger);
         }
+
+        private static bool ColorAndTest(Picasso picasso, Block block)
+        {
+            int tempScore = picasso.Score;
+            picasso.Color(block.ID, picasso.AverageTargetColor(block));
+            if (picasso.Score < tempScore)
+            {
+                return true;
+            }
+
+            picasso.Undo(1);
+            return false;
+        }
+
     }
 }
