@@ -2,6 +2,7 @@
 using Mondrian;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -49,7 +50,8 @@ namespace Visualizer
         private bool _multiClickMode;
 
         private double _unselectedRectOpacity = 0.8;
-        internal bool UseExperimentalRenderer;
+        internal bool UseOldRenderer;
+        private Stopwatch renderTimer = new Stopwatch();
 
         // Brushes for reusing
         private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
@@ -121,9 +123,9 @@ namespace Visualizer
                     _unselectedRectOpacity = Math.Max(0.0, Math.Min(1.0, desiredOpacity));
                 }
 
-                if (args[i].Equals("-useexperimentalrenderer", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-useoldrenderer", StringComparison.OrdinalIgnoreCase))
                 {
-                    UseExperimentalRenderer = true;
+                    UseOldRenderer = true;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
@@ -249,6 +251,8 @@ namespace Visualizer
 
         public void RenderImageFast(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
+            renderTimer.Restart();
+
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
             int width = _problemWidth;
@@ -262,8 +266,6 @@ namespace Visualizer
             previouslyRenderedBlocks ??= new HashSet<SimpleBlock>();
             List<SimpleBlock> unrendered = blocks.Where(b => !previouslyRenderedBlocks.Contains(b)).ToList();
 
-            LogVisualizerMessage($"Full size: {blocks.Count}. Unrendered size: {unrendered.Count()}");
-
             BitmapData bmpData = renderedBitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
 
             foreach (SimpleBlock block in unrendered)
@@ -273,10 +275,10 @@ namespace Visualizer
                 {
                     // Pointer is x * bitdepth + (height - top) * stride, then scan the block top to bottom left to right
                     byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (bmpData.Stride * (height - block.TopRight.Y));
-                    for (int y = block.TopRight.Y - 1; y >= block.BottomLeft.Y; y--)
+                    for (int y = block.Size.Y - 1; y >= 0; y--)
                     {
                         byte* drawptr = ptr;
-                        for (int x = block.BottomLeft.X; x < block.TopRight.X; x++)
+                        for (int x = 0; x < block.Size.X; x++)
                         {
                             RGBA blockPixel = block.Image == null ? block.Color : block.Image[x, y];
 
@@ -304,13 +306,17 @@ namespace Visualizer
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
 
-
             // Make sure to copy this into other implementations.
             ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
+
+            LogVisualizerMessage($"Render took {renderTimer.ElapsedMilliseconds} ms");
+            renderTimer.Stop();
         }
 
         public void RenderImage(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
+            renderTimer.Restart();
+
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
             int width = _problemWidth;
@@ -346,6 +352,9 @@ namespace Visualizer
 
             // Make sure to copy this into other implementations.
             ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
+
+            LogVisualizerMessage($"Render took {renderTimer.ElapsedMilliseconds} ms");
+            renderTimer.Stop();
         }
 
         private static RGBA[] BlocksToRGBAArray(List<SimpleBlock> blocks, int width, int height)

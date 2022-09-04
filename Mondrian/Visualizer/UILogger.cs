@@ -65,13 +65,13 @@ namespace Visualizer
 
                         if (toRender != null)
                         {
-                            if (_mainUi.UseExperimentalRenderer)
+                            if (_mainUi.UseOldRenderer)
                             {
-                                _mainUi.RenderImageFast(toRender, score, totalCost);
+                                _mainUi.RenderImage(toRender, score, totalCost);
                             }
                             else
                             {
-                                _mainUi.RenderImage(toRender, score, totalCost);
+                                _mainUi.RenderImageFast(toRender, score, totalCost);
                             }
                             skippedFrames = Interlocked.Exchange(ref _skippedFrames, 0);
                         }
