@@ -49,6 +49,7 @@ namespace Core
         public Picasso(Image img, InitialConfig? initialConfig = null, Image? initialPng = null)
         {
             TargetImage = img;
+            USE_STAGE_3_COSTS = initialConfig != null && initialPng != null;
 
             if (initialConfig != null)
             {
