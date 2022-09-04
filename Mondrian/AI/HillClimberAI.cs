@@ -45,6 +45,7 @@ namespace AI
             }
 
             PlaceAllRectangles(picasso, rects, logger);
+            logger.LogMessage(picasso.Score.ToString());
             if (args.problemNum != -1)
             {
                 Rest.CacheBests();
