@@ -465,6 +465,31 @@ namespace Visualizer
 
             ManualDrawCanvas.Children.Clear();
 
+            // Draw crosshairs
+            // Horizontal
+            var horizontalRect = new System.Windows.Shapes.Rectangle();
+            horizontalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            horizontalRect.StrokeThickness = 0.5;
+            horizontalRect.Opacity = 1.0;
+            horizontalRect.Width = _problemWidth;
+            horizontalRect.Height = 0.5;
+            System.Windows.Controls.Canvas.SetLeft(horizontalRect, 0);
+            System.Windows.Controls.Canvas.SetTop(horizontalRect, cursorPosition.Y - 0.25);
+
+            ManualDrawCanvas.Children.Add(horizontalRect);
+            // Vertical
+            var verticalRect = new System.Windows.Shapes.Rectangle();
+            verticalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            verticalRect.StrokeThickness = 0.5;
+            verticalRect.Opacity = 1.0;
+            verticalRect.Width = 0.5;
+            verticalRect.Height = _problemHeight;
+            System.Windows.Controls.Canvas.SetLeft(verticalRect, cursorPosition.X - 0.25);
+            System.Windows.Controls.Canvas.SetTop(verticalRect, 0);
+
+            ManualDrawCanvas.Children.Add(verticalRect);
+
+
             // Handle area select
             if (_areaSelectOrigin != null)
             {
@@ -609,19 +634,132 @@ namespace Visualizer
 
         private void RectStack_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Delete)
+            if (RectStack.SelectedIndex == -1)
             {
                 return;
             }
 
-            if (RectStack.SelectedIndex != -1)
+            int selectedIndex = RectStack.SelectedIndex;
+            Core.Rectangle selected = RectStack.SelectedItem as Core.Rectangle;
+
+            if (e.Key == Key.Delete)
             {
-                Core.Rectangle selected = RectStack.SelectedItem as Core.Rectangle;
                 _selectedRects.Remove(selected);
 
                 DrawSelectedRects(true);
+
+                return;
             }
 
+            Core.Rectangle newRect;
+            if (e.Key == Key.W)
+            {
+                // Top up 1 px
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                {
+                    // Clamp top to top of canvas
+                    newRect = new Core.Rectangle(selected.BottomLeft, new Core.Point(selected.Right, Math.Min(_problemHeight, selected.Top + 1)));
+                }
+                // Bottom up 1 px
+                else if (Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    // Clamp bottom to disallow lines
+                    newRect = new Core.Rectangle(new Core.Point(selected.Left, Math.Min(selected.Bottom + 1, selected.Top - 1)), selected.TopRight);
+                }
+                else
+                {
+                    // Nudge but shrink if it hits the top and don't allow lines
+                    Core.Point newTopRight = new Core.Point(selected.Right, Math.Min(_problemHeight, selected.Top + 1));
+                    newRect = new Core.Rectangle(new Core.Point(selected.Left, Math.Min(selected.Bottom + 1, newTopRight.Y - 1)), newTopRight);
+                }
+
+                SwapSelectedRect(newRect, selectedIndex);
+                return;
+            }
+
+            if (e.Key == Key.S)
+            {
+                // Top down 1 px
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                {
+                    // Clamp top to disallow lines
+                    newRect = new Core.Rectangle(selected.BottomLeft, new Core.Point(selected.Right, Math.Max(selected.Bottom + 1, selected.Top - 1)));
+                }
+                // Bottom down 1 px
+                else if (Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    // Clamp bottom to bottom of canvas
+                    newRect = new Core.Rectangle(new Core.Point(selected.Left, Math.Max(0, selected.Bottom - 1)), selected.TopRight);
+                }
+                else
+                {
+                    // Nudge but shrink if it hits the bottom and don't allow lines
+                    Core.Point newBottomLeft = new Core.Point(selected.Left, Math.Max(0, selected.Bottom - 1));
+                    newRect = new Core.Rectangle(newBottomLeft, new Core.Point(selected.Right, Math.Max(newBottomLeft.Y + 1, selected.Top - 1)));
+                }
+
+                SwapSelectedRect(newRect, selectedIndex);
+                return;
+            }
+
+            if (e.Key == Key.A)
+            {
+                // Left edge left 1 px
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                {
+                    // Clamp left to left side of canvas
+                    newRect = new Core.Rectangle(new Core.Point(Math.Max(0, selected.Left - 1), selected.Bottom), selected.TopRight);
+                }
+                // Right edge left 1 px
+                else if (Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    // Clamp to left to prevent lines
+                    newRect = new Core.Rectangle(selected.BottomLeft, new Core.Point(Math.Max(selected.Left + 1, selected.Right - 1), selected.Top));
+                }
+                else
+                {
+                    // Nudge but shrink if it hits the left and don't allow lines
+                    Core.Point newBottomLeft = new Core.Point(Math.Max(0, selected.Left - 1), selected.Bottom);
+                    newRect = new Core.Rectangle(newBottomLeft, new Core.Point(Math.Max(newBottomLeft.X + 1, selected.Right - 1), selected.Top));
+                }
+
+                SwapSelectedRect(newRect, selectedIndex);
+                return;
+            }
+
+            if (e.Key == Key.D)
+            {
+                // Left edge right 1 px
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                {
+                    // Clamp to right to prevent lines
+                    newRect = new Core.Rectangle(new Core.Point(Math.Min(selected.Left + 1, selected.Right - 1), selected.Bottom), selected.TopRight);
+                }
+                // Right edge right 1 px
+                else if (Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    // Clamp to right size of canvas
+                    newRect = new Core.Rectangle(selected.BottomLeft, new Core.Point(Math.Min(selected.Right + 1, _problemWidth), selected.Top));
+                }
+                else
+                {
+                    // Nudge but shrink if it hits the right and don't allow lines
+                    Core.Point newTopRight = new Core.Point(Math.Min(selected.Right + 1, _problemWidth), selected.Top);
+                    newRect = new Core.Rectangle(new Core.Point(Math.Min(selected.Left + 1, newTopRight.X - 1), selected.Bottom), newTopRight);
+                }
+
+                SwapSelectedRect(newRect, selectedIndex);
+                return;
+            }
+        }
+
+        private void SwapSelectedRect(Core.Rectangle newRect, int selectedIndex)
+        {
+            _selectedRects.RemoveAt(selectedIndex);
+            _selectedRects.Insert(selectedIndex, newRect);
+            RectStack.ItemsSource = null;
+            RectStack.ItemsSource = _selectedRects;
+            RectStack.SelectedIndex = selectedIndex;
         }
 
         private void OrderRectStackUp_OnClick(object sender, RoutedEventArgs e)

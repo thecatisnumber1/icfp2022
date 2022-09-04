@@ -70,13 +70,16 @@
             <TextBox IsReadOnly="True" xml:space="preserve">-a SolverName
 -p[roblem] ID
 -sot (selected rect on top)
--vdbg (visualizer debug)
-            </TextBox>
+-vdbg (visualizer debug)</TextBox>
             <Separator />
             <Label>Rect Hotkeys</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">Ctrl+Z Undo
 Ctrl+S Quicksave
 Ctrl+O Quickload</TextBox>
+            <Label>While selected:</Label>
+            <TextBox IsReadOnly="True" xml:space="preserve">WASD: Nudge
+LShift+WASD: Left/top
+RShift+WASD: Right/bottom</TextBox>
             <Separator />
             <DockPanel HorizontalAlignment="Stretch">
                 <Button x:Name="OrderRectStackUp" Content="Move Up" Click="OrderRectStackUp_OnClick" Width="60" DockPanel.Dock="Left" IsEnabled="False"/>
