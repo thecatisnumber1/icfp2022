@@ -37,7 +37,7 @@ namespace Visualizer
         private CancellationTokenSource _tokenSource;
         private Picasso _problem;
         private int _problemId;
-        private Stack<Core.Rectangle> _selectedRects;
+        private List<Core.Rectangle> _selectedRects;
         private UILogger _loggerInstance;
 
         private int _problemWidth;
@@ -141,7 +141,7 @@ namespace Visualizer
 
             if (clearSelectedRects)
             {
-                _selectedRects = new Stack<Core.Rectangle>();
+                _selectedRects = new List<Core.Rectangle>();
                 RectStack.ItemsSource = _selectedRects;
                 SelectedRectCanvas.Children.Clear();
             }
@@ -431,7 +431,7 @@ namespace Visualizer
                     LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
                     LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
-                    _selectedRects.Push(result);
+                    _selectedRects.Insert(0, result);
                     DrawSelectedRects(true);
                 }
 
@@ -494,9 +494,9 @@ namespace Visualizer
         {
             if (_selectedRects != null)
             {
-                if (_selectedRects.TryPop(out Core.Rectangle popped))
+                if (_selectedRects.Count > 0)
                 {
-                    LogVisualizerMessage($"Popped {popped}");
+                    _selectedRects.RemoveAt(0);
                     DrawSelectedRects(true);
                 }
             }
@@ -554,7 +554,7 @@ namespace Visualizer
 
         private void Execute_RestoreStack(object sender, ExecutedRoutedEventArgs e)
         {
-            (string problemId, Stack<Core.Rectangle> rects, string fileName) = Quicksave.RestoreMostRecentStackFromDirectory(@"..\..\quicksaves", _problemId);
+            (string problemId, List<Core.Rectangle> rects, string fileName) = Quicksave.RestoreMostRecentStackFromDirectory(@"..\..\quicksaves", _problemId);
 
             if (problemId == null || rects?.Count == 0)
             {
@@ -588,19 +588,7 @@ namespace Visualizer
             if (RectStack.SelectedIndex != -1)
             {
                 Core.Rectangle selected = RectStack.SelectedItem as Core.Rectangle;
-                // Swaparoonie everything
-                Stack<Core.Rectangle> tmp = new Stack<Core.Rectangle>();
-                while (_selectedRects.TryPop(out Core.Rectangle cur))
-                {
-                    if (cur != selected)
-                    {
-                        tmp.Push(cur);
-                    }
-                }
-                while (tmp.TryPop(out Core.Rectangle cur))
-                {
-                    _selectedRects.Push(cur);
-                }
+                _selectedRects.Remove(selected);
 
                 DrawSelectedRects(true);
             }

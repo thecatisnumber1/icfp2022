@@ -2,7 +2,7 @@
 {
     public abstract class LoggerBase
     {
-        public Stack<Rectangle> UserSelectedRectangles = new Stack<Rectangle>();
+        public List<Rectangle> UserSelectedRectangles = new List<Rectangle>();
 
         public abstract void Render(Picasso image);
 

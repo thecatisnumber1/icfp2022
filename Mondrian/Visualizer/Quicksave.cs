@@ -9,9 +9,9 @@ namespace Visualizer
     public class Quicksave
     {
         public string ProblemId { get; set; }
-        public Stack<Core.Rectangle> Rects { get; set; }
+        public List<Core.Rectangle> Rects { get; set; }
 
-        public static void SaveRects(string problemId, Stack<Core.Rectangle> rects, string filePath)
+        public static void SaveRects(string problemId, List<Core.Rectangle> rects, string filePath)
         {
             var save = new Quicksave
             {
@@ -25,34 +25,29 @@ namespace Visualizer
             File.WriteAllText(filePath, contents);
         }
 
-        public static (string ProblemId, Stack<Core.Rectangle> rects) RestoreRectsFromFile(string filePath)
+        public static (string ProblemId, List<Core.Rectangle> rects) RestoreRectsFromFile(string filePath)
         {
             Quicksave save = JsonSerializer.Deserialize<Quicksave>(File.ReadAllText(filePath));
 
-            Stack<Core.Rectangle> r = save.Rects ?? new Stack<Core.Rectangle>();
-            Stack<Core.Rectangle> toReturn = new Stack<Rectangle>();
-            foreach (var rect in r)
-            {
-                toReturn.Push(rect); // Deal with stack deserializing in reverse order.
-            }
+            List<Core.Rectangle> r = save.Rects ?? new List<Core.Rectangle>();
 
-            return (save.ProblemId, toReturn);
+            return (save.ProblemId, r);
         }
 
-        public static (string ProblemId, Stack<Core.Rectangle> rects, string filePath) RestoreMostRecentStackFromDirectory(string directory, int problemId)
+        public static (string ProblemId, List<Core.Rectangle> rects, string filePath) RestoreMostRecentStackFromDirectory(string directory, int problemId)
         {
             if (!Directory.Exists(directory))
             {
-                return (null, new Stack<Core.Rectangle>(), null);
+                return (null, new List<Core.Rectangle>(), null);
             }
             string file = Directory.GetFiles(directory, $"{problemId}_*.json").LastOrDefault();
 
             if (file == null)
             {
-                return (null, new Stack<Core.Rectangle>(), null);
+                return (null, new List<Core.Rectangle>(), null);
             }
 
-            (string ProblemId, Stack<Core.Rectangle> rects) = RestoreRectsFromFile(file);
+            (string ProblemId, List<Core.Rectangle> rects) = RestoreRectsFromFile(file);
             return (ProblemId, rects, file);
         }
     }

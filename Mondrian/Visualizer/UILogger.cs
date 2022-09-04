@@ -33,7 +33,7 @@ namespace Visualizer
 
         private object lockobj = new object();
 
-        public UILogger(MainWindow mainUI, CancellationToken cancellationToken, Stack<Rectangle> selectedRects)
+        public UILogger(MainWindow mainUI, CancellationToken cancellationToken, List<Rectangle> selectedRects)
         {
             _mainUi = mainUI;
             _cancellationToken = cancellationToken;
