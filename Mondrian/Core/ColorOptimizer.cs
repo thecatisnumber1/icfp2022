@@ -77,6 +77,8 @@ namespace Core
                 pixelCost += ComputePixelDiffs(prevEdge, currEdge, color, target);
             }
 
+            pixelCost += ComputePixelDiffs(currEdge, new List<Point> { new(target.Width, target.Height) }, new RGBA(), target);
+
             return (colors, (int)Math.Round(pixelCost * 0.005));
         }
 
