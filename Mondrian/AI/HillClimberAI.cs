@@ -18,6 +18,20 @@ namespace AI
                 RejoinAll(picasso);
             }
 
+            /*
+            int granularity = 40;
+            List<Rectangle> rects = new List<Rectangle>();
+            for (int col = granularity; col <= 400; col += granularity)
+            {
+                for (int row = granularity; row <= 400; row += granularity)
+                {
+                    rects.Add(new Rectangle(Point.ORIGIN, new Point(col, row)));
+                }
+            }
+
+            rects = rects.OrderByDescending(x => x.TopRight.ManhattanDist(Point.ORIGIN)).ToList();
+            */
+
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             bool simplified = true;
             while (simplified)

@@ -11,23 +11,19 @@ namespace AI
     {
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            int granularity = 40;
+            int granularity = 20;
             List<Rectangle> rects = new List<Rectangle>();
-            for (int col = 0; col < 400; col += granularity)
+            for (int col = granularity; col <= 400; col += granularity)
             {
-                for (int row = 0; row < 400; row += granularity)
+                for (int row = granularity; row <= 400; row += granularity)
                 {
-                    if (col == 0 && row == 0)
-                    {
-                        continue;
-                    }
-
                     rects.Add(new Rectangle(Point.ORIGIN, new Point(col, row)));
                 }
             }
 
             rects = rects.OrderByDescending(x => x.TopRight.ManhattanDist(Point.ORIGIN)).ToList();
             PlaceAllRectangles(picasso, rects, logger);
+            logger.Render(picasso);
         }
 
         private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
