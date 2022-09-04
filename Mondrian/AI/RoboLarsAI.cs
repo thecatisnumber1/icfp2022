@@ -27,61 +27,84 @@ namespace AI
             }
 
             rects = rects.OrderByDescending(x => x.TopRight.ManhattanDist(Point.ORIGIN)).ToList();
+            PlaceAllRectangles(picasso, rects, logger);
+        }
+
+        private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
+        {
+            ColorOptimizer co = new ColorOptimizer();
+            List<RGBA?> colors = co.ChooseColorsSlow(rects, picasso.TargetImage);
             for (int i = 0; i < rects.Count; i++)
             {
-                if (i % 1000 == 0)
-                {
-                    logger.LogMessage(i.ToString());
-                }
-
-                Point point = Point.ORIGIN;
-                if (MaybeColor(picasso, new Rectangle(Point.ORIGIN, point), picasso.AllBlocks.First(), picasso.TargetImage[point]))
-                {
-                    logger.Render(picasso);
-                }
+                PlaceRectangle(picasso, rects[i], colors[i]);
             }
         }
 
-        private static bool MaybeColor(Picasso picasso, Rectangle rect, Block block, RGBA color)
+        private static void PlaceRectangle(Picasso picasso, Rectangle rect, RGBA? color)
         {
-            int preScore = picasso.Score;
-            int instructionCount;
+            if (picasso.BlockCount > 1)
+            {
+                throw new Exception("Can't place a rectangle on a complex canvas!");
+            }
+
+            FirstCut(picasso, rect, color);
+        }
+
+        private static void FirstCut(Picasso picasso, Rectangle rect, RGBA? color)
+        {
+            if (rect.Left != 0 && rect.Bottom != 0)
+            {
+                List<Block> blocks0 = picasso.PointCut(picasso.AllBlocks.First().ID, rect.BottomLeft).ToList();
+                Block zeroDotTwo = SecondCut(picasso, rect, blocks0[2], color);
+                Block firstMerge = picasso.Merge(zeroDotTwo.ID, blocks0[1].ID);
+                Block secondMerge = picasso.Merge(blocks0[0].ID, blocks0[3].ID);
+                picasso.Merge(firstMerge.ID, secondMerge.ID);
+            }
+            else if (rect.Left != 0 && rect.Bottom == 0)
+            {
+                List<Block> blocks = picasso.VerticalCut(picasso.AllBlocks.First().ID, rect.Left).ToList();
+                Block right = SecondCut(picasso, rect, blocks[1], color);
+                picasso.Merge(right.ID, blocks[0].ID);
+            }
+            else if (rect.Left == 0 && rect.Bottom != 0)
+            {
+                List<Block> blocks = picasso.HorizontalCut(picasso.AllBlocks.First().ID, rect.Bottom).ToList();
+                Block top = SecondCut(picasso, rect, blocks[1], color);
+                picasso.Merge(top.ID, blocks[0].ID);
+            }
+            else
+            {
+                SecondCut(picasso, rect, picasso.AllBlocks.First(), color);
+            }
+        }
+
+        private static Block SecondCut(Picasso picasso, Rectangle rect, Block block, RGBA? color)
+        {
             if (rect.Right != 400 && rect.Top != 400)
             {
                 List<Block> blocks1 = picasso.PointCut(block.ID, rect.TopRight).ToList();
-                picasso.Color(blocks1[0].ID, color);
+                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
                 Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
                 Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
-                picasso.Merge(firstMerge.ID, secondMerge.ID);
-                instructionCount = 5;
+                return picasso.Merge(firstMerge.ID, secondMerge.ID);
             }
             else if (rect.Right != 400 && rect.Top == 400)
             {
                 List<Block> blocks1 = picasso.VerticalCut(block.ID, rect.Right).ToList();
-                picasso.Color(blocks1[0].ID, color);
-                picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-                instructionCount = 3;
+                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
             }
             else if (rect.Right == 400 && rect.Top != 400)
             {
                 List<Block> blocks1 = picasso.HorizontalCut(block.ID, rect.Top).ToList();
-                picasso.Color(blocks1[0].ID, color);
-                picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-                instructionCount = 3;
+                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
             }
             else
             {
-                picasso.Color(block.ID, color);
-                instructionCount = 1;
+                picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                return block;
             }
-
-            if (picasso.Score >= preScore)
-            {
-                picasso.Undo(instructionCount);
-                return false;
-            }
-
-            return true;
         }
     }
 }

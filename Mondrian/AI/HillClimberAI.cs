@@ -19,7 +19,6 @@ namespace AI
             }
 
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
-            rects.Reverse();
             bool simplified = true;
             while (simplified)
             {
