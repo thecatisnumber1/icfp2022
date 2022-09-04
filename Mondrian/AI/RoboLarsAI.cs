@@ -34,7 +34,7 @@ namespace AI
             Picasso tempPic = new Picasso(picasso.TargetImage);
             PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
 
-            if (Math.Abs(bestScore - tempPic.Score) > 10)
+            if (Math.Abs(bestScore - tempPic.Score) > 0)
             {
                 throw new Exception("predicatble");
             }
@@ -61,7 +61,7 @@ namespace AI
                             tempPic = new Picasso(picasso.TargetImage);
                             PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
 
-                            if (Math.Abs(tempPic.Score - newScore) > 10)
+                            if (Math.Abs(tempPic.Score - newScore) > 0)
                             {
                                 throw new Exception("predicatble");
                             }
