@@ -334,6 +334,7 @@ namespace Visualizer
         {
             SolverRunButton.IsEnabled = true;
             SolverResumeButton.IsEnabled = false;
+            SolverBreakButton.IsEnabled = false;
         }
 
         private void SolverRunButton_OnClick(object sender, RoutedEventArgs e)
@@ -341,6 +342,7 @@ namespace Visualizer
             Solvers.Solver solver = Solvers.GetSolver(SolverSelector.SelectedItem.ToString());
 
             SolverRunButton.IsEnabled = false;
+            SolverBreakButton.IsEnabled = true; // Allow debug breaks
 
             SolverSelector.IsEnabled = false;
             ProblemSelector.IsEnabled = false;
@@ -471,12 +473,21 @@ namespace Visualizer
         internal void Break()
         {
             SolverResumeButton.IsEnabled = true;
+            SolverBreakButton.IsEnabled = false;
         }
 
         private void SolverResumeButton_OnClick(object sender, RoutedEventArgs e)
         {
+            SolverBreakButton.IsEnabled = true;
             SolverResumeButton.IsEnabled = false;
-            _loggerInstance.Paused = false;
+            _loggerInstance.SolverPaused = false;
+            _loggerInstance.PauseRequested = false;
+        }
+
+        private void SolverBreakButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            LogVisualizerMessage("Pause requested");
+            _loggerInstance.PauseRequested = true;
         }
 
         private void Execute_Undo(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)

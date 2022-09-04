@@ -6,7 +6,12 @@
 
         public abstract void Render(Picasso image);
 
-        public abstract void Break();
+        /// <summary>
+        /// Pauses immediately until the logger returns
+        /// </summary>
+        /// <param name="immediate">If true, blocks in the Logger. Else blocks opportunistically.</param>
+        /// <remarks>If false, the visualizer will only block if the user has selected the Pause button.</remarks>
+        public abstract void Break(bool immediate = false);
 
         public abstract void LogMessage(string logString);
 
@@ -20,7 +25,7 @@
             // Do nothing for now.
         }
 
-        public override void Break()
+        public override void Break(bool immediate)
         {
             // Do nothing;
         }

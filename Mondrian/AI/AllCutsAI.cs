@@ -30,6 +30,7 @@ namespace AI
             {
                 picasso.Color(block.ID, targetColor);
                 Logger.Render(picasso);
+                Logger.Break();
                 return;
             }
 

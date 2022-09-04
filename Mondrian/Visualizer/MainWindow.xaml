@@ -54,6 +54,7 @@
             <Separator />
             <Label Content="Solver Stuff" />
             <Button Content="Run" x:Name="SolverRunButton" Click="SolverRunButton_OnClick" IsEnabled="False" />
+            <Button Content="Break" x:Name="SolverBreakButton" Click="SolverBreakButton_OnClick" IsEnabled="False" />
             <Button Content="Resume" x:Name="SolverResumeButton" Click="SolverResumeButton_OnClick" IsEnabled="False" />
             <Separator />
             <Label>Rect Hotkeys</Label>

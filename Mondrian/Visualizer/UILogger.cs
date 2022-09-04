@@ -25,7 +25,11 @@ namespace Visualizer
 
         private Task _renderPump;
 
-        internal bool Paused;
+        // The solver is blocked on the logger. UI must eventually set this to false to release it.
+        internal bool SolverPaused;
+
+        // User requested pause in the visualizer.
+        internal bool PauseRequested;
 
         private object lockobj = new object();
 
@@ -94,17 +98,21 @@ namespace Visualizer
             }
         }
 
-        public override void Break()
+        public override void Break(bool immediate)
         {
-            Paused = true;
-            _mainUi.Dispatcher.BeginInvoke(() =>
+            if (PauseRequested || immediate)
             {
-                _mainUi.Break();
-            });
+                SolverPaused = true;
+                _mainUi.Dispatcher.BeginInvoke(() =>
+                {
+                    _mainUi.Break();
+                });
 
-            while (Paused && !_cancellationToken.IsCancellationRequested)
-            {
-                Task.Delay(20).Wait(); // Visualizer will eventually release.
+
+                while (SolverPaused && !_cancellationToken.IsCancellationRequested)
+                {
+                    Task.Delay(20).Wait(); // Visualizer will eventually release.
+                }
             }
         }
 
