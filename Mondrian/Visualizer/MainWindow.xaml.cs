@@ -47,6 +47,7 @@ namespace Visualizer
         // Area select
         private DrawingPoint? _areaSelectOrigin;
         private bool _leftMouseDown;
+        private bool _multiClickMode;
 
         // Options
         private bool _showSelectedRectOnTop;
@@ -82,9 +83,14 @@ namespace Visualizer
                     continue;
                 }
 
-                if (args[i].Equals("-sot", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-s", StringComparison.OrdinalIgnoreCase))
                 {
                     SelectedRectOnTopCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-h", StringComparison.OrdinalIgnoreCase))
+                {
+                    HideUnselectedRectsCheckbox.IsChecked = true;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
@@ -438,10 +444,11 @@ namespace Visualizer
 
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
 
-                if (result.Width == 0 && result.Height == 0)
+                if (result.Width == 0 && result.Height == 0 && Keyboard.IsKeyDown(Key.LeftCtrl))
                 {
                     // Consider this a click-click area select
                     LogVisualizerMessage("Entering click-click selection");
+                    _multiClickMode = true;
                     return;
                 }
                 else if (result.Width == 0 || result.Height == 0)
@@ -458,7 +465,7 @@ namespace Visualizer
                 }
 
                 // Multi-click mode
-                if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                if (!_multiClickMode)
                 {
                     _areaSelectOrigin = null;
                 }
@@ -593,12 +600,16 @@ namespace Visualizer
                 if ((!SelectedRectOnTopCheckbox.IsChecked.HasValue || !SelectedRectOnTopCheckbox.IsChecked.Value)
                     || selected != rect)
                 {
-                    SelectedRectCanvas.Children.Add(stackRect);
+                    if (HideUnselectedRectsCheckbox.IsChecked.HasValue && !HideUnselectedRectsCheckbox.IsChecked.Value)
+                    {
+                        SelectedRectCanvas.Children.Add(stackRect);
+                    }
                 }
             }
 
             // One was selected AND we're told to render it on top
-            if (selectedRect != null && (SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value))
+            if (selectedRect != null && ((SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value)
+                || (HideUnselectedRectsCheckbox.IsChecked.HasValue && HideUnselectedRectsCheckbox.IsChecked.Value)))
             {
                 SelectedRectCanvas.Children.Add(selectedRect);
             }
@@ -801,8 +812,15 @@ namespace Visualizer
             DrawSelectedRects();
         }
 
+        private void HideUnselectedRectsCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
+        }
+
         private void ManualMove_OnMouseLeave(object sender, MouseEventArgs e)
         {
+            _multiClickMode = false;
+            _areaSelectOrigin = null;
             ManualDrawCanvas.Children.Clear();
         }
     }

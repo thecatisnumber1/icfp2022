@@ -63,13 +63,15 @@
             <Separator />
             <Label Content="UI Flags"/>
             <CheckBox x:Name="SelectedRectOnTopCheckbox" Content="Selected rect on top" Checked="SelectedRectOnTopCheckbox_Toggled" Unchecked="SelectedRectOnTopCheckbox_Toggled" />
+            <CheckBox x:Name="HideUnselectedRectsCheckbox" Content="Hide unselected rects" Checked="HideUnselectedRectsCheckbox_Toggled" Unchecked="HideUnselectedRectsCheckbox_Toggled" />
             <CheckBox x:Name="UIDebugSpewCheckbox" Content="UI Debug Spew"/>
             <!-- Actually manual mode -->
             <Separator />
             <Label>Command Line Args</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">-a SolverName
 -p[roblem] ID
--sot (selected rect on top)
+-s (selected rect on top)
+-h (hide unselected rects)
 -vdbg (visualizer debug)</TextBox>
             <Separator />
             <Label>Rect Hotkeys</Label>
