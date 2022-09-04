@@ -74,40 +74,39 @@ namespace Core
                 prevColorSum = newColorSum;
                 prevArea = newArea;
 
-                pixelCost += ComputePixelDiffs(prevEdge, currEdge, color, target);
+                pixelCost += FastComputePixelDiffs(prevEdge, currEdge, color, target);
             }
 
-            pixelCost += ComputePixelDiffs(currEdge, new List<Point> { new(target.Width, target.Height) }, new RGBA(255, 255, 255, 255), target);
+            pixelCost += FastComputePixelDiffs(currEdge, new List<Point> { new(target.Width, target.Height) }, new RGBA(255, 255, 255, 255), target);
 
             return (colors, (int)Math.Round(pixelCost * 0.005));
         }
 
-        private static double ComputePixelDiffs(List<Point> prevEdge, List<Point> currEdge, RGBA color, Image img)
+        private static double FastComputePixelDiffs(List<Point> prevEdge, List<Point> currEdge, RGBA color, Image img)
         {
-            double sum = 0.0;
-            int x = 0;
-            foreach (var (y1, y2) in Enumerable.Zip(EdgeHeights(prevEdge), EdgeHeights(currEdge))) {
-                for (int y = y1; y < y2; y++)
+            int prevIndex = 0;
+            int currIndex = 0;
+            double sum = 0;
+            for (int x = 0; x < img.Width; x++)
+            {
+                while (prevEdge[prevIndex].X <= x)
+                {
+                    prevIndex++;
+                }
+
+                while (currEdge[currIndex].X <= x)
+                {
+                    currIndex++;
+                }
+
+                for (int y = prevEdge[prevIndex].Y; y < currEdge[currIndex].Y; y++)
                 {
                     RGBA actual = img[x, y];
                     sum += actual.Diff(color);
                 }
-
-                x++;
             }
+
             return sum;
-        }
-
-        private static IEnumerable<int> EdgeHeights(List<Point> edge)
-        {
-            int prevX = 0;
-            foreach (Point p in edge)
-            {
-                for (; prevX < p.X; prevX++)
-                {
-                    yield return p.Y;
-                }
-            }
         }
 
         private static bool EdgeNeedsUpdating(List<Point> oldEdge, Point point)
