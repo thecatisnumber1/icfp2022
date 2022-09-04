@@ -14,7 +14,6 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Xml;
 using CoreImage = Core.Image;
 using DrawingPoint = System.Windows.Point;
 using Image = System.Drawing.Image;
@@ -48,6 +47,8 @@ namespace Visualizer
         private DrawingPoint? _areaSelectOrigin;
         private bool _leftMouseDown;
         private bool _multiClickMode;
+
+        private double _unselectedRectOpacity = 0.8;
 
         // Brushes for reusing
         private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
@@ -106,6 +107,17 @@ namespace Visualizer
                 if (args[i].Equals("-r", StringComparison.OrdinalIgnoreCase))
                 {
                     RectsOnBothCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-op", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!double.TryParse(args[++i], out double desiredOpacity))
+                    {
+                        LogMessage($"Invalid double [{args[i]}]");
+                        continue;
+                    }
+
+                    _unselectedRectOpacity = Math.Max(0.0, Math.Min(1.0, desiredOpacity));
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
@@ -639,16 +651,17 @@ namespace Visualizer
                 {
                     stackRect.Stroke = SelectedStackRectBorderBrush;
                     stackRect.Fill = SelectedStackRectFillBrush;
+                    stackRect.Opacity = 0.8; // Hard code this
                     selectedRect = stackRect;
                 }
                 else
                 {
                     stackRect.Stroke = StackRectBorderBrush;
                     stackRect.Fill = StackRectFillBrush;
+                    stackRect.Opacity = _unselectedRectOpacity;
                 }
 
                 stackRect.StrokeThickness = 0.1;
-                stackRect.Opacity = 0.80;
                 // Be less stupid about this...
                 stackRect.Width = Math.Abs(rect.Width);
                 stackRect.Height = Math.Abs(rect.Height);
