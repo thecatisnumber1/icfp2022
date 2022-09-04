@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml;
 using CoreImage = Core.Image;
 using DrawingPoint = System.Windows.Point;
 using Image = System.Drawing.Image;
@@ -96,6 +98,16 @@ namespace Visualizer
                     HideUnselectedRectsCheckbox.IsChecked = true;
                 }
 
+                if (args[i].Equals("-c", StringComparison.OrdinalIgnoreCase))
+                {
+                    CrosshairOnBothCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-r", StringComparison.OrdinalIgnoreCase))
+                {
+                    RectsOnBothCheckbox.IsChecked = true;
+                }
+
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
                 {
                     UIDebugSpewCheckbox.IsChecked = true;
@@ -152,7 +164,7 @@ namespace Visualizer
             b.UriSource = new Uri(filePath);
             b.EndInit();
 
-            ReferenceImage.Source = b;
+            TargetImage.Source = b;
 
             _problemId = int.Parse(ProblemSelector.SelectedItem.ToString());
             CoreImage ci = Problems.GetProblem(_problemId);
@@ -167,7 +179,7 @@ namespace Visualizer
             {
                 _selectedRects = new List<Core.Rectangle>();
                 RectStack.ItemsSource = _selectedRects;
-                SelectedRectCanvas.Children.Clear();
+                ClearSelectedRectCanvas();
             }
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
@@ -206,7 +218,7 @@ namespace Visualizer
             b.UnlockBits(bmpData);
 
             // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 b.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
@@ -266,7 +278,7 @@ namespace Visualizer
             previouslyRenderedBlocks = blocks.ToHashSet();
 
             // While we can muck with it all we want, we still need to create a new source every time...
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 renderedBitmap.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
@@ -302,7 +314,7 @@ namespace Visualizer
             b.UnlockBits(bmpData);
 
             // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 b.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
@@ -425,11 +437,45 @@ namespace Visualizer
             _leftMouseDown = true;
 
             // Necessary to deal with hit-testing and rounding garbage
-            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+            DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = $"{gridPosition} Mouse down";
 
             _areaSelectOrigin ??= cursorPosition;
+        }
+
+        private void ClearManualDrawCanvas()
+        {
+            ManualDrawCanvasTarget.Children.Clear();
+            ManualDrawCanvasUser.Children.Clear();
+        }
+
+        private void DrawShapeOnManualCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
+        {
+            ManualDrawCanvasTarget.Children.Add(shape);
+            if (showOnUserSide)
+            {
+                // Clone and show
+                System.Windows.Shapes.Shape clone = (System.Windows.Shapes.Shape)XamlReader.Parse(XamlWriter.Save(shape));
+                ManualDrawCanvasUser.Children.Add(clone);
+            }
+        }
+
+        private void ClearSelectedRectCanvas()
+        {
+            SelectedRectCanvasTarget.Children.Clear();
+            SelectedRectCanvasUser.Children.Clear();
+        }
+
+        private void DrawShapeOnSelectedRectlCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
+        {
+            SelectedRectCanvasTarget.Children.Add(shape);
+            if (showOnUserSide)
+            {
+                // Clone and show
+                System.Windows.Shapes.Shape clone = (System.Windows.Shapes.Shape)XamlReader.Parse(XamlWriter.Save(shape));
+                SelectedRectCanvasUser.Children.Add(clone);
+            }
         }
 
         private void ManualMove_OnMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -439,9 +485,9 @@ namespace Visualizer
             if (_areaSelectOrigin != null)
             {
                 // Log area
-                ManualDrawCanvas.Children.Clear();
+                ClearManualDrawCanvas();
 
-                DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+                DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
 
                 Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
                 Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
@@ -487,12 +533,12 @@ namespace Visualizer
 
         private void ManualMove_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+            DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
 
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = gridPosition.ToString();
 
-            ManualDrawCanvas.Children.Clear();
+            ClearManualDrawCanvas();
 
             // Draw crosshairs
             // Horizontal
@@ -500,23 +546,24 @@ namespace Visualizer
             horizontalRect.Stroke = CrosshairBrush;
             horizontalRect.StrokeThickness = 0.5;
             horizontalRect.Opacity = 1.0;
-            horizontalRect.Width = ManualDrawCanvas.ActualWidth + 20;
+            horizontalRect.Width = ManualDrawCanvasTarget.ActualWidth + 20;
             horizontalRect.Height = 0.5;
             System.Windows.Controls.Canvas.SetLeft(horizontalRect, -10);
             System.Windows.Controls.Canvas.SetTop(horizontalRect, cursorPosition.Y - 0.25);
 
-            ManualDrawCanvas.Children.Add(horizontalRect);
+            DrawShapeOnManualCanvas(horizontalRect, CrosshairOnBothCheckbox.IsChecked.Value);
+
             // Vertical
             var verticalRect = new System.Windows.Shapes.Rectangle();
             verticalRect.Stroke = CrosshairBrush;
             verticalRect.StrokeThickness = 0.5;
             verticalRect.Opacity = 1.0;
             verticalRect.Width = 0.5;
-            verticalRect.Height = ManualDrawCanvas.ActualHeight + 20;
+            verticalRect.Height = ManualDrawCanvasTarget.ActualHeight + 20;
             System.Windows.Controls.Canvas.SetLeft(verticalRect, cursorPosition.X - 0.25);
             System.Windows.Controls.Canvas.SetTop(verticalRect, -10);
 
-            ManualDrawCanvas.Children.Add(verticalRect);
+            DrawShapeOnManualCanvas(verticalRect, CrosshairOnBothCheckbox.IsChecked.Value);
 
 
             // Handle area select
@@ -535,7 +582,7 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetLeft(selectionRect, Math.Min(cursorPosition.X, origin.X));
                 System.Windows.Controls.Canvas.SetTop(selectionRect, Math.Min(cursorPosition.Y, origin.Y));
 
-                ManualDrawCanvas.Children.Add(selectionRect);
+                DrawShapeOnManualCanvas(selectionRect, CrosshairOnBothCheckbox.IsChecked.Value);
                 return;
             }
         }
@@ -581,7 +628,7 @@ namespace Visualizer
                 selected = RectStack.SelectedItem as Core.Rectangle;
             }
 
-            SelectedRectCanvas.Children.Clear();
+            ClearSelectedRectCanvas();
             System.Windows.Shapes.Rectangle selectedRect = null;
             foreach (Core.Rectangle rect in _selectedRects)
             {
@@ -614,7 +661,7 @@ namespace Visualizer
                 {
                     if (HideUnselectedRectsCheckbox.IsChecked.HasValue && !HideUnselectedRectsCheckbox.IsChecked.Value)
                     {
-                        SelectedRectCanvas.Children.Add(stackRect);
+                        DrawShapeOnSelectedRectlCanvas(stackRect, RectsOnBothCheckbox.IsChecked.Value);
                     }
                 }
             }
@@ -623,7 +670,7 @@ namespace Visualizer
             if (selectedRect != null && ((SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value)
                 || (HideUnselectedRectsCheckbox.IsChecked.HasValue && HideUnselectedRectsCheckbox.IsChecked.Value)))
             {
-                SelectedRectCanvas.Children.Add(selectedRect);
+                DrawShapeOnSelectedRectlCanvas(selectedRect, RectsOnBothCheckbox.IsChecked.Value);
             }
 
             if (reloadList)
@@ -831,14 +878,19 @@ namespace Visualizer
 
         private void ManualMove_OnMouseLeave(object sender, MouseEventArgs e)
         {
-            ManualDrawCanvas.Children.Clear();
+            ClearManualDrawCanvas();
         }
 
         private void Execute_ExitMultiMode(object sender, ExecutedRoutedEventArgs e)
         {
             _multiClickMode = false;
             _areaSelectOrigin = null;
-            ManualDrawCanvas.Children.Clear();
+            ClearManualDrawCanvas();
+        }
+
+        private void RectsOnBothCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
         }
     }
 }

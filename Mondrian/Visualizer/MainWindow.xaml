@@ -31,15 +31,17 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="OutputImage" Grid.Column="0" Margin="10" />
-                <Image x:Name="ReferenceImage" Grid.Column="1" Margin="10" />
+                <Image x:Name="UserImage" Grid.Column="0" Margin="10" />
+                <Image x:Name="TargetImage" Grid.Column="1" Margin="10" />
                 <!-- We just put our manual cursor here on top of the image -->
-                <Canvas x:Name="SelectedRectCanvas" Grid.Column="1" Margin="10" />
-                <Canvas x:Name="ManualDrawCanvas" Grid.Column="1" Margin="10" />
-                <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
+                <Canvas x:Name="SelectedRectCanvasTarget" Grid.Column="1" Margin="10" />
+                <Canvas x:Name="SelectedRectCanvasUser" Grid.Column="0" Margin="10" />
+                <Canvas x:Name="ManualDrawCanvasTarget" Grid.Column="1" Margin="10" />
+                <Canvas x:Name="ManualDrawCanvasUser" Grid.Column="0" Margin="10" />
+                <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayerTarget" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
                     <Border BorderThickness=".5" BorderBrush="Black" />
                 </Grid>
-                <Grid Background="Transparent" Grid.Column="0" x:Name="UserMouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
+                <Grid Background="Transparent" Grid.Column="0" x:Name="MouseLayerUser" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
                     <Border BorderThickness=".5" BorderBrush="Black" />
                 </Grid>
             </Grid>
@@ -65,6 +67,8 @@
             <Label Content="UI Flags"/>
             <CheckBox x:Name="SelectedRectOnTopCheckbox" Content="Selected rect on top" Checked="SelectedRectOnTopCheckbox_Toggled" Unchecked="SelectedRectOnTopCheckbox_Toggled" />
             <CheckBox x:Name="HideUnselectedRectsCheckbox" Content="Hide unselected rects" Checked="HideUnselectedRectsCheckbox_Toggled" Unchecked="HideUnselectedRectsCheckbox_Toggled" />
+            <CheckBox x:Name="CrosshairOnBothCheckbox" Content="Crosshairs on both" />
+            <CheckBox x:Name="RectsOnBothCheckbox" Content="Rects on both" Checked="RectsOnBothCheckbox_Toggled" Unchecked="RectsOnBothCheckbox_Toggled" />
             <CheckBox x:Name="UIDebugSpewCheckbox" Content="UI Debug Spew"/>
             <!-- Actually manual mode -->
             <Separator />
@@ -73,6 +77,8 @@
 -p[roblem] ID
 -s (selected rect on top)
 -h (hide unselected rects)
+-c (crosshair on both boxes)
+-r (rects on both boxes)
 -vdbg (visualizer debug)</TextBox>
             <Separator />
             <Label>Rect Hotkeys</Label>
@@ -90,7 +96,7 @@ RShift+WASD: Right/bottom</TextBox>
                 <Button x:Name="OrderRectStackUp" Content="Move Up" Click="OrderRectStackUp_OnClick" Width="60" DockPanel.Dock="Left" IsEnabled="False"/>
                 <Button x:Name="OrderRectStackDown" Content="Move Down" Click="OrderRectStackDown_OnClick" Width="70" DockPanel.Dock="Right" IsEnabled="False"/>
             </DockPanel>
-            <ListBox x:Name="RectStack" Height="500" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
+            <ListBox x:Name="RectStack" Height="300" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>
