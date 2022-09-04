@@ -161,6 +161,7 @@ namespace Core
                 Rectangle rect = new Rectangle(new(prevX, 0), p);
                 colorSum += img.ColorSum(rect);
                 area += rect.Area;
+                prevX = p.X;
             }
 
             return (colorSum, area);
