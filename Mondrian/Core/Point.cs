@@ -59,6 +59,11 @@ namespace Core
             return new Point(X - other.X, Y - other.Y);
         }
 
+        public int ManhattanDist(Point other)
+        {
+            return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+        }
+
         public override string ToString()
         {
             return $"[{X}, {Y}]";
