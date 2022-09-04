@@ -55,9 +55,9 @@ namespace Core
 
         public static void Upload(int problem, string solution, int score)
         {
-            if (current[problem] < score)
+            if (current.GetValueOrDefault(problem, int.MaxValue) < score)
             {
-                Console.WriteLine($"Not submitting because {score} > {current[problem]} ({best[problem]}?)");
+                Console.WriteLine($"Not submitting because {score} > {current.GetValueOrDefault(problem, int.MaxValue)} ({best.GetValueOrDefault(problem, int.MaxValue)}?)");
                 return;
             }
 
