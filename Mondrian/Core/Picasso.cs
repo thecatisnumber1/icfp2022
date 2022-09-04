@@ -46,10 +46,14 @@ namespace Core
         public readonly Image TargetImage;
         private readonly Renderer renderer;
 
-        public Picasso(Image img, InitialConfig? initialConfig = null, Image? initialPng = null)
+        public Picasso(Image img, InitialConfig? initialConfig = null, Image? initialPng = null, bool isFakePicasso = false)
         {
             TargetImage = img;
-            USE_STAGE_3_COSTS = initialConfig != null && initialPng != null;
+
+            if (!isFakePicasso)
+            {
+                USE_STAGE_3_COSTS = initialConfig != null && initialPng != null;
+            }
 
             if (initialConfig != null)
             {
@@ -66,7 +70,7 @@ namespace Core
             instructions = new Stack<Snack>();
         }
 
-        public Picasso(Image img, int startingInstructionCost) : this(img)
+        public Picasso(Image img, int startingInstructionCost) : this(img, null, null, true)
         {
             TotalInstructionCost = startingInstructionCost;
         }
