@@ -10,6 +10,8 @@
         d:DesignHeight="1080" d:DesignWidth="1920">
     <Window.CommandBindings>
         <CommandBinding Command="Undo" Executed="Execute_Undo" />
+        <CommandBinding Command="Save" Executed="Execute_SaveStack" />
+        <CommandBinding Command="Open" Executed="Execute_RestoreStack" />
     </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
@@ -53,7 +55,12 @@
             <Button Content="Run" x:Name="SolverRunButton" Click="SolverRunButton_OnClick" IsEnabled="False" />
             <Button Content="Resume" x:Name="SolverResumeButton" Click="SolverResumeButton_OnClick" IsEnabled="False" />
             <Separator />
-            <TextBlock x:Name="RectStack" />
+            <Label>Rect Hotkeys</Label>
+            <TextBox IsReadOnly="True" xml:space="preserve">Ctrl+Z Undo
+Ctrl+S Quicksave
+Ctrl+O Quickload</TextBox>
+            <Separator />
+            <ListBox x:Name="RectStack" Height="200"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>

@@ -1,12 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Text.Json.Serialization;
 
 namespace Core
 {
     public struct Point
     {
+        [JsonInclude]
         public readonly int X;
+        [JsonInclude]
         public readonly int Y;
 
+        [JsonConstructor]
         public Point(int x = 0, int y = 0)
         {
             X = x;

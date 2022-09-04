@@ -18,6 +18,8 @@ using Mondrian;
 using System.Threading.Tasks;
 using Core;
 using System.Windows.Media;
+using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace Visualizer
 {
@@ -136,6 +138,7 @@ namespace Visualizer
 
             _problem = new Picasso(ci, initialConfig);
             _selectedRects = new Stack<Core.Rectangle>();
+            RectStack.ItemsSource = _selectedRects;
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
         }
@@ -414,7 +417,6 @@ namespace Visualizer
                 LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
                 _selectedRects.Push(result);
-                RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
                 DrawSelectedRects();
 
                 _areaSelectOrigin = null;
@@ -469,7 +471,6 @@ namespace Visualizer
                 if (_selectedRects.TryPop(out Core.Rectangle popped))
                 {
                     LogVisualizerMessage($"Popped {popped}");
-                    RectStack.Text = string.Join(Environment.NewLine, _selectedRects);
                     DrawSelectedRects();
                 }
             }
@@ -493,6 +494,35 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
                 SelectedRectCanvas.Children.Add(stackRect);
             }
+        }
+
+        private void Execute_SaveStack(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            string filePath = Path.Combine("quicksaves", $"{now}.json");
+            LogVisualizerMessage($"Saving state to {filePath}");
+            Quicksave.SaveRects(_problemId.ToString(), _selectedRects, filePath);
+        }
+
+        private void Execute_RestoreStack(object sender, ExecutedRoutedEventArgs e)
+        {
+            (string problemId, Stack<Core.Rectangle> rects, string fileName) = Quicksave.RestoreMostRecentStackFromDirectory("quicksaves");
+
+            if (problemId == null || rects?.Count == 0)
+            {
+                LogVisualizerMessage("Nothing to restore");
+                return;
+            }
+
+            LogVisualizerMessage($"Restoring from {fileName}");
+
+            // string[] problemFiles = Directory.GetFiles(AllProblemsRelativePath, "*.json");
+            // List<string> problemStrings = problemFiles.Select(Path.GetFileNameWithoutExtension).ToList();
+            // SelectProblemFromId(problemStrings, problemId); // Load/switch problem
+
+            // ResetProblem();
+            _selectedRects = rects;
+            DrawSelectedRects();
         }
     }
 }

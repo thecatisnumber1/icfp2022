@@ -15,6 +15,7 @@ namespace AI
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
         {
             Logger = logger;
+
             foreach (SimpleBlock sb in picasso.AllSimpleBlocks.ToList())
             {
                 Recurse(picasso, sb);
