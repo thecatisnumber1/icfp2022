@@ -119,7 +119,7 @@ namespace Visualizer
             }
         }
 
-        private void ResetProblem()
+        private void ResetProblem(bool clearSelectedRects = false)
         {
             string filePath = Path.GetFullPath(Path.Combine(AllProblemsRelativePath, $"{ProblemSelector.SelectedItem}.png"));
 
@@ -138,9 +138,13 @@ namespace Visualizer
             _problemHeight = ci.Height;
 
             _problem = new Picasso(ci, initialConfig);
-            _selectedRects = new Stack<Core.Rectangle>();
-            RectStack.ItemsSource = _selectedRects;
-            SelectedRectCanvas.Children.Clear();
+
+            if (clearSelectedRects)
+            {
+                _selectedRects = new Stack<Core.Rectangle>();
+                RectStack.ItemsSource = _selectedRects;
+                SelectedRectCanvas.Children.Clear();
+            }
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
         }
@@ -318,7 +322,7 @@ namespace Visualizer
 
         private void ProblemSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ResetProblem();
+            ResetProblem(true);
         }
 
         private void SolverSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -345,8 +349,8 @@ namespace Visualizer
 
             _loggerInstance = new UILogger(this, _tokenSource.Token, _selectedRects);
 
-            // Load image etc.
-            //ResetProblem(); // Wipe all state.
+            // This should probably happen *after* the task runs
+            ResetProblem(); // Wipe all state.
 
             _solverTask = Task.Run(() =>
             {
