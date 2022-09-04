@@ -132,8 +132,7 @@ namespace AI
 
         private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
         {
-            ColorOptimizer co = new ColorOptimizer();
-            List<RGBA?> colors = co.ChooseColorsSlow(rects, picasso.TargetImage);
+            List<RGBA?> colors = ColorOptimizer.ChooseColorsSlow(rects, picasso.TargetImage);
             for (int i = 0; i < rects.Count; i++)
             {
                 PlaceRectangle(picasso, rects[i], colors[i]);

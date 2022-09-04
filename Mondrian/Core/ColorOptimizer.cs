@@ -8,12 +8,12 @@ namespace Core
 {
     public class ColorOptimizer
     {
-        public List<RGBA?> ChooseColors(List<Rectangle> regions, Image target)
+        public static List<RGBA?> ChooseColors(List<Rectangle> regions, Image target)
         {
             return (from r in regions select (RGBA?)target.AverageColor(r)).ToList();
         }
 
-        public List<RGBA?> ChooseColorsSlow(List<Rectangle> regions, Image target)
+        public static List<RGBA?> ChooseColorsSlow(List<Rectangle> regions, Image target)
         {
             bool[,] seen = new bool[target.Width, target.Height];
             List<RGBA?> result = new(regions.Count);
@@ -46,7 +46,7 @@ namespace Core
             return result;
         }
 
-        public List<RGBA?> ChooseColorsLars(List<Point> corners, Point start, Image target)
+        public static (List<RGBA?> colors, int score) ChooseColorsLars(List<Point> corners, Point start, Image target)
         {
             return new();
         }
