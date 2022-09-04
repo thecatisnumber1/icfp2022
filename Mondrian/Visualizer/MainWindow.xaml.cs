@@ -324,7 +324,15 @@ namespace Visualizer
                 {
                     for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
                     {
-                        frame[y * width + x] = block.Color;
+                        if (block.Image == null)
+                        {
+                            frame[y * width + x] = block.Color;
+                        }
+                        else
+                        {
+                            // Extra - 1 on the Y axis because the top right Y is exclusive
+                            frame[y * width + x] = block.Image[block.BottomLeft.X + x, block.TopRight.Y - 1 - y];
+                        }
                     }
                 }
             }
