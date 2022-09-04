@@ -1,4 +1,5 @@
 ﻿using Core;
+using System;
 
 namespace AI
 {
@@ -9,6 +10,11 @@ namespace AI
             var swaps = new Swapmaster6000(picasso, args, logger);
             swaps.Initialize();
             swaps.Run();
+
+            logger.LogMessage($"Swaps Score: {picasso.Score}");
+
+            var paints = new PaintmasterX86(picasso, args, logger);
+            paints.Paint();
 
             if (args.problemNum != -1)
             {
@@ -30,6 +36,72 @@ namespace AI
                 }
 
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
+            }
+        }
+
+        private class PaintmasterX86
+        {
+            private Picasso picasso;
+            private LoggerBase logger;
+            private int virtualSize;
+            private int blockSize;
+            private string[,] virtualBlocks;
+
+            public PaintmasterX86(Picasso picasso, AIArgs args, LoggerBase logger)
+            {
+                this.picasso = picasso;
+                this.logger = logger;
+                var blocks = picasso.AllSimpleBlocks;
+
+                blockSize = blocks.First().Size.X;
+                virtualSize = picasso.TargetImage.Width / blockSize;
+                virtualBlocks = new string[virtualSize, virtualSize];
+            }
+
+            public void Paint()
+            {
+                var blocks = picasso.AllSimpleBlocks;
+
+                GenerateVirtualBlocks(blocks);
+                TryColor(picasso.TargetImage);
+
+                logger.Render(picasso);
+            }
+
+            private void GenerateVirtualBlocks(IEnumerable<SimpleBlock> blocks)
+            {
+                foreach (var block in blocks)
+                {
+                    virtualBlocks[block.BottomLeft.X / blockSize, block.BottomLeft.Y / blockSize] = block.ID;
+                }
+            }
+
+            private void TryColor(Image image)
+            {
+                for (int x = 0; x < virtualSize; x++)
+                {
+                    for (int y = 0; y < virtualSize; y++)
+                    {
+                        var imageColor = image.AverageColor(new Rectangle(
+                            new Point(x * blockSize, y * blockSize),
+                            new Point(x * blockSize + blockSize, y * blockSize + blockSize)));
+
+                        int pre = picasso.Score;
+                        picasso.Color(virtualBlocks[x, y], imageColor);
+                        int post = picasso.Score;
+
+                        if (pre <= post)
+                        {
+                            picasso.Undo();
+                            return;
+                        }
+                        else
+                        {
+                            logger.Render(picasso);
+                            Thread.Sleep(50);
+                        }
+                    }
+                }
             }
         }
 
@@ -118,7 +190,7 @@ namespace AI
                         else
                         {
                             var (xx, yy) = FindSwapPartner(n, pri.color);
-                            
+
                             if (xx != -1)
                             {
                                 PerformSwap(pri.x, pri.y, xx, yy);
