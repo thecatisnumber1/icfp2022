@@ -13,7 +13,7 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            ClimbThatHill(picasso, new List<Point> { new Point(400, 400) }, logger);
+            ClimbThatHill(picasso, new List<Point> { new Point(50, 100), new Point(100, 50) }, logger);
             ;
         }
 
@@ -34,7 +34,7 @@ namespace AI
             Picasso tempPic = new Picasso(picasso.TargetImage);
             PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
 
-            if (tempPic.Score != bestScore)
+            if (Math.Abs(bestScore - tempPic.Score) > 10)
             {
                 throw new Exception("predicatble");
             }
@@ -61,7 +61,7 @@ namespace AI
                             tempPic = new Picasso(picasso.TargetImage);
                             PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
 
-                            if (tempPic.Score != newScore)
+                            if (Math.Abs(tempPic.Score - newScore) > 10)
                             {
                                 throw new Exception("predicatble");
                             }
