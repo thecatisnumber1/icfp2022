@@ -389,7 +389,7 @@ namespace Visualizer
             _leftMouseDown = true;
 
             // Necessary to deal with hit-testing and rounding garbage
-            DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = $"{gridPosition} Mouse down";
 
@@ -406,7 +406,8 @@ namespace Visualizer
                 // Log area
                 ManualDrawCanvas.Children.Clear();
 
-                DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+                DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+
                 Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
                 Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
 
@@ -439,7 +440,8 @@ namespace Visualizer
 
         private void ManualMove_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            DrawingPoint cursorPosition = e.GetPosition(ManualDrawCanvas);
+            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = gridPosition.ToString();
 

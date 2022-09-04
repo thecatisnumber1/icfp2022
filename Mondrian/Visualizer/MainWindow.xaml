@@ -36,6 +36,7 @@
                 <Canvas x:Name="SelectedRectCanvas" Grid.Column="1" Margin="5" />
                 <Canvas x:Name="ManualDrawCanvas" Grid.Column="1" Margin="5" />
                 <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" />
+                <Grid Background="Transparent" Grid.Column="0" x:Name="UserMouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" />
             </Grid>
         </Viewbox>
         <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
