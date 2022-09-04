@@ -10,13 +10,18 @@ namespace Mondrian
         private static string? pngDir = null;
         private static int? pngCount = null;
 
-        public static Core.Image GetInitialPNG(int num)
+        public static Core.Image? GetInitialPNG(int num)
         {
             return LoadFile(LocationFor($"{num}.source.png"));
         }
 
-        public static Core.Image LoadFile(string path)
+        public static Core.Image? LoadFile(string path)
         {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
             Bitmap original = new Bitmap(path);
             int width = original.Width;
             int height = original.Height;
