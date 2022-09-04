@@ -19,7 +19,7 @@
             };
         }
 
-        public Canvas(InitialConfig config)
+        public Canvas(InitialConfig config, Image? initialPng)
         {
             Width = config.width;
             Height = config.height;
@@ -29,11 +29,27 @@
 
             foreach (var block in config.blocks)
             {
-                Blocks[block.blockId] = new SimpleBlock(
-                    block.blockId,
-                    new Point(block.bottomLeft[0], block.bottomLeft[1]),
-                    new Point(block.topRight[0], block.topRight[1]),
-                    new RGBA(block.color[0], block.color[1], block.color[2], block.color[3]));
+                var bl = new Point(block.bottomLeft[0], block.bottomLeft[1]);
+                var tr = new Point(block.topRight[0], block.topRight[1]);
+
+                if (block.color != null)
+                {
+                    Blocks[block.blockId] = new SimpleBlock(
+                        block.blockId,
+                        bl,
+                        tr,
+                        new RGBA(block.color[0], block.color[1], block.color[2], block.color[3]));
+                }
+                else if (block.pngBottomLeftPoint != null)
+                {
+                    var pngBL = new Point(block.pngBottomLeftPoint[0], block.pngBottomLeftPoint[1]);
+                    var size = tr.GetDiff(bl);
+                    Blocks[block.blockId] = new SimpleBlock(
+                        block.blockId,
+                        bl,
+                        tr,
+                        initialPng.Extract(pngBL, size));
+                }
             }
         }
 

@@ -36,5 +36,20 @@
         {
             return summedAreaTable.GetSum(rect);
         }
+
+        public Image Extract(Point bottomLeft, Point size)
+        {
+            RGBA[,] cut = new RGBA[size.X, size.Y];
+
+            for (int x = bottomLeft.X; x < bottomLeft.X + size.X; x++)
+            {
+                for (int y = bottomLeft.Y; y < bottomLeft.Y + size.Y; y++)
+                {
+                    cut[x, y] = pixels[x, y];
+                }
+            }
+
+            return new Image(cut);
+        }
     }
 }

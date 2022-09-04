@@ -154,10 +154,11 @@ namespace Visualizer
             _problemId = int.Parse(ProblemSelector.SelectedItem.ToString());
             CoreImage ci = Problems.GetProblem(_problemId);
             InitialConfig initialConfig = InitialConfigs.GetInitialConfig(_problemId);
+            CoreImage initialPng = Problems.GetProblem(_problemId);
             _problemWidth = ci.Width;
             _problemHeight = ci.Height;
 
-            _problem = new Picasso(ci, initialConfig);
+            _problem = new Picasso(ci, initialConfig, initialPng);
 
             if (clearSelectedRects)
             {

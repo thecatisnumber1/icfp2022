@@ -46,13 +46,13 @@ namespace Core
         public readonly Image TargetImage;
         private readonly Renderer renderer;
 
-        public Picasso(Image img, InitialConfig? initialConfig = null)
+        public Picasso(Image img, InitialConfig? initialConfig = null, Image? initialPng = null)
         {
             TargetImage = img;
 
             if (initialConfig != null)
             {
-                canvas = new Canvas(initialConfig);
+                canvas = new Canvas(initialConfig, initialPng);
                 topLevelIdCounter = int.Parse(initialConfig.blocks.Last().blockId);
             }
             else
