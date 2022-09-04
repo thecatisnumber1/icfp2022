@@ -10,11 +10,18 @@ namespace AI
     public class RoboLarsAI
     {
         public static readonly int CANVAS_SIZE = 400;
+        public static Random r = new Random();
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
+            List<Point> points = new List<Point>();
+            for (int i = 0; i < 300; i++)
+            {
+                points.Add(RandomPoint());
+            }
+
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            ClimbThatHill(picasso, corners, logger);
+            ClimbThatHill(picasso, points, logger);
         }
 
         public static readonly List<Point> DIRECTIONS = new List<Point>
@@ -259,6 +266,11 @@ namespace AI
                 picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
                 return block;
             }
+        }
+
+        private static Point RandomPoint()
+        {
+            return new Point(r.Next(1, 399), r.Next(1, 399));
         }
     }
 }
