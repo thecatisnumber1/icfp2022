@@ -20,6 +20,7 @@ using Core;
 using System.Windows.Media;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Controls.Primitives;
 
 namespace Visualizer
 {
@@ -138,7 +139,7 @@ namespace Visualizer
 
             _problem = new Picasso(ci, initialConfig);
             _selectedRects = new Stack<Core.Rectangle>();
-            RectStack.ItemsSource = _selectedRects; // TODO: THIS DOES NOT WORK
+            RectStack.ItemsSource = _selectedRects;
             SelectedRectCanvas.Children.Clear();
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
@@ -418,7 +419,7 @@ namespace Visualizer
                 LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
                 _selectedRects.Push(result);
-                DrawSelectedRects();
+                DrawSelectedRects(true);
 
                 _areaSelectOrigin = null;
                 return;
@@ -472,17 +473,18 @@ namespace Visualizer
                 if (_selectedRects.TryPop(out Core.Rectangle popped))
                 {
                     LogVisualizerMessage($"Popped {popped}");
-                    DrawSelectedRects();
+                    DrawSelectedRects(true);
                 }
             }
         }
 
-        private void DrawSelectedRects()
+        private void DrawSelectedRects(bool reloadList = false)
         {
             // Figure out which rectangle to highlight
+            Core.Rectangle selected = null;
             if (RectStack.SelectedIndex != -1)
             {
-                Core.Rectangle selected = RectStack.SelectedItem as Core.Rectangle;
+                selected = RectStack.SelectedItem as Core.Rectangle;
             }
 
             SelectedRectCanvas.Children.Clear();
@@ -490,9 +492,19 @@ namespace Visualizer
             {
                 // Draw a box
                 var stackRect = new System.Windows.Shapes.Rectangle();
-                stackRect.Stroke = new SolidColorBrush(Colors.Green);
+
+                if (selected == rect)
+                {
+                    stackRect.Stroke = new SolidColorBrush(Colors.Red);
+                    stackRect.Fill = new SolidColorBrush(Colors.Salmon);
+                }
+                else
+                {
+                    stackRect.Stroke = new SolidColorBrush(Colors.Green);
+                    stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
+                }
+
                 stackRect.StrokeThickness = 0.1;
-                stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
                 stackRect.Opacity = 0.80;
                 // Be less stupid about this...
                 stackRect.Width = Math.Abs(rect.Width);
@@ -500,6 +512,10 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetLeft(stackRect, rect.Left);
                 System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
                 SelectedRectCanvas.Children.Add(stackRect);
+            }
+            if (reloadList)
+            {
+                RectStack.ItemsSource = null;
             }
             RectStack.ItemsSource = _selectedRects;
         }
@@ -530,12 +546,41 @@ namespace Visualizer
 
             // ResetProblem();
             _selectedRects = rects;
-            DrawSelectedRects();
+            DrawSelectedRects(true);
         }
 
         private void RectStack_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Highlight rect
+            DrawSelectedRects();
+        }
+
+        private void RectStack_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete)
+            {
+                return;
+            }
+
+            if (RectStack.SelectedIndex != -1)
+            {
+                Core.Rectangle selected = RectStack.SelectedItem as Core.Rectangle;
+                // Swaparoonie everything
+                Stack<Core.Rectangle> tmp = new Stack<Core.Rectangle>();
+                while (_selectedRects.TryPop(out Core.Rectangle cur))
+                {
+                    if (cur != selected)
+                    {
+                        tmp.Push(cur);
+                    }
+                }
+                while (tmp.TryPop(out Core.Rectangle cur))
+                {
+                    _selectedRects.Push(cur);
+                }
+
+                DrawSelectedRects(true);
+            }
+
         }
     }
 }
