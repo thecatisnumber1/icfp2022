@@ -790,5 +790,10 @@ namespace Visualizer
         {
             DrawSelectedRects();
         }
+
+        private void ManualMove_OnMouseLeave(object sender, MouseEventArgs e)
+        {
+            ManualDrawCanvas.Children.Clear();
+        }
     }
 }
