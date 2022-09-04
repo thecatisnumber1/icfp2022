@@ -45,5 +45,10 @@ namespace Core
 
             return result;
         }
+
+        public List<RGBA?> ChooseColorsLars(List<Point> corners, Point start, Image target)
+        {
+            return new();
+        }
     }
 }
