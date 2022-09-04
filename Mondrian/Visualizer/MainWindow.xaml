@@ -22,7 +22,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="140"/>
         </Grid.ColumnDefinitions>
         <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2" >
             <Grid x:Name="ViewportContainer" Background="White"><!-- Right now they use white -->
@@ -60,7 +60,7 @@
 Ctrl+S Quicksave
 Ctrl+O Quickload</TextBox>
             <Separator />
-            <TextBlock x:Name="RectStack" Height="200"/>
+            <ListBox x:Name="RectStack" Height="200" SelectionChanged="RectStack_SelectionChanged"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>

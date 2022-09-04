@@ -39,13 +39,13 @@ namespace Visualizer
             return (save.ProblemId, toReturn);
         }
 
-        public static (string ProblemId, Stack<Core.Rectangle> rects, string filePath) RestoreMostRecentStackFromDirectory(string directory)
+        public static (string ProblemId, Stack<Core.Rectangle> rects, string filePath) RestoreMostRecentStackFromDirectory(string directory, int problemId)
         {
             if (!Directory.Exists(directory))
             {
                 return (null, new Stack<Core.Rectangle>(), null);
             }
-            string file = Directory.GetFiles(directory, "*.json").LastOrDefault();
+            string file = Directory.GetFiles(directory, $"{problemId}_*.json").LastOrDefault();
 
             if (file == null)
             {
