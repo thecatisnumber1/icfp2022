@@ -12,5 +12,38 @@ namespace Core
         {
             return (from r in regions select (RGBA?)target.AverageColor(r)).ToList();
         }
+
+        public List<RGBA?> ChooseColorsSlow(List<Rectangle> regions, Image target)
+        {
+            bool[,] seen = new bool[target.Width, target.Height];
+            List<RGBA?> result = new(regions.Count);
+            result.AddRange(Enumerable.Repeat<RGBA?>(null, regions.Count));
+
+            for (int i = regions.Count - 1; i >= 0; i--)
+            {
+                Rectangle rec = regions[i];
+                int area = 0;
+                IntRGB sum = IntRGB.ZERO;
+                for (int x = rec.Left; x < rec.Right; x++)
+                {
+                    for (int y = rec.Bottom; y < rec.Top; y++)
+                    {
+                        if (!seen[x, y])
+                        {
+                            seen[x, y] = true;
+                            sum += target[x, y];
+                            area++;
+                        }
+                    }
+                }
+
+                if (area > 0)
+                {
+                    result[i] = sum / area;
+                }
+            }
+
+            return result;
+        }
     }
 }
