@@ -15,7 +15,7 @@ namespace AI
         {
             if (picasso.AllBlocks.Count() > 0)
             {
-                RejoinAll(picasso);
+                AIUtils.RejoinAll(picasso);
             }
 
             /*
