@@ -17,7 +17,7 @@
         public SimpleBlock(string id, Point bottomLeft, Point topRight, Image image)
             : base(id, bottomLeft, topRight)
         {
-            Color = image.AverageColor(new Rectangle(bottomLeft, topRight));
+            Color = image.AverageColor(new Rectangle(new Point(), Size));
             Image = image;
         }
 
@@ -33,7 +33,7 @@
                 return Color;
             }
 
-            return Image[BottomLeft.X + x, BottomLeft.Y + y];
+            return Image[x - BottomLeft.X, y - BottomLeft.Y];
         }
 
         public SimpleBlock Clone()

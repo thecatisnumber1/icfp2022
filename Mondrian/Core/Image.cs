@@ -41,13 +41,13 @@
         {
             RGBA[,] cut = new RGBA[size.X, size.Y];
 
-            for (int x = bottomLeft.X; x < bottomLeft.X + size.X; x++)
+            for (int x = 0; x < size.X; x++)
             {
-                for (int y = bottomLeft.Y; y < bottomLeft.Y + size.Y; y++)
+                for (int y = 0; y < size.Y; y++)
                 {
                     // BUG: This line will throw on images because cut[x,y] should be something like cut[x - bottomLeft.X, y - bottomLeft.Y]
                     // Otherwise if bottomLeft is, say, [200, 200] then this will try to index cut[200, 200]
-                    cut[x, y] = pixels[x, y];
+                    cut[x, y] = pixels[bottomLeft.X, bottomLeft.Y];
                 }
             }
 
