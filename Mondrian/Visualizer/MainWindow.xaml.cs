@@ -411,36 +411,7 @@ namespace Visualizer
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = $"{gridPosition} Mouse down";
 
-
-            if (_areaSelectOrigin != null)
-            {
-                // We're in click-click mode.
-                // TODO: Refactor
-                Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
-                Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
-
-                // Also clamp
-                Core.Point bottomLeft = new Core.Point(
-                    Math.Min(_problemWidth, Math.Max(0, Math.Min(startPosition.X, endPosition.X))),
-                    Math.Min(_problemHeight, Math.Max(0, Math.Min(startPosition.Y, endPosition.Y))));
-                Core.Point topRight = new Core.Point(
-                    Math.Min(_problemWidth, Math.Max(0, Math.Max(startPosition.X, endPosition.X))),
-                    Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
-
-                Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
-
-                LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
-                LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
-
-                _selectedRects.Insert(0, result);
-                DrawSelectedRects(true);
-
-                _areaSelectOrigin = null;
-            }
-            else
-            {
-                _areaSelectOrigin = cursorPosition;
-            }
+            _areaSelectOrigin ??= cursorPosition;
         }
 
         private void ManualMove_OnMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -486,7 +457,11 @@ namespace Visualizer
                     DrawSelectedRects(true);
                 }
 
-                _areaSelectOrigin = null;
+                // Multi-click mode
+                if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                {
+                    _areaSelectOrigin = null;
+                }
                 return;
             }
         }
