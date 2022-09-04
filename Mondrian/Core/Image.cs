@@ -31,5 +31,10 @@
         {
             return summedAreaTable.GetSum(rect) / rect.Area;
         }
+
+        public IntRGB ColorSum(Rectangle rect)
+        {
+            return summedAreaTable.GetSum(rect);
+        }
     }
 }
