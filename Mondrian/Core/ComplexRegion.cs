@@ -15,10 +15,25 @@ namespace Core
             regions = new();
         }
 
-        public ComplexRegion UnionRegion(Rectangle r)
+        public ComplexRegion UnionRegion(Rectangle rect)
         {
+            List<EdgeList> paths = (from r in regions select EdgeList.FromEdges(r)).ToList();
+            EdgeList rectPath = EdgeList.FromRect(rect);
+
+            Dictionary<Point, Junction> juncts = new();
+            foreach(var path in paths)
+            {
+                rectPath.Split(path, juncts);
+            }
+
+            while (juncts.Count > 0)
+            {
+                EdgeList.Trace(juncts.Values.First(), juncts);
+            }
             return new();
         }
+
+        //private List<List<Edge>> Join(EdgeList rectPath, List)
 
         private static bool Intersects(Edge e1, Edge e2)
         {
@@ -34,11 +49,11 @@ namespace Core
             return e1.isHoriz ? new(e2.constant, e1.constant) : new(e1.constant, e2.constant);
         }
 
-        private static Edge[] Split(Edge e, Point p)
+        /*private static Edge[] Split(Edge e, Point p)
         {
             int mid = e.isHoriz ? p.X : p.Y;
             return new Edge[] { new(e.start, mid, e.constant, e.isHoriz), new(mid, e.end, e.constant, e.isHoriz) };
-        }
+        }*/
         
         public record Edge(int start, int end, int constant, bool isHoriz)
         {
@@ -100,6 +115,16 @@ namespace Core
                 prev.LinkTo(Head);
             }
 
+            public static EdgeList FromEdges(IEnumerable<Edge> edges)
+            {
+                return new EdgeList(from e in edges select e.Start);
+            }
+
+            public static EdgeList FromRect(Rectangle rect)
+            {
+                return new EdgeList(new Point[] { rect.TopLeft, rect.TopRight, rect.BottomRight, rect.BottomLeft });
+            }
+
             public static List<Point> Trace(Junction initialJunc, Dictionary<Point, Junction> junctions)
             {
                 List<Point> result = new List<Point>();
@@ -123,10 +148,8 @@ namespace Core
                 return result;
             }
 
-            public Dictionary<Point, Junction> Split(EdgeList other)
+            public void Split(EdgeList other, Dictionary<Point, Junction> result)
             {
-                Dictionary<Point, Junction> result = new();
-
                 foreach (Node n in Nodes())
                 {
                     Node? iPrev = other.FindClosestIntersectionPrev(n.PrevE);
@@ -152,8 +175,6 @@ namespace Core
 
                     result.Add(iPoint, new Junction(n1, n2));
                 }
-
-                return result;
             }
 
             private Node? FindClosestIntersectionPrev(Edge e)
