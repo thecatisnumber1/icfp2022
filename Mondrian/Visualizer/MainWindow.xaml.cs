@@ -1,26 +1,24 @@
-﻿using System;
+﻿using Core;
+using Mondrian;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Path = System.IO.Path;
 using CoreImage = Core.Image;
+using DrawingPoint = System.Windows.Point;
+using Image = System.Drawing.Image;
+using Path = System.IO.Path;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Rectangle = System.Drawing.Rectangle;
-using Image = System.Drawing.Image;
-using DrawingPoint = System.Windows.Point;
-using System.Threading;
-using Mondrian;
-using System.Threading.Tasks;
-using Core;
-using System.Windows.Media;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Controls.Primitives;
 
 namespace Visualizer
 {
@@ -49,9 +47,14 @@ namespace Visualizer
         private bool _leftMouseDown;
         private bool _multiClickMode;
 
-        // Options
-        private bool _showSelectedRectOnTop;
-        private bool _debugSpew;
+        // Brushes for reusing
+        private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
+        private static readonly SolidColorBrush AreaSelectBorderBrush = new SolidColorBrush(Colors.Navy);
+        private static readonly SolidColorBrush AreaSelectFillBrush = new SolidColorBrush(Colors.LightSkyBlue);
+        private static readonly SolidColorBrush StackRectBorderBrush = new SolidColorBrush(Colors.Green);
+        private static readonly SolidColorBrush StackRectFillBrush = new SolidColorBrush(Colors.LightGreen);
+        private static readonly SolidColorBrush SelectedStackRectBorderBrush = new SolidColorBrush(Colors.Red);
+        private static readonly SolidColorBrush SelectedStackRectFillBrush = new SolidColorBrush(Colors.Salmon);
 
         public MainWindow(string[] args)
         {
@@ -486,7 +489,7 @@ namespace Visualizer
             // Draw crosshairs
             // Horizontal
             var horizontalRect = new System.Windows.Shapes.Rectangle();
-            horizontalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            horizontalRect.Stroke = CrosshairBrush;
             horizontalRect.StrokeThickness = 0.5;
             horizontalRect.Opacity = 1.0;
             horizontalRect.Width = ManualDrawCanvas.ActualWidth + 20;
@@ -497,7 +500,7 @@ namespace Visualizer
             ManualDrawCanvas.Children.Add(horizontalRect);
             // Vertical
             var verticalRect = new System.Windows.Shapes.Rectangle();
-            verticalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            verticalRect.Stroke = CrosshairBrush;
             verticalRect.StrokeThickness = 0.5;
             verticalRect.Opacity = 1.0;
             verticalRect.Width = 0.5;
@@ -514,9 +517,9 @@ namespace Visualizer
                 DrawingPoint origin = _areaSelectOrigin.Value;
                 // Draw a box
                 var selectionRect = new System.Windows.Shapes.Rectangle();
-                selectionRect.Stroke = new SolidColorBrush(Colors.Navy);
+                selectionRect.Stroke = AreaSelectBorderBrush;
                 selectionRect.StrokeThickness = 0.1;
-                selectionRect.Fill = new SolidColorBrush(Colors.LightSkyBlue);
+                selectionRect.Fill = AreaSelectFillBrush;
                 selectionRect.Opacity = 0.40;
                 // Be less stupid about this...
                 selectionRect.Width = Math.Abs(cursorPosition.X - origin.X);
@@ -579,14 +582,14 @@ namespace Visualizer
 
                 if (selected == rect)
                 {
-                    stackRect.Stroke = new SolidColorBrush(Colors.Red);
-                    stackRect.Fill = new SolidColorBrush(Colors.Salmon);
+                    stackRect.Stroke = SelectedStackRectBorderBrush;
+                    stackRect.Fill = SelectedStackRectFillBrush;
                     selectedRect = stackRect;
                 }
                 else
                 {
-                    stackRect.Stroke = new SolidColorBrush(Colors.Green);
-                    stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
+                    stackRect.Stroke = StackRectBorderBrush;
+                    stackRect.Fill = StackRectFillBrush;
                 }
 
                 stackRect.StrokeThickness = 0.1;
