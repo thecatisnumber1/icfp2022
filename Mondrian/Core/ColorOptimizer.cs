@@ -74,7 +74,7 @@ namespace Core
                 prevColorSum = newColorSum;
                 prevArea = newArea;
 
-                pixelCost += ComputePixelDiffs(prevEdge, currEdge, color, img);
+                pixelCost += ComputePixelDiffs(prevEdge, currEdge, color, target);
             }
 
             return (colors, (int)Math.Round(pixelCost * 0.005));
