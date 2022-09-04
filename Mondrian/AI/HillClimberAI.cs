@@ -14,11 +14,32 @@ namespace AI
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
-            ClimbThatHill(picasso, rects, logger);
+            bool simplified = true;
+            while (simplified)
+            {
+                simplified = false;
+                ClimbThatHill(picasso, rects, logger);
+                for (int i = 0; i < rects.Count; i++)
+                {
+                    Picasso temp = new Picasso(picasso.TargetImage);
+                    PlaceAllRectangles(temp, rects, logger);
+                    int prevScore = temp.Score;
+                    temp = new Picasso(picasso.TargetImage);
+                    rects.RemoveAt(i);
+                    PlaceAllRectangles(temp, rects, logger);
+                    if (temp.Score < prevScore)
+                    {
+                        logger.LogMessage("Found a simplification!");
+                        simplified = true;
+                        break;
+                    }
+                }
+            }
+            
             
             if (args.problemNum != -1)
             {
-                Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()));
+                //Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()));
             }
         }
 
@@ -49,7 +70,6 @@ namespace AI
                                 bestScore = temp.Score;
                                 improved = true;
                                 logger.Render(temp);
-                                logger.LogMessage($"New best score = {bestScore}");
                             }
                             else
                             {
