@@ -640,8 +640,8 @@ namespace Core
                 );
             }
 
-            canvas.Blocks[blockId1] = newBlock1;
-            canvas.Blocks[blockId2] = newBlock2;
+            canvas.Blocks[blockId1] = newBlock2;
+            canvas.Blocks[blockId2] = newBlock1;
 
             instructions.Push(new Snack(new SwapInstruction(blockId1, blockId2), cost, new List<Block>() { oldBlock1, oldBlock2 }, new List<string>() { newBlock1.ID, newBlock2.ID }));
 
