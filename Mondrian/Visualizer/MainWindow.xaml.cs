@@ -411,8 +411,36 @@ namespace Visualizer
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = $"{gridPosition} Mouse down";
 
-            // Only overwrite this if it's not already set.
-            _areaSelectOrigin ??= cursorPosition;
+
+            if (_areaSelectOrigin != null)
+            {
+                // We're in click-click mode.
+                // TODO: Refactor
+                Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
+                Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
+
+                // Also clamp
+                Core.Point bottomLeft = new Core.Point(
+                    Math.Min(_problemWidth, Math.Max(0, Math.Min(startPosition.X, endPosition.X))),
+                    Math.Min(_problemHeight, Math.Max(0, Math.Min(startPosition.Y, endPosition.Y))));
+                Core.Point topRight = new Core.Point(
+                    Math.Min(_problemWidth, Math.Max(0, Math.Max(startPosition.X, endPosition.X))),
+                    Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
+
+                Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
+
+                LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
+                LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
+
+                _selectedRects.Insert(0, result);
+                DrawSelectedRects(true);
+
+                _areaSelectOrigin = null;
+            }
+            else
+            {
+                _areaSelectOrigin = cursorPosition;
+            }
         }
 
         private void ManualMove_OnMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -438,7 +466,14 @@ namespace Visualizer
                     Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
 
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
-                if (result.Width == 0 || result.Height == 0)
+
+                if (result.Width == 0 && result.Height == 0)
+                {
+                    // Consider this a click-click area select
+                    LogVisualizerMessage("Entering click-click selection");
+                    return;
+                }
+                else if (result.Width == 0 || result.Height == 0)
                 {
                     LogVisualizerMessage("Ignoring zero width/height rectangle");
                 }
@@ -471,9 +506,9 @@ namespace Visualizer
             horizontalRect.Stroke = new SolidColorBrush(Colors.Purple);
             horizontalRect.StrokeThickness = 0.5;
             horizontalRect.Opacity = 1.0;
-            horizontalRect.Width = _problemWidth;
+            horizontalRect.Width = ManualDrawCanvas.ActualWidth + 20;
             horizontalRect.Height = 0.5;
-            System.Windows.Controls.Canvas.SetLeft(horizontalRect, 0);
+            System.Windows.Controls.Canvas.SetLeft(horizontalRect, -10);
             System.Windows.Controls.Canvas.SetTop(horizontalRect, cursorPosition.Y - 0.25);
 
             ManualDrawCanvas.Children.Add(horizontalRect);
@@ -483,9 +518,9 @@ namespace Visualizer
             verticalRect.StrokeThickness = 0.5;
             verticalRect.Opacity = 1.0;
             verticalRect.Width = 0.5;
-            verticalRect.Height = _problemHeight;
+            verticalRect.Height = ManualDrawCanvas.ActualHeight + 20;
             System.Windows.Controls.Canvas.SetLeft(verticalRect, cursorPosition.X - 0.25);
-            System.Windows.Controls.Canvas.SetTop(verticalRect, 0);
+            System.Windows.Controls.Canvas.SetTop(verticalRect, -10);
 
             ManualDrawCanvas.Children.Add(verticalRect);
 
