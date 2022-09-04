@@ -138,7 +138,8 @@ namespace Visualizer
 
             _problem = new Picasso(ci, initialConfig);
             _selectedRects = new Stack<Core.Rectangle>();
-            RectStack.ItemsSource = _selectedRects;
+            RectStack.Text = ""; // TODO: THIS DOES NOT WORK
+            SelectedRectCanvas.Children.Clear();
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
         }
@@ -479,6 +480,7 @@ namespace Visualizer
         private void DrawSelectedRects()
         {
             SelectedRectCanvas.Children.Clear();
+            RectStack.Text = "";
             foreach (Core.Rectangle rect in _selectedRects)
             {
                 // Draw a box
@@ -486,27 +488,28 @@ namespace Visualizer
                 stackRect.Stroke = new SolidColorBrush(Colors.Green);
                 stackRect.StrokeThickness = 0.1;
                 stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
-                stackRect.Opacity = 0.40;
+                stackRect.Opacity = 0.80;
                 // Be less stupid about this...
                 stackRect.Width = Math.Abs(rect.Width);
                 stackRect.Height = Math.Abs(rect.Height);
                 System.Windows.Controls.Canvas.SetLeft(stackRect, rect.Left);
                 System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
                 SelectedRectCanvas.Children.Add(stackRect);
+                RectStack.Text += $"{rect}" + Environment.NewLine;
             }
         }
 
         private void Execute_SaveStack(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
             long now = DateTime.UtcNow.Ticks;
-            string filePath = Path.Combine("quicksaves", $"{now}.json");
+            string filePath = Path.Combine(@"..\..\quicksaves", $"{now}.json");
             LogVisualizerMessage($"Saving state to {filePath}");
             Quicksave.SaveRects(_problemId.ToString(), _selectedRects, filePath);
         }
 
         private void Execute_RestoreStack(object sender, ExecutedRoutedEventArgs e)
         {
-            (string problemId, Stack<Core.Rectangle> rects, string fileName) = Quicksave.RestoreMostRecentStackFromDirectory("quicksaves");
+            (string problemId, Stack<Core.Rectangle> rects, string fileName) = Quicksave.RestoreMostRecentStackFromDirectory(@"..\..\quicksaves");
 
             if (problemId == null || rects?.Count == 0)
             {

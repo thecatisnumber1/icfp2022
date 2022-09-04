@@ -60,7 +60,7 @@
 Ctrl+S Quicksave
 Ctrl+O Quickload</TextBox>
             <Separator />
-            <ListBox x:Name="RectStack" Height="200"/>
+            <TextBlock x:Name="RectStack" Height="200"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>
