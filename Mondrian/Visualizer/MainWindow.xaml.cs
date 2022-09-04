@@ -53,6 +53,9 @@ namespace Visualizer
         internal bool UseOldRenderer;
         private Stopwatch renderTimer = new Stopwatch();
 
+        // Score computation is REALLY expensive.
+        internal bool HideScore;
+
         // Brushes for reusing
         private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
         private static readonly SolidColorBrush AreaSelectBorderBrush = new SolidColorBrush(Colors.Navy);
@@ -126,6 +129,11 @@ namespace Visualizer
                 if (args[i].Equals("-useoldrenderer", StringComparison.OrdinalIgnoreCase))
                 {
                     UseOldRenderer = true;
+                }
+
+                if (args[i].Equals("-hidescore", StringComparison.OrdinalIgnoreCase))
+                {
+                    HideScore = true;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))

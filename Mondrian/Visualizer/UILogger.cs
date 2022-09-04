@@ -129,8 +129,8 @@ namespace Visualizer
             // Atomically update all data that's going to be rendered.
             lock (lockobj)
             {
-                _nextScore = image.Score;
-                _nextTotalInstructionCost = image.TotalInstructionCost;
+                _nextScore = _mainUi.HideScore ? 1 : image.Score;
+                _nextTotalInstructionCost = _mainUi.HideScore? 1 : image.TotalInstructionCost;
                 blocks = new List<SimpleBlock>(image.AllSimpleBlocks);
             }
 
