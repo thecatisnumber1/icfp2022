@@ -150,7 +150,16 @@ namespace AI
                 var block1 = virtualCanvas[x1, y1];
                 var block2 = virtualCanvas[x2, y2];
 
+                int pre = picasso.Score;
                 picasso.Swap(block1.ActualBlockId, block2.ActualBlockId);
+                int post = picasso.Score;
+
+                if (pre <= post)
+                {
+                    picasso.Undo();
+                    return;
+                }
+                
                 virtualCanvas[x1, y1] = block2;
                 virtualCanvas[x2, y2] = block1;
 
