@@ -15,23 +15,46 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> points = new List<Point>();
-            for (int i = 0; i < 300; i++)
+            List<Point> corners = new List<Point>();
+            for (int i = 0; i < 100; i++)
             {
-                points.Add(RandomPoint());
+                corners.Add(RandomPoint());
             }
 
-            List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            ClimbThatHill(picasso, points, logger);
+            Stopwatch sw = Stopwatch.StartNew();
+            //List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
+            List<RGBA?> colors;
+            int totalScore;
+            do
+            {
+                (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, logger);
+            } while (Simplify(corners, picasso.TargetImage, logger, totalScore));
 
-            /*
-            PlaceAllRectangles(picasso, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
+            logger.LogMessage(sw.Elapsed.ToString());
+            PlaceAllRectangles(picasso, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors, logger);
+            logger.Render(picasso);
+
             logger.LogMessage(picasso.Score.ToString());
+            List<string> instructions = picasso.SerializeInstructions();
+            File.WriteAllLines($"{Guid.NewGuid}.sol", instructions);
             if (args.problemNum != -1)
             {
                 Rest.CacheBests();
+                int best = Rest.BestForProblem(args.problemNum);
+                int score = picasso.Score;
+                if (picasso.Score < best)
+                {
+                    logger.LogMessage($"Woo new top score! Previous: {best}.");
+                    logger.LogMessage($"{Math.Round(score / (double)best * 100, 2)}% of previous high");
+                }
+                else
+                {
+                    logger.LogMessage($"Not good enough! Previous: {best}.");
+                    logger.LogMessage($"{Math.Round(score / (double)best * 100, 2)}% of best solution.");
+                }
+
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
-            }*/
+            }
         }
 
         public static readonly List<Point> DIRECTIONS = new List<Point>
@@ -42,10 +65,10 @@ namespace AI
             new Point(1, 0)
         };
 
-        private static void ClimbThatHill(Picasso picasso, List<Point> corners, LoggerBase logger)
+        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image img, List<Point> corners, LoggerBase logger)
         {
             bool improved = true;
-            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
+            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
             int limit = 10;
@@ -58,14 +81,15 @@ namespace AI
                     Point curPoint = corners[i];
                     foreach (Point d in DIRECTIONS)
                     {
-                        Point scaledDelta = new Point(d.X * limit, d.Y * limit);
+                        int scaleAmount = r.Next(1, limit + 1);
+                        Point scaledDelta = new Point(d.X * scaleAmount, d.Y * scaleAmount);
                         Point modifiedPoint = curPoint.Add(scaledDelta);
                         if (modifiedPoint.X > 0 && modifiedPoint.X <= CANVAS_SIZE && modifiedPoint.Y > 0 && modifiedPoint.Y <= CANVAS_SIZE)
                         {
                             corners[i] = modifiedPoint;
                             totalInstructionCost -= ComputeRectInstructionCost(curPoint);
                             totalInstructionCost += ComputeRectInstructionCost(modifiedPoint);
-                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
+                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img);
                             int newScore = tempColors.score + totalInstructionCost;
                             
                             if (newScore < bestScore)
@@ -77,15 +101,15 @@ namespace AI
 
                                 if (watch.Elapsed > TimeSpan.FromSeconds(3))
                                 {
-                                    Picasso tempPic = new Picasso(picasso.TargetImage);
-                                    PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
+                                    Picasso leondardo = new Picasso(img);
+                                    PlaceAllRectangles(leondardo, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
                                     watch.Restart();
 
-                                    if (tempPic.Score != newScore)
+                                    if (leondardo.Score != newScore)
                                     {
                                         throw new Exception("unpredicatble");
                                     }
-                                    logger.Render(tempPic);
+                                    logger.Render(leondardo);
                                 }
                             }
                             else
@@ -105,6 +129,35 @@ namespace AI
                     logger.LogMessage($"New \"limit\"={limit}");
                 }
             }
+
+            return (colors.colors, totalInstructionCost + colors.score);
+        }
+
+        private static bool Simplify(List<Point> corners, Image img, LoggerBase logger, int initialScore)
+        {
+            bool simplified = false;
+            int bestScore = initialScore;
+            for (int i = 0; i < corners.Count; i++)
+            {
+                Point p = corners[i];
+                corners.RemoveAt(i);
+                int newScore = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img).score;
+                newScore += corners.Sum(ComputeRectInstructionCost);
+                if (newScore < bestScore)
+                {
+                    logger.LogMessage("Found a simplification!");
+                    simplified = true;
+                    bestScore = newScore;
+                    i--;
+                    continue;
+                }
+                else
+                {
+                    corners.Insert(i, p);
+                }
+            }
+
+            return simplified;
         }
 
         private static int ComputeRectInstructionCost(Point topRight)
