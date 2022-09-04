@@ -55,7 +55,7 @@
             {
                 for (var x = block.BottomLeft.X; x < block.TopRight.X; x++)
                 {
-                    var blockColor = block.Image != null ? block.Image[x, y] : block.Color;
+                    var blockColor = block.GetColorAt(x, y);
 
                     bool colorChanged = renderCanvas[x, y] != blockColor;
                     double pixelDiff = pixelCost[x, y];

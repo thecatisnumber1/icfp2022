@@ -146,30 +146,10 @@ namespace Core
             var newBlocks = new List<Block>();
 
             if (oldBlock is SimpleBlock sBlock) {
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".0",
-                    sBlock.BottomLeft.Clone(),
-                    point.Clone(),
-                    sBlock.Color
-                ));
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".1",
-                    new Point(point.X, sBlock.BottomLeft.Y),
-                    new Point(sBlock.TopRight.X, point.Y),
-                    sBlock.Color
-                ));
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".2",
-                    point.Clone(),
-                    sBlock.TopRight.Clone(),
-                    sBlock.Color
-                ));
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".3",
-                    new Point(sBlock.BottomLeft.X, point.Y),
-                    new Point(point.X, sBlock.TopRight.Y),
-                    sBlock.Color
-                ));
+                newBlocks.Add(sBlock.Cut(".0", sBlock.BottomLeft, point));
+                newBlocks.Add(sBlock.Cut(".1", new Point(point.X, sBlock.BottomLeft.Y), new Point(sBlock.TopRight.X, point.Y)));
+                newBlocks.Add(sBlock.Cut(".2", point, sBlock.TopRight));
+                newBlocks.Add(sBlock.Cut(".3", new Point(sBlock.BottomLeft.X, point.Y), new Point(point.X, sBlock.TopRight.Y)));
             }
 
             if (oldBlock is ComplexBlock cBlock)
@@ -199,98 +179,38 @@ namespace Core
                     }
                     else if (point.IsInside(block.BottomLeft, block.TopRight))
                     {
-                        bottomLeftBlocks.Add(new SimpleBlock(
-                            "bl_child",
-                            block.BottomLeft.Clone(),
-                            point,
-                            block.Color
-                        ));
-                        bottomRightBlocks.Add(new SimpleBlock(
-                            "br_child",
-                            new Point(point.X, block.BottomLeft.Y),
-                            new Point(block.TopRight.X, point.Y),
-                            block.Color
-                        ));
-                        topRightBlocks.Add(new SimpleBlock(
-                            "tr_child",
-                            point,
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
-                        topLeftBlocks.Add(new SimpleBlock(
-                            "tl_child",
-                            new Point(block.BottomLeft.X, point.Y),
-                            new Point(point.X, block.TopRight.Y),
-                            block.Color
-                        ));
+                        bottomLeftBlocks.Add(block.Cut("bl_child", block.BottomLeft, point));
+                        bottomRightBlocks.Add(block.Cut("br_child", new Point(point.X, block.BottomLeft.Y), new Point(block.TopRight.X, point.Y)));
+                        topRightBlocks.Add(block.Cut("tr_child", point, block.TopRight));
+                        topLeftBlocks.Add(block.Cut("tl_child", new Point(block.BottomLeft.X, point.Y), new Point(point.X, block.TopRight.Y)));
                     }
                     else if (block.BottomLeft.X <= point.X && 
                         point.X <= block.TopRight.X &&
                         point.Y < block.BottomLeft.Y)
                     {
-                        topLeftBlocks.Add(new SimpleBlock(
-                            "case2_tl_child",
-                            block.BottomLeft.Clone(),
-                            new Point(point.X, block.TopRight.Y),
-                            block.Color
-                        ));
-                        topRightBlocks.Add(new SimpleBlock(
-                            "case2_tr_child",
-                            new Point(point.X, block.BottomLeft.Y),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        topLeftBlocks.Add(block.Cut("case2_tl_child", block.BottomLeft, new Point(point.X, block.TopRight.Y)));
+                        topRightBlocks.Add(block.Cut("case2_tr_child", new Point(point.X, block.BottomLeft.Y), block.TopRight));
                     }
                     else if (block.BottomLeft.X <= point.X &&
                         point.X <= block.TopRight.X &&
                         point.Y > block.TopRight.Y)
                     {
-                        bottomLeftBlocks.Add(new SimpleBlock(
-                            "case8_bl_child",
-                            block.BottomLeft.Clone(),
-                            new Point(point.X, block.TopRight.Y),
-                            block.Color
-                        ));
-                        bottomRightBlocks.Add(new SimpleBlock(
-                            "case8_br_child",
-                            new Point(point.X, block.BottomLeft.Y),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        bottomLeftBlocks.Add(block.Cut("case8_bl_child", block.BottomLeft, new Point(point.X, block.TopRight.Y)));
+                        bottomRightBlocks.Add(block.Cut("case8_br_child", new Point(point.X, block.BottomLeft.Y), block.TopRight));
                     }
                     else if (block.BottomLeft.Y <= point.Y &&
                         point.Y <= block.TopRight.Y &&
                         point.X < block.BottomLeft.X)
                     {
-                        bottomRightBlocks.Add(new SimpleBlock(
-                            "case4_br_child",
-                            block.BottomLeft.Clone(),
-                            new Point(block.TopRight.X, point.Y),
-                            block.Color
-                        ));
-                        topRightBlocks.Add(new SimpleBlock(
-                            "case4_tr_child",
-                            new Point(block.BottomLeft.X, point.Y),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        bottomRightBlocks.Add(block.Cut("case4_br_child", block.BottomLeft, new Point(block.TopRight.X, point.Y)));
+                        topRightBlocks.Add(block.Cut("case4_tr_child", new Point(block.BottomLeft.X, point.Y), block.TopRight));
                     }
                     else if (block.BottomLeft.Y <= point.Y &&
                         point.Y <= block.TopRight.Y &&
                         point.X > block.TopRight.X)
                     {
-                        bottomLeftBlocks.Add(new SimpleBlock(
-                            "case6_bl_child",
-                            block.BottomLeft.Clone(),
-                            new Point(block.TopRight.X, point.Y),
-                            block.Color
-                        ));
-                        topLeftBlocks.Add(new SimpleBlock(
-                            "case6_br_child",
-                            new Point(block.BottomLeft.X, point.Y),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        bottomLeftBlocks.Add(block.Cut("case6_bl_child", block.BottomLeft, new Point(block.TopRight.X, point.Y)));
+                        topLeftBlocks.Add(block.Cut("case6_br_child", new Point(block.BottomLeft.X, point.Y), block.TopRight));
                     }
                 }
 
@@ -350,18 +270,8 @@ namespace Core
 
             if (oldBlock is SimpleBlock sBlock)
             {
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".0",
-                    sBlock.BottomLeft.Clone(),
-                    new Point(lineNumber, sBlock.TopRight.Y),
-                    sBlock.Color
-                ));
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".1",
-                    new Point(lineNumber, sBlock.BottomLeft.Y),
-                    sBlock.TopRight.Clone(),
-                    sBlock.Color
-                ));
+                newBlocks.Add(sBlock.Cut(".0", sBlock.BottomLeft, new Point(lineNumber, sBlock.TopRight.Y)));
+                newBlocks.Add(sBlock.Cut(".1", new Point(lineNumber, sBlock.BottomLeft.Y), sBlock.TopRight));
             }
 
             if (oldBlock is ComplexBlock cBlock)
@@ -381,18 +291,8 @@ namespace Core
                     }
                     else
                     {
-                        leftBlocks.Add(new SimpleBlock(
-                            "child",
-                            block.BottomLeft.Clone(),
-                            new Point(lineNumber, block.TopRight.Y),
-                            block.Color
-                        ));
-                        rightBlocks.Add(new SimpleBlock(
-                            "child",
-                            new Point(lineNumber, block.BottomLeft.Y),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        leftBlocks.Add(block.Cut("child", block.BottomLeft, new Point(lineNumber, block.TopRight.Y)));
+                        rightBlocks.Add(block.Cut("child", new Point(lineNumber, block.BottomLeft.Y), block.TopRight));
                     }
                 }
 
@@ -439,18 +339,8 @@ namespace Core
 
             if (oldBlock is SimpleBlock sBlock)
             {
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".0",
-                    sBlock.BottomLeft.Clone(),
-                    new Point(sBlock.TopRight.X, lineNumber),
-                    sBlock.Color
-                ));
-                newBlocks.Add(new SimpleBlock(
-                    sBlock.ID + ".1",
-                    new Point(sBlock.BottomLeft.X, lineNumber),
-                    sBlock.TopRight.Clone(),
-                    sBlock.Color
-                ));
+                newBlocks.Add(sBlock.Cut(".0", sBlock.BottomLeft, new Point(sBlock.TopRight.X, lineNumber)));
+                newBlocks.Add(sBlock.Cut(".1", new Point(sBlock.BottomLeft.X, lineNumber), sBlock.TopRight));
             }
 
             if (oldBlock is ComplexBlock cBlock)
@@ -470,18 +360,8 @@ namespace Core
                     }
                     else
                     {
-                        bottomBlocks.Add(new SimpleBlock(
-                            "child",
-                            block.BottomLeft.Clone(),
-                            new Point(block.TopRight.X, lineNumber),
-                            block.Color
-                        ));
-                        topBlocks.Add(new SimpleBlock(
-                            "child",
-                            new Point(block.BottomLeft.X, lineNumber),
-                            block.TopRight.Clone(),
-                            block.Color
-                        ));
+                        bottomBlocks.Add(block.Cut("child", block.BottomLeft, new Point(block.TopRight.X, lineNumber)));
+                        topBlocks.Add(block.Cut("child", new Point(block.BottomLeft.X, lineNumber), block.TopRight));
                     }
                 }
 
@@ -611,12 +491,7 @@ namespace Core
 
             if (oldBlock1 is SimpleBlock sBlock1)
             {
-                newBlock2 = new SimpleBlock(
-                    blockId1,
-                    oldBlock2.BottomLeft.Clone(),
-                    oldBlock2.TopRight.Clone(),
-                    sBlock1.Color
-                );
+                newBlock2 = sBlock1.Shift(oldBlock2.BottomLeft, oldBlock2.TopRight);
             }
             else// if (oldBlock1 is ComplexBlock cBlock1)
             {
@@ -630,12 +505,7 @@ namespace Core
 
             if (oldBlock2 is SimpleBlock sBlock2)
             {
-                newBlock1 = new SimpleBlock(
-                    blockId2,
-                    oldBlock1.BottomLeft.Clone(),
-                    oldBlock1.TopRight.Clone(),
-                    sBlock2.Color
-                );
+                newBlock1 = sBlock2.Shift(oldBlock1.BottomLeft, oldBlock1.TopRight);
             }
             else// if (oldBlock2 is ComplexBlock cBlock2)
             {

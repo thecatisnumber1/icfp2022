@@ -51,5 +51,10 @@
 
             return new Image(cut);
         }
+
+        public Image Clone()
+        {
+            return Extract(new Point(), new Point(Width, Height));
+        }
     }
 }
