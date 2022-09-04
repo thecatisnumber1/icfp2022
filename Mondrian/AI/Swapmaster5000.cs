@@ -21,7 +21,7 @@ namespace AI
                 if (picasso.Score < best)
                 {
                     logger.LogMessage($"Woo new top score! Previous: {best}.");
-                    logger.LogMessage($"Improvement: {Math.Round(score / (double)best * 100, 2)}%");
+                    logger.LogMessage($"{Math.Round(score / (double)best * 100, 2)}% of previous high");
                 }
                 else
                 {
@@ -45,9 +45,18 @@ namespace AI
             private Picasso picasso;
             private LoggerBase logger;
             private VirtualBlock[,] virtualCanvas;
-            private List<RGBA>[,] virtualImage;
             private int virtualSize;
             private int blockSize;
+
+            private class Pri
+            {
+                public int x;
+                public int y;
+                public RGBA color;
+                public double cost;
+            }
+
+            private List<Pri> priorities;
 
             public Swapmaster6000(Picasso picasso, AIArgs args, LoggerBase logger)
             {
@@ -79,7 +88,7 @@ namespace AI
                 virtualSize = picasso.TargetImage.Width / blockSize;
 
                 virtualCanvas = new VirtualBlock[virtualSize, virtualSize];
-                virtualImage = new List<RGBA>[virtualSize, virtualSize];
+                priorities = new List<Pri>();
             }
 
             public void Initialize()
@@ -88,68 +97,53 @@ namespace AI
                 var colorSet = blocks.Select(x => x.Color).Distinct();
 
                 GenerateVirtualCanvas(blocks);
-                GenerateVirtualImage(picasso.TargetImage, colorSet);
-
-                // Initial lock pass
-                for (int y = 0; y < virtualSize; y++)
-                {
-                    for (int x = 0; x < virtualSize; x++)
-                    {
-                        var vc = virtualCanvas[x, y];
-                        var vi = virtualImage[x, y];
-                        vc.Locked = vc.Color == vi.First();
-                    }
-                }
+                GeneratePriorities(picasso.TargetImage, colorSet);
 
                 logger.Render(picasso);
             }
 
             public void Run()
             {
-                for (int pri = 0; pri < virtualImage[0,0].Count; pri++)
+                for (int n = 0; n < priorities.Count; n++)
                 {
-                    PriorityPass(pri);
-                }
-            }
+                    var pri = priorities[n];
+                    var vc = virtualCanvas[pri.x, pri.y];
 
-            private void PriorityPass(int priority)
-            {
-                for (int y = 0; y < virtualSize; y++)
-                {
-                    for (int x = 0; x < virtualSize; x++)
+                    if (!vc.Locked)
                     {
-                        var vc = virtualCanvas[x, y];
-                        var targetColor = virtualImage[x, y][priority];
-
-                        if (!vc.Locked && vc.Color != targetColor)
+                        if (vc.Color == pri.color)
                         {
-                            var (xx, yy) = FindSwapPartner(x, y, targetColor);
-
+                            vc.Locked = true;
+                        }
+                        else
+                        {
+                            var (xx, yy) = FindSwapPartner(n, pri.color);
+                            
                             if (xx != -1)
                             {
-                                PerformSwap(x, y, xx, yy);
+                                PerformSwap(pri.x, pri.y, xx, yy);
                             }
                         }
                     }
                 }
             }
 
-            private (int, int) FindSwapPartner(int startX, int startY, RGBA targetColor)
+            private (int, int) FindSwapPartner(int upperBound, RGBA targetColor)
             {
-                for (int y = startY; y < virtualSize; y++)
+                for (int i = priorities.Count - 1; i > upperBound; i--)
                 {
-                    for (int x = (y == startY ? startX + 1 : 0); x < virtualSize; x++)
+                    var pri = priorities[i];
+                    var swapOption = virtualCanvas[pri.x, pri.y];
+
+                    if (!swapOption.Locked && pri.color == targetColor && swapOption.Color == targetColor)
                     {
-                        if (!virtualCanvas[x, y].Locked && virtualCanvas[x, y].Color == targetColor)
-                        {
-                            return (x, y);
-                        }
+                        return (pri.x, pri.y);
                     }
                 }
 
                 return (-1, -1);
             }
-
+            
             private void PerformSwap(int x1, int y1, int x2, int y2)
             {
                 //logger.LogMessage($"Swap {x1},{y1} with {x2},{y2}");
@@ -166,20 +160,30 @@ namespace AI
                 Thread.Sleep(50);
             }
 
-
-            private void GenerateVirtualImage(Image image, IEnumerable<RGBA> colorSet)
+            private void GeneratePriorities(Image image, IEnumerable<RGBA> colorSet)
             {
                 for (int x = 0; x < virtualSize; x++)
                 {
                     for (int y = 0; y < virtualSize; y++)
                     {
-                        var color = image.AverageColor(new Rectangle(
-                            new Point(x*blockSize, y*blockSize),
-                            new Point(x*blockSize+blockSize, y*blockSize+blockSize)));
+                        var imageColor = image.AverageColor(new Rectangle(
+                            new Point(x * blockSize, y * blockSize),
+                            new Point(x * blockSize + blockSize, y * blockSize + blockSize)));
 
-                        virtualImage[x, y] = colorSet.OrderBy(x => x.Diff(color)).ToList();
+                        foreach (var color in colorSet)
+                        {
+                            priorities.Add(new Pri()
+                            {
+                                x = x,
+                                y = y,
+                                color = color,
+                                cost = imageColor.Diff(color)
+                            });
+                        }
                     }
                 }
+
+                priorities = priorities.OrderBy(x => x.cost).ToList();
             }
 
             private void GenerateVirtualCanvas(IEnumerable<SimpleBlock> blocks)
