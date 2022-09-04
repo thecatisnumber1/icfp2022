@@ -49,6 +49,7 @@ namespace Visualizer
         private bool _multiClickMode;
 
         private double _unselectedRectOpacity = 0.8;
+        internal bool UseExperimentalRenderer;
 
         // Brushes for reusing
         private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
@@ -118,6 +119,11 @@ namespace Visualizer
                     }
 
                     _unselectedRectOpacity = Math.Max(0.0, Math.Min(1.0, desiredOpacity));
+                }
+
+                if (args[i].Equals("-useexperimentalrenderer", StringComparison.OrdinalIgnoreCase))
+                {
+                    UseExperimentalRenderer = true;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
@@ -241,7 +247,7 @@ namespace Visualizer
         private HashSet<SimpleBlock> previouslyRenderedBlocks;
         private Bitmap renderedBitmap;
 
-        public void RenderImageFast(List<SimpleBlock> blocks)
+        public void RenderImageFast(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
@@ -265,21 +271,23 @@ namespace Visualizer
                 // Render
                 unsafe
                 {
-                    // Get starting pointer
-                    // Pointer of 0,0 + X offset (w/ bitdepth) + Y offset (stride handles bit depth; it's width * bit depth)
-                    byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (block.BottomLeft.Y * bmpData.Stride);
-                    for (int x = 0; x < block.Size.X; x++)
+                    // Pointer is x * bitdepth + (height - top) * stride, then scan the block top to bottom left to right
+                    byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (bmpData.Stride * (height - block.TopRight.Y));
+                    for (int y = block.TopRight.Y - 1; y >= block.BottomLeft.Y; y--)
                     {
                         byte* drawptr = ptr;
-                        for (int y = 0; y < block.Size.Y; y++)
+                        for (int x = block.BottomLeft.X; x < block.TopRight.X; x++)
                         {
-                            *(drawptr++) = (byte)block.Color.B;
-                            *(drawptr++) = (byte)block.Color.G;
-                            *(drawptr++) = (byte)block.Color.R;
-                            *(drawptr++) = (byte)block.Color.A;
+                            RGBA blockPixel = block.Image == null ? block.Color : block.Image[x, y];
+
+                            *(drawptr++) = (byte)blockPixel.B;
+                            *(drawptr++) = (byte)blockPixel.G;
+                            *(drawptr++) = (byte)blockPixel.R;
+                            *(drawptr++) = (byte)blockPixel.A;
                         }
                         ptr += bmpData.Stride;
                     }
+
                 }
             }
 
@@ -295,6 +303,10 @@ namespace Visualizer
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
+
+
+            // Make sure to copy this into other implementations.
+            ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
         }
 
         public void RenderImage(List<SimpleBlock> blocks, int score, int totalInstructionCost)

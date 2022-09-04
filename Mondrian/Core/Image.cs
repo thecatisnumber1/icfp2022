@@ -45,6 +45,8 @@
             {
                 for (int y = bottomLeft.Y; y < bottomLeft.Y + size.Y; y++)
                 {
+                    // BUG: This line will throw on images because cut[x,y] should be something like cut[x - bottomLeft.X, y - bottomLeft.Y]
+                    // Otherwise if bottomLeft is, say, [200, 200] then this will try to index cut[200, 200]
                     cut[x, y] = pixels[x, y];
                 }
             }
