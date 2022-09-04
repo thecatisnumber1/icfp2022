@@ -415,11 +415,18 @@ namespace Visualizer
                     Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
 
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
-                LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
-                LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
+                if (result.Width == 0 || result.Height == 0)
+                {
+                    LogVisualizerMessage("Ignoring zero width/height rectangle");
+                }
+                else
+                {
+                    LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
+                    LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
-                _selectedRects.Push(result);
-                DrawSelectedRects(true);
+                    _selectedRects.Push(result);
+                    DrawSelectedRects(true);
+                }
 
                 _areaSelectOrigin = null;
                 return;
