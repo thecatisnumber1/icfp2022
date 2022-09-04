@@ -19,7 +19,7 @@
             };
         }
 
-        public Canvas(InitialConfig config, Image? initialPng)
+        public Canvas(InitialConfig config, Image? initialPng = null)
         {
             Width = config.width;
             Height = config.height;
