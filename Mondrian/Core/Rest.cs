@@ -72,5 +72,10 @@ namespace Core
                 Console.WriteLine(rez.Content.ReadAsStringAsync().Result);
             }
         }
+
+        public static int BestForProblem(int problem)
+        {
+            return current.GetValueOrDefault(problem, int.MaxValue);
+        }
     }
 }

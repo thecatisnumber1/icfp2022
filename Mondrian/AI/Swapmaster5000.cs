@@ -9,6 +9,28 @@ namespace AI
             var swaps = new Swapmaster6000(picasso, args, logger);
             swaps.Initialize();
             swaps.Run();
+
+            if (args.problemNum != -1)
+            {
+                int score = picasso.Score;
+                logger.LogMessage($"Score: {score}");
+                
+                Rest.CacheBests();
+
+                int best = Rest.BestForProblem(args.problemNum);
+                if (picasso.Score < best)
+                {
+                    logger.LogMessage($"Woo new top score! Previous: {best}.");
+                    logger.LogMessage($"Improvement: {Math.Round(score / (double)best * 100, 2)}%");
+                }
+                else
+                {
+                    logger.LogMessage($"Not good enough! Previous: {best}.");
+                    logger.LogMessage($"{Math.Round(score / (double)best * 100, 2)}% of best solution.");
+                }
+
+                Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
+            }
         }
 
         private class Swapmaster6000
@@ -88,8 +110,6 @@ namespace AI
                 {
                     PriorityPass(pri);
                 }
-
-                logger.LogMessage(string.Join("\n", picasso.SerializeInstructions()));
             }
 
             private void PriorityPass(int priority)
@@ -136,25 +156,6 @@ namespace AI
                 var block1 = virtualCanvas[x1, y1];
                 var block2 = virtualCanvas[x2, y2];
 
-                /*if (x1 == 0 && y1 == 0)
-                {
-                    logger.LogMessage($"Swapping as the first: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
-                }
-                else if (block1.ActualBlockId == "0")
-                {
-                    logger.LogMessage($"Swapping as the first by blockId 0: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
-                }
-
-
-                if (x2 == 0 && y2 == 0)
-                {
-                    logger.LogMessage($"Swapping as the second: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
-                }
-                else if (block2.ActualBlockId == "0")
-                {
-                    logger.LogMessage($"Swapping as the second by blockId 0: {x1},{y1}[{block1.ActualBlockId}] and {x2},{y2}[{block2.ActualBlockId}]");
-                }*/
-
                 picasso.Swap(block1.ActualBlockId, block2.ActualBlockId);
                 virtualCanvas[x1, y1] = block2;
                 virtualCanvas[x2, y2] = block1;
@@ -162,7 +163,7 @@ namespace AI
                 block2.Locked = true;
 
                 logger.Render(picasso);
-                //Thread.Sleep(100);
+                Thread.Sleep(50);
             }
 
 
