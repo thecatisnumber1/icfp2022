@@ -21,6 +21,7 @@ namespace AI
                 ClimbThatHill(picasso, rects, logger);
                 for (int i = 0; i < rects.Count; i++)
                 {
+                    Rectangle r = rects[i];
                     Picasso temp = new Picasso(picasso.TargetImage);
                     PlaceAllRectangles(temp, rects, logger);
                     int prevScore = temp.Score;
@@ -33,6 +34,8 @@ namespace AI
                         simplified = true;
                         break;
                     }
+
+                    rects.Insert(i, r);
                 }
             }
             
