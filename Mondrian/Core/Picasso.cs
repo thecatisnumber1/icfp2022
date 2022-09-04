@@ -65,6 +65,11 @@ namespace Core
             instructions = new Stack<Snack>();
         }
 
+        public Picasso(Image img, int startingInstructionCost) : this(img)
+        {
+            TotalInstructionCost = startingInstructionCost;
+        }
+
         public int Score
         {
             get

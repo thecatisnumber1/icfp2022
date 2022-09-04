@@ -19,6 +19,7 @@ namespace AI
             }
 
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
+            rects.Reverse();
             bool simplified = true;
             while (simplified)
             {
@@ -27,10 +28,10 @@ namespace AI
                 for (int i = 0; i < rects.Count; i++)
                 {
                     Rectangle r = rects[i];
-                    Picasso temp = new Picasso(picasso.TargetImage);
+                    Picasso temp = new Picasso(picasso.TargetImage, picasso.TotalInstructionCost);
                     PlaceAllRectangles(temp, rects, logger);
                     int prevScore = temp.Score;
-                    temp = new Picasso(picasso.TargetImage);
+                    temp = new Picasso(picasso.TargetImage, picasso.TotalInstructionCost);
                     rects.RemoveAt(i);
                     PlaceAllRectangles(temp, rects, logger);
                     if (temp.Score < prevScore)
@@ -87,7 +88,7 @@ namespace AI
         private static void ClimbThatHill(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
         {
             bool improved = true;
-            Picasso origCopy = new Picasso(picasso.TargetImage);
+            Picasso origCopy = new Picasso(picasso.TargetImage, picasso.TotalInstructionCost);
             PlaceAllRectangles(origCopy, rects, logger);
             int bestScore = origCopy.Score;
             int limit = 10;
@@ -104,7 +105,7 @@ namespace AI
                             curRect = rects[i];
                             rects.RemoveAt(i);
                             rects.Insert(i, rm.Mutate());
-                            Picasso temp = new Picasso(picasso.TargetImage);
+                            Picasso temp = new Picasso(picasso.TargetImage, picasso.TotalInstructionCost);
                             PlaceAllRectangles(temp, rects, logger);
                             if (temp.Score < bestScore)
                             {
@@ -147,10 +148,6 @@ namespace AI
                 throw new Exception("Can't place a rectangle on a complex canvas!");
             }
 
-            if (color == null)
-            {
-                ;
-            }
             FirstCut(picasso, rect, color);
         }
 
