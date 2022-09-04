@@ -13,6 +13,11 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
+            if (picasso.AllBlocks.Count() > 0)
+            {
+                RejoinAll(picasso);
+            }
+
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             bool simplified = true;
             while (simplified)
@@ -44,6 +49,37 @@ namespace AI
             {
                 Rest.CacheBests();
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
+            }
+        }
+
+        private static void RejoinAll(Picasso picasso)
+        {
+            // Assume square.  Assume equal size.
+            Block first = picasso.AllBlocks.First();
+            int size = first.TopRight.X - first.BottomLeft.X;
+            if (400 % size != 0)
+            {
+                throw new Exception("I didn' think this could be true.");
+            }
+
+            Block[,] blocks = new Block[400 / size, 400 / size];
+
+            foreach (Block block in picasso.AllBlocks)
+            {
+                blocks[block.BottomLeft.X / size, block.BottomLeft.Y / size] = block;
+            }
+            
+            for (int row = 0; row < 400 / size; row++)
+            {
+                for (int col = 0; col < 400 / size - 1; col++)
+                {
+                    blocks[0, row] = picasso.Merge(blocks[0, row].ID, blocks[col + 1, row].ID);
+                }
+
+                if (row > 0)
+                {
+                    blocks[0, 0] = picasso.Merge(blocks[0, 0].ID, blocks[0, row].ID);
+                }
             }
         }
 
@@ -86,7 +122,7 @@ namespace AI
 
                 if (!improved && limit > 1)
                 {
-                    limit--;
+                    limit = (int) (limit * .75);
                     improved = true;
                     logger.LogMessage($"New \"limit\"={limit}");
                 }

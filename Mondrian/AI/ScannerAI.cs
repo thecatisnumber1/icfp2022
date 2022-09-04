@@ -10,16 +10,15 @@ namespace AI
 {
     public class ScannerAI
     {
+        public static List<Rectangle> Rects;
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
+            Rects = new List<Rectangle>();
+            Picasso temp = new Picasso(picasso.TargetImage);
             picasso.Color(picasso.AllBlocks.First().ID, picasso.AverageTargetColor(picasso.AllBlocks.First()));
             logger.Render(picasso);
             ScanBlock(picasso, picasso.AllBlocks.First(), logger);
-            //int scannerScore = picasso.Score;
-            //picasso.Undo(picasso.InstructionCount);
-            //CheckerboardAI.Solve(picasso, args, new ConsoleLogger());
-            //logger.LogMessage($"Scanner score = {scannerScore}, Checkerboard score = {picasso.Score}.");
-            //logger.Render(picasso);
+            
             logger.LogMessage($"Scanner score = {picasso.Score}.");
         }
 
@@ -124,6 +123,5 @@ namespace AI
             picasso.Undo(1);
             return false;
         }
-
     }
 }
