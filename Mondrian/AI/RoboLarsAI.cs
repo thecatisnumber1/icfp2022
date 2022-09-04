@@ -13,19 +13,8 @@ namespace AI
 
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            int granularity = 20;
-            List<Rectangle> rects = new List<Rectangle>();
-            for (int col = granularity; col <= 400; col += granularity)
-            {
-                for (int row = granularity; row <= 400; row += granularity)
-                {
-                    rects.Add(new Rectangle(Point.ORIGIN, new Point(col, row)));
-                }
-            }
-
-            rects = rects.OrderByDescending(x => x.TopRight.ManhattanDist(Point.ORIGIN)).ToList();
-            PlaceAllRectangles(picasso, rects, logger);
-            logger.Render(picasso);
+            ClimbThatHill(picasso, new List<Point> { new Point(100, 50), new Point(50, 100) }, logger);
+            ;
         }
 
         public static readonly List<Point> DIRECTIONS = new List<Point>
@@ -102,15 +91,15 @@ namespace AI
 
         private static int ComputeRectInstructionCost(Rectangle rect)
         {
-            if (rect.Right != 400 && rect.Top != 400)
+            if (rect.Right != CANVAS_SIZE && rect.Top != CANVAS_SIZE)
             {
                 return PointCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
-            else if (rect.Right != 400 && rect.Top == 400)
+            else if (rect.Right != CANVAS_SIZE && rect.Top == CANVAS_SIZE)
             {
                 return VerticalCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
-            else if (rect.Right == 400 && rect.Top != 400)
+            else if (rect.Right == CANVAS_SIZE && rect.Top != CANVAS_SIZE)
             {
                 return HorizontalCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
