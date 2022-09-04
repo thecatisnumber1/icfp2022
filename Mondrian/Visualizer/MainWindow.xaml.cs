@@ -346,7 +346,7 @@ namespace Visualizer
             _loggerInstance = new UILogger(this, _tokenSource.Token, _selectedRects);
 
             // Load image etc.
-            ResetProblem(); // Wipe all state.
+            //ResetProblem(); // Wipe all state.
 
             _solverTask = Task.Run(() =>
             {
