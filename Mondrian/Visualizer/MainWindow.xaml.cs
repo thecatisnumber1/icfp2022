@@ -48,6 +48,10 @@ namespace Visualizer
         private DrawingPoint? _areaSelectOrigin;
         private bool _leftMouseDown;
 
+        // Options
+        private bool _showSelectedRectOnTop;
+        private bool _debugSpew;
+
         public MainWindow(string[] args)
         {
             InitializeComponent();
@@ -64,7 +68,7 @@ namespace Visualizer
             // Parse args
             for (int i = 0; i < args.Length; i++)
             {
-                if (args[i].Equals("-problem", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-problem", StringComparison.OrdinalIgnoreCase) || args[i].Equals("-p", StringComparison.OrdinalIgnoreCase))
                 {
                     string problemId = args[++i];
                     SelectProblemFromId(problemStrings, problemId);
@@ -76,6 +80,16 @@ namespace Visualizer
                     string solverName = args[++i];
                     SelectSolverFromName(solverList, solverName);
                     continue;
+                }
+
+                if (args[i].Equals("-sot", StringComparison.OrdinalIgnoreCase))
+                {
+                    SelectedRectOnTopCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
+                {
+                    UIDebugSpewCheckbox.IsChecked = true;
                 }
 
                 otherArgs.Add(args[i]);
@@ -237,7 +251,6 @@ namespace Visualizer
 
             renderedBitmap.UnlockBits(bmpData);
 
-
             // Throw away anything in the set. Because doing an action makes a new block, we don't want to
             // be holding onto the reference.
             previouslyRenderedBlocks = blocks.ToHashSet();
@@ -317,7 +330,10 @@ namespace Visualizer
 
         private void LogVisualizerMessage(string message)
         {
-            LogMessage($"[VIZ] {message}");
+            if (UIDebugSpewCheckbox.IsChecked.HasValue && UIDebugSpewCheckbox.IsChecked.Value)
+            {
+                LogMessage($"[VIZ] {message}");
+            }
         }
 
         private void ProblemSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -512,6 +528,7 @@ namespace Visualizer
             }
 
             SelectedRectCanvas.Children.Clear();
+            System.Windows.Shapes.Rectangle selectedRect = null;
             foreach (Core.Rectangle rect in _selectedRects)
             {
                 // Draw a box
@@ -521,6 +538,7 @@ namespace Visualizer
                 {
                     stackRect.Stroke = new SolidColorBrush(Colors.Red);
                     stackRect.Fill = new SolidColorBrush(Colors.Salmon);
+                    selectedRect = stackRect;
                 }
                 else
                 {
@@ -535,8 +553,21 @@ namespace Visualizer
                 stackRect.Height = Math.Abs(rect.Height);
                 System.Windows.Controls.Canvas.SetLeft(stackRect, rect.Left);
                 System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
-                SelectedRectCanvas.Children.Add(stackRect);
+
+                // No value/false OR it's not the selected one
+                if ((!SelectedRectOnTopCheckbox.IsChecked.HasValue || !SelectedRectOnTopCheckbox.IsChecked.Value)
+                    || selected != rect)
+                {
+                    SelectedRectCanvas.Children.Add(stackRect);
+                }
             }
+
+            // One was selected AND we're told to render it on top
+            if (selectedRect != null && (SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value))
+            {
+                SelectedRectCanvas.Children.Add(selectedRect);
+            }
+
             if (reloadList)
             {
                 RectStack.ItemsSource = null;
@@ -564,11 +595,6 @@ namespace Visualizer
 
             LogVisualizerMessage($"Restoring from {fileName}");
 
-            // string[] problemFiles = Directory.GetFiles(AllProblemsRelativePath, "*.json");
-            // List<string> problemStrings = problemFiles.Select(Path.GetFileNameWithoutExtension).ToList();
-            // SelectProblemFromId(problemStrings, problemId); // Load/switch problem
-
-            // ResetProblem();
             _selectedRects = rects;
             DrawSelectedRects(true);
         }
@@ -576,6 +602,9 @@ namespace Visualizer
         private void RectStack_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             DrawSelectedRects();
+
+            OrderRectStackUp.IsEnabled = _selectedRects.Count > 1 && RectStack.SelectedIndex > 0;
+            OrderRectStackDown.IsEnabled = _selectedRects.Count > 1 && RectStack.SelectedIndex < _selectedRects.Count - 1; // -1 because we can't move the last one down
         }
 
         private void RectStack_KeyUp(object sender, KeyEventArgs e)
@@ -593,6 +622,35 @@ namespace Visualizer
                 DrawSelectedRects(true);
             }
 
+        }
+
+        private void OrderRectStackUp_OnClick(object sender, RoutedEventArgs e)
+        {
+            // Swap current with current - 1
+            int currentIndex = RectStack.SelectedIndex;
+            Core.Rectangle prev = _selectedRects[currentIndex - 1];
+            _selectedRects.RemoveAt(currentIndex - 1);
+            _selectedRects.Insert(currentIndex, prev);
+            RectStack.ItemsSource = null;
+            RectStack.ItemsSource = _selectedRects;
+            RectStack.SelectedIndex = currentIndex - 1; // Automatically redraws
+        }
+
+        private void OrderRectStackDown_OnClick(object sender, RoutedEventArgs e)
+        {
+            // Swap current with current + 1
+            int currentIndex = RectStack.SelectedIndex;
+            Core.Rectangle next = _selectedRects[currentIndex + 1];
+            _selectedRects.RemoveAt(currentIndex + 1);
+            _selectedRects.Insert(currentIndex, next);
+            RectStack.ItemsSource = null;
+            RectStack.ItemsSource = _selectedRects;
+            RectStack.SelectedIndex = currentIndex + 1; // Automatically redraws
+        }
+
+        private void SelectedRectOnTopCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
         }
     }
 }

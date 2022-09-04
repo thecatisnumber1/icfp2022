@@ -61,12 +61,28 @@
             <Button Content="Break" x:Name="SolverBreakButton" Click="SolverBreakButton_OnClick" IsEnabled="False" />
             <Button Content="Resume" x:Name="SolverResumeButton" Click="SolverResumeButton_OnClick" IsEnabled="False" />
             <Separator />
+            <Label Content="UI Flags"/>
+            <CheckBox x:Name="SelectedRectOnTopCheckbox" Content="Selected rect on top" Checked="SelectedRectOnTopCheckbox_Toggled" Unchecked="SelectedRectOnTopCheckbox_Toggled" />
+            <CheckBox x:Name="UIDebugSpewCheckbox" Content="UI Debug Spew"/>
+            <!-- Actually manual mode -->
+            <Separator />
+            <Label>Command Line Args</Label>
+            <TextBox IsReadOnly="True" xml:space="preserve">-a SolverName
+-p[roblem] ID
+-sot (selected rect on top)
+-vdbg (visualizer debug)
+            </TextBox>
+            <Separator />
             <Label>Rect Hotkeys</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">Ctrl+Z Undo
 Ctrl+S Quicksave
 Ctrl+O Quickload</TextBox>
             <Separator />
-            <ListBox x:Name="RectStack" Height="200" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
+            <DockPanel HorizontalAlignment="Stretch">
+                <Button x:Name="OrderRectStackUp" Content="Move Up" Click="OrderRectStackUp_OnClick" Width="60" DockPanel.Dock="Left" IsEnabled="False"/>
+                <Button x:Name="OrderRectStackDown" Content="Move Down" Click="OrderRectStackDown_OnClick" Width="70" DockPanel.Dock="Right" IsEnabled="False"/>
+            </DockPanel>
+            <ListBox x:Name="RectStack" Height="500" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>
