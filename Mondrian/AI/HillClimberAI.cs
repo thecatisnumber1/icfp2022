@@ -90,7 +90,7 @@ namespace AI
             Picasso origCopy = new Picasso(picasso.TargetImage, picasso.TotalInstructionCost);
             PlaceAllRectangles(origCopy, rects, logger);
             int bestScore = origCopy.Score;
-            int limit = 10;
+            int limit = 3;
             while (improved)
             {
                 improved = false;
