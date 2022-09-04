@@ -33,7 +33,8 @@ namespace AI
                 {
                     logger.LogMessage(i.ToString());
                 }
-                Point point = rects[i];
+
+                Point point = Point.ORIGIN;
                 if (MaybeColor(picasso, new Rectangle(Point.ORIGIN, point), picasso.AllBlocks.First(), picasso.TargetImage[point]))
                 {
                     logger.Render(picasso);
