@@ -9,6 +9,8 @@ namespace AI
 {
     public class RoboLarsAI
     {
+        public static readonly int CANVAS_SIZE = 400;
+
         public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             int granularity = 20;
@@ -38,7 +40,8 @@ namespace AI
         {
             bool improved = true;
             var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
-            int bestScore = colors.score;
+            int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
+            int bestScore = colors.score + totalInstructionCost;
             int limit = 10;
             while (improved)
             {
@@ -48,25 +51,36 @@ namespace AI
                     Point curPoint = corners[i];
                     foreach (Point d in DIRECTIONS)
                     {
-                        Point scaled = new Point(d.X * limit, d.Y * limit);
-                        curPoint = curPoint.Add(scaled);
-                        if (scaled.X > 0 && scaled.X <= 400 && scaled.Y > 0 && scaled.Y <= 400)
+                        Point scaledDelta = new Point(d.X * limit, d.Y * limit);
+                        Point modifiedPoint = curPoint.Add(scaledDelta);
+                        if (modifiedPoint.X > 0 && modifiedPoint.X <= CANVAS_SIZE && modifiedPoint.Y > 0 && modifiedPoint.Y <= CANVAS_SIZE)
                         {
-                            Point origPoint = corners[i];
-                            corners.RemoveAt(i);
-                            corners.Insert(i, curPoint);
+                            corners[i] = modifiedPoint;
+                            totalInstructionCost -= ComputeRectInstructionCost(curPoint);
+                            totalInstructionCost += ComputeRectInstructionCost(modifiedPoint);
                             var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
-                            // TODO: update score to include the cost of doing the move!
-                            if (tempColors.score < bestScore)
+                            int newScore = tempColors.score + totalInstructionCost;
+                            
+                            Picasso tempPic = new Picasso(picasso.TargetImage);
+                            PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
+
+                            if (tempPic.Score != newScore)
                             {
-                                bestScore = tempColors.score;
+                                throw new Exception("predicatble");
+                            }
+                            
+                            if (newScore < bestScore)
+                            {
+                                bestScore = newScore;
                                 improved = true;
-                                // TODO: Render this
+                                curPoint = modifiedPoint;
+                                logger.Render(tempPic);
                             }
                             else
                             {
-                                corners.RemoveAt(i);
-                                corners.Insert(i, curPoint);
+                                corners[i] = curPoint;
+                                totalInstructionCost -= ComputeRectInstructionCost(modifiedPoint);
+                                totalInstructionCost += ComputeRectInstructionCost(curPoint);
                             }
                         }
                     }
@@ -81,49 +95,89 @@ namespace AI
             }
         }
 
+        private static int ComputeRectInstructionCost(Point topRight)
+        {
+            return ComputeRectInstructionCost(new Rectangle(Point.ORIGIN, topRight));
+        }
+
         private static int ComputeRectInstructionCost(Rectangle rect)
         {
-            throw new NotImplementedException();
             if (rect.Right != 400 && rect.Top != 400)
             {
-                /*
-                List<Block> blocks1 = picasso.PointCut(block.ID, rect.TopRight).ToList();
-                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
-                Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
-                return picasso.Merge(firstMerge.ID, secondMerge.ID);
-                */
-                int cost = PointCutCost(rect);
-                //cost += InstructionCostCalculator.GetCost(InstructionType.Color, )
+                return PointCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
             else if (rect.Right != 400 && rect.Top == 400)
             {
-                /*
-                List<Block> blocks1 = picasso.VerticalCut(block.ID, rect.Right).ToList();
-                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-                */
+                return VerticalCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
             else if (rect.Right == 400 && rect.Top != 400)
             {
-                /*
-                List<Block> blocks1 = picasso.HorizontalCut(block.ID, rect.Top).ToList();
-                picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                return picasso.Merge(blocks1[0].ID, blocks1[1].ID);
-                */
+                return HorizontalCutCost(rect) + ColorCost(rect) + MergeCost(rect);
             }
             else
             {
-                /*
-                picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                return block;
-                */
+                return ColorCost(rect);
             }
         }
 
         private static int PointCutCost(Rectangle rect)
         {
-            return InstructionCostCalculator.GetCost(InstructionType.PointCut, rect.TopRight.GetDiff(rect.BottomLeft).GetScalarSize(), 400 * 400);
+            return InstructionCostCalculator.GetCost(InstructionType.PointCut, CANVAS_SIZE * CANVAS_SIZE, CANVAS_SIZE * CANVAS_SIZE);
+        }
+
+        private static int HorizontalCutCost(Rectangle rect)
+        {
+            return InstructionCostCalculator.GetCost(InstructionType.HorizontalCut, CANVAS_SIZE * CANVAS_SIZE, CANVAS_SIZE * CANVAS_SIZE);
+        }
+
+        private static int VerticalCutCost(Rectangle rect)
+        {
+            return InstructionCostCalculator.GetCost(InstructionType.VerticalCut, CANVAS_SIZE * CANVAS_SIZE, CANVAS_SIZE * CANVAS_SIZE);
+        }
+
+        private static int ColorCost(Rectangle rect)
+        {
+            return InstructionCostCalculator.GetCost(InstructionType.Color, rect.TopRight.GetDiff(rect.BottomLeft).GetScalarSize(), CANVAS_SIZE * CANVAS_SIZE);
+        }
+
+        private static int MergeCost(Rectangle rect)
+        {
+            Point center = rect.TopRight;
+
+            // Figure out which rectangles were created for this rect
+            if (rect.Right != CANVAS_SIZE && rect.Top != CANVAS_SIZE)
+            {
+                Rectangle rect1 = Rectangle.FromPoints(center, new Point(CANVAS_SIZE, 0));
+                Rectangle rect2 = Rectangle.FromPoints(center, new Point(CANVAS_SIZE, CANVAS_SIZE));
+                Rectangle rect3 = Rectangle.FromPoints(center, new Point(0, CANVAS_SIZE));
+                Rectangle rect12 = MergeRects(rect1, rect2);
+                Rectangle rect03 = MergeRects(rect, rect3);
+                return MergeCost(rect1, rect2) + MergeCost(rect, rect3) + MergeCost(rect12, rect03);
+            }
+            else if (rect.Right != CANVAS_SIZE && rect.Top == CANVAS_SIZE)
+            {
+                Rectangle rect1 = Rectangle.FromPoints(center, new Point(CANVAS_SIZE, 0));
+                return MergeCost(rect, rect1);
+            }
+            else if (rect.Right == CANVAS_SIZE && rect.Top != CANVAS_SIZE)
+            {
+                Rectangle rect1 = Rectangle.FromPoints(center, new Point(0, CANVAS_SIZE));
+                return MergeCost(rect, rect1);
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private static Rectangle MergeRects(Rectangle bottomLeft, Rectangle topRight)
+        {
+            return Rectangle.FromPoints(bottomLeft.BottomLeft, topRight.TopRight);
+        }
+
+        private static int MergeCost(Rectangle first, Rectangle second)
+        {
+            return InstructionCostCalculator.GetCost(InstructionType.Merge, Math.Max(first.Area, second.Area), CANVAS_SIZE * CANVAS_SIZE);
         }
 
         private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
