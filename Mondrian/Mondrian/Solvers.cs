@@ -14,16 +14,16 @@ namespace Mondrian
 
         private static Dictionary<string, Solver> solvers = new()
         {
-            ["Checkerboard"] = CheckerboardAI.Solve,
+            //["Checkerboard"] = CheckerboardAI.Solve,
             ["Scanner"] = ScannerAI.Solve,
-            ["BeamScanner"] = BeamScannerAI.Solve,
+            //["BeamScanner"] = BeamScannerAI.Solve,
             ["AllCuts"] = AllCutsAI.Solve,
             ["LinePrinterH"] = LinePrinter.SolveH,
             ["LinePrinterV"] = LinePrinter.SolveV,
             ["DotMatrix"] = LinePrinter.SolveD,
             ["Swapmaster"] = Swapmaster5000.Solve,
-            ["HillClimber"] = HillClimberAI.Solve,
-            ["RoboLars"] = RoboLarsAI.Solve,
+            ["HillClimber"] = RoboLarsAI.InteractiveSolve,
+            ["RoboLars"] = RoboLarsAI.NonInteractiveSolve,
         };
 
         public static Solver GetSolver(string algorithm)

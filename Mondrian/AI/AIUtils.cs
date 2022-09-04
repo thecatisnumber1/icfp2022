@@ -11,6 +11,11 @@ namespace AI
     {
         public static void RejoinAll(Picasso picasso)
         {
+            if (picasso.BlockCount == 1)
+            {
+                return;
+            }
+
             // Assume square.  Assume equal size.
             Block first = picasso.AllBlocks.First();
             int size = first.TopRight.X - first.BottomLeft.X;

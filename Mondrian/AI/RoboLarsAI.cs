@@ -13,24 +13,36 @@ namespace AI
         public static readonly int CANVAS_SIZE = 400;
         public static Random r = new Random();
 
-        public static void Solve(Picasso picasso, AIArgs args, LoggerBase logger)
+        public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> corners = new List<Point>();
-            for (int i = 0; i < 100; i++)
-            {
-                corners.Add(RandomPoint());
-            }
+            List<Point> corners = GenerateInitialCorners();
+            List<RGBA?> colors = DoSearch(picasso, logger, corners);
+            SubmitSolution(picasso, args, logger, corners, colors);
+        }
 
-            Stopwatch sw = Stopwatch.StartNew();
-            //List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
+        public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
+        {
+            List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
+            List<RGBA?> colors = DoSearch(picasso, logger, corners);
+            SubmitSolution(picasso, args, logger, corners, colors);
+        }
+
+        private static List<RGBA?> DoSearch(Picasso picasso, LoggerBase logger, List<Point> corners)
+        {
             List<RGBA?> colors;
             int totalScore;
+            Stopwatch sw = Stopwatch.StartNew();
             do
             {
                 (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, logger);
             } while (Simplify(corners, picasso.TargetImage, logger, totalScore));
-
             logger.LogMessage(sw.Elapsed.ToString());
+            return colors;
+        }
+
+        private static void SubmitSolution(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners, List<RGBA?> colors)
+        {
+            AIUtils.RejoinAll(picasso);
             PlaceAllRectangles(picasso, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors, logger);
             logger.Render(picasso);
 
@@ -55,6 +67,17 @@ namespace AI
 
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
             }
+        }
+
+        private static List<Point> GenerateInitialCorners()
+        {
+            List<Point> corners = new List<Point>();
+            for (int i = 0; i < 200; i++)
+            {
+                corners.Add(RandomPoint());
+            }
+
+            return corners.OrderByDescending(x => x.ManhattanDist(Point.ORIGIN)).ToList();
         }
 
         public static readonly List<Point> DIRECTIONS = new List<Point>
@@ -101,7 +124,7 @@ namespace AI
 
                                 if (watch.Elapsed > TimeSpan.FromSeconds(3))
                                 {
-                                    Picasso leondardo = new Picasso(img);
+                                    Picasso leondardo = new Picasso(img, true);
                                     PlaceAllRectangles(leondardo, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
                                     watch.Restart();
 
