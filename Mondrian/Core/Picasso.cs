@@ -75,6 +75,9 @@ namespace Core
             TotalInstructionCost = startingInstructionCost;
         }
 
+        public Picasso(Image img, bool isFakePicasso) : this(img, null, null, isFakePicasso)
+        { }
+
         public int Score
         {
             get
