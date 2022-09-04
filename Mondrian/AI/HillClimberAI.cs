@@ -38,11 +38,11 @@ namespace AI
                     rects.Insert(i, r);
                 }
             }
-            
-            
+
+            PlaceAllRectangles(picasso, rects, logger);
             if (args.problemNum != -1)
             {
-                //Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()));
+                Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
             }
         }
 
@@ -94,9 +94,11 @@ namespace AI
 
         private static void PlaceAllRectangles(Picasso picasso, List<Rectangle> rects, LoggerBase logger)
         {
-            foreach (Rectangle rect in rects)
+            //ColorOptimizer co = new ColorOptimizer();
+            //List<RGBA?> colors = co.ChooseColorsSlow(rects, picasso.TargetImage);
+            for (int i = 0; i < rects.Count; i++)
             {
-                PlaceRectangle(picasso, rect);
+                PlaceRectangle(picasso, rects[i]);
             }
         }
 
