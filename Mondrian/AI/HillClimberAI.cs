@@ -42,6 +42,7 @@ namespace AI
             PlaceAllRectangles(picasso, rects, logger);
             if (args.problemNum != -1)
             {
+                Rest.CacheBests();
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
             }
         }
@@ -52,7 +53,7 @@ namespace AI
             Picasso origCopy = new Picasso(picasso.TargetImage);
             PlaceAllRectangles(origCopy, rects, logger);
             int bestScore = origCopy.Score;
-            int limit = 20;
+            int limit = 10;
             while (improved)
             {
                 improved = false;
