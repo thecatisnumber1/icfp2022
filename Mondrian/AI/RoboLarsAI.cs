@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,15 @@ namespace AI
 
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
             ClimbThatHill(picasso, points, logger);
+
+            /*
+            PlaceAllRectangles(picasso, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
+            logger.LogMessage(picasso.Score.ToString());
+            if (args.problemNum != -1)
+            {
+                Rest.CacheBests();
+                Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
+            }*/
         }
 
         public static readonly List<Point> DIRECTIONS = new List<Point>
@@ -38,15 +48,8 @@ namespace AI
             var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
-            /*Picasso tempPic = new Picasso(picasso.TargetImage);
-            PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
-
-            if (Math.Abs(bestScore - tempPic.Score) > 0)
-            {
-                throw new Exception("predicatble");
-            }*/
-
             int limit = 10;
+            Stopwatch watch = Stopwatch.StartNew();
             while (improved)
             {
                 improved = false;
@@ -65,14 +68,6 @@ namespace AI
                             var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, picasso.TargetImage);
                             int newScore = tempColors.score + totalInstructionCost;
                             
-                            /*tempPic = new Picasso(picasso.TargetImage);
-                            PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), logger);
-
-                            if (Math.Abs(tempPic.Score - newScore) > 0)
-                            {
-                                throw new Exception("predicatble");
-                            }*/
-                            
                             if (newScore < bestScore)
                             {
                                 bestScore = newScore;
@@ -80,14 +75,18 @@ namespace AI
                                 curPoint = modifiedPoint;
                                 colors = tempColors;
 
-                                Picasso tempPic = new Picasso(picasso.TargetImage);
-                                PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
-
-                                if (tempPic.Score != newScore)
+                                if (watch.Elapsed > TimeSpan.FromSeconds(3))
                                 {
-                                    throw new Exception("unpredicatble");
+                                    Picasso tempPic = new Picasso(picasso.TargetImage);
+                                    PlaceAllRectangles(tempPic, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
+                                    watch.Restart();
+
+                                    if (tempPic.Score != newScore)
+                                    {
+                                        throw new Exception("unpredicatble");
+                                    }
+                                    logger.Render(tempPic);
                                 }
-                                logger.Render(tempPic);
                             }
                             else
                             {
