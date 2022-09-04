@@ -819,6 +819,11 @@ namespace Visualizer
 
         private void ManualMove_OnMouseLeave(object sender, MouseEventArgs e)
         {
+            ManualDrawCanvas.Children.Clear();
+        }
+
+        private void Execute_ExitMultiMode(object sender, ExecutedRoutedEventArgs e)
+        {
             _multiClickMode = false;
             _areaSelectOrigin = null;
             ManualDrawCanvas.Children.Clear();

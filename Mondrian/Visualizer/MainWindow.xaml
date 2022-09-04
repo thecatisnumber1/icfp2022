@@ -12,6 +12,7 @@
         <CommandBinding Command="Undo" Executed="Execute_Undo" />
         <CommandBinding Command="Save" Executed="Execute_SaveStack" />
         <CommandBinding Command="Open" Executed="Execute_RestoreStack" />
+        <CommandBinding Command="Print" Executed="Execute_ExitMultiMode" />
     </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
