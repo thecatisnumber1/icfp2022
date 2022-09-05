@@ -10,10 +10,9 @@ namespace AI
 {
     public class RoboLarsAI
     {
-        public static readonly int CANVAS_SIZE = 400;
-        public static Random r = new Random();
-        public static int NUM_POINTS = 200;
-        public static List<Point> CORNERS = new List<Point>
+        public const int CANVAS_SIZE = 400;
+        public static readonly Random r = new Random();
+        public static readonly List<Point> CORNERS = new List<Point>
         {
             new Point(0, 0),
             new Point(CANVAS_SIZE, 0),
@@ -23,26 +22,26 @@ namespace AI
 
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> corners = GenerateInitialCorners();
-            List<RGBA?> colors = DoSearch(picasso, logger, corners);
+            List<Point> corners = GenerateInitialCorners(args.numPoints);
+            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            List<RGBA?> colors = DoSearch(picasso, logger, corners);
+            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
-        private static List<RGBA?> DoSearch(Picasso picasso, LoggerBase logger, List<Point> corners)
+        private static List<RGBA?> DoSearch(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners)
         {
             List<RGBA?> colors;
             int totalScore;
             Stopwatch sw = Stopwatch.StartNew();
             do
             {
-                (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, logger);
+                (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, args, logger);
             } while (Simplify(corners, picasso.TargetImage, logger, totalScore));
             logger.LogMessage(sw.Elapsed.ToString());
             return colors;
@@ -79,10 +78,10 @@ namespace AI
             }
         }
 
-        private static List<Point> GenerateInitialCorners()
+        private static List<Point> GenerateInitialCorners(int numPoints)
         {
             List<Point> corners = new List<Point>();
-            for (int i = 0; i < NUM_POINTS; i++)
+            for (int i = 0; i < numPoints; i++)
             {
                 corners.Add(RandomPoint());
             }
@@ -98,13 +97,13 @@ namespace AI
             new Point(1, 0)
         };
 
-        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image img, List<Point> corners, LoggerBase logger)
+        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image img, List<Point> corners, AIArgs args, LoggerBase logger)
         {
             bool improved = true;
             var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
-            int limit = 10;
+            int limit = args.limit;
             Stopwatch watch = Stopwatch.StartNew();
             bool renderedAtLeastOnce = false;
             while (improved)
