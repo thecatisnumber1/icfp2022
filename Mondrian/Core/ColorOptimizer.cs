@@ -40,7 +40,9 @@
             return result;
         }
 
-        private static Dictionary<int, Dictionary<int, Dictionary<int, double>>> nestedLarsCache = new Dictionary<int, Dictionary<int, Dictionary<int, double>>>();
+        public static bool DISABLE_LARSE_CACHE = false;
+
+        private static Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>> nestedLarsCache = new Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>>();
 
         public static void ClearLarsCache()
         {
@@ -85,21 +87,29 @@
                 prevColorSum = newColorSum;
                 prevArea = newArea;
 
-                // Awful Larse caching code
-                if (!nestedLarsCache.ContainsKey(color.GetHashCode()))
+                double diff;
+                if (DISABLE_LARSE_CACHE)
                 {
-                    nestedLarsCache[color.GetHashCode()] = new Dictionary<int, Dictionary<int, double>>();
+                    diff = FastComputePixelDiffs(prevEdge, currEdge, color, target);
                 }
-                if (!nestedLarsCache[color.GetHashCode()].ContainsKey(prevHash))
+                else
                 {
-                    nestedLarsCache[color.GetHashCode()][prevHash] = new Dictionary<int, double>();
-                }
-                if (!nestedLarsCache[color.GetHashCode()][prevHash].ContainsKey(currHash))
-                {
-                    nestedLarsCache[color.GetHashCode()][prevHash][currHash] = FastComputePixelDiffs(prevEdge, currEdge, color, target);
+                    // Awful Larse caching code
+                    if (!nestedLarsCache.ContainsKey(color))
+                    {
+                        nestedLarsCache[color] = new Dictionary<int, Dictionary<int, double>>();
+                    }
+                    if (!nestedLarsCache[color].ContainsKey(prevHash))
+                    {
+                        nestedLarsCache[color][prevHash] = new Dictionary<int, double>();
+                    }
+                    if (!nestedLarsCache[color][prevHash].ContainsKey(currHash))
+                    {
+                        nestedLarsCache[color][prevHash][currHash] = FastComputePixelDiffs(prevEdge, currEdge, color, target);
+                    }
+                    diff = nestedLarsCache[color][prevHash][currHash];
                 }
 
-                var diff = nestedLarsCache[color.GetHashCode()][prevHash][currHash];
                 pixelCost += diff;
             }
 
