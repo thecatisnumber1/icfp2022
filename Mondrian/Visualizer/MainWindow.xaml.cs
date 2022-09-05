@@ -213,46 +213,6 @@ namespace Visualizer
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
         }
 
-        public void RenderImage(CoreImage image)
-        {
-            PixelFormat pf = PixelFormat.Format32bppArgb;
-            int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
-
-            int width = image.Width;
-            int height = image.Height;
-            // Convert the array into a pure byte array, 32bpp ARGB.
-            byte[] imageBytes = new byte[width * height * bitDepth];
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Core.RGBA pixel = image[x, y];
-
-                    int baseIndex = (x + y * height) * bitDepth;
-                    // TODO: Abuse struct
-                    imageBytes[baseIndex + 2] = (byte)pixel.R;
-                    imageBytes[baseIndex + 1] = (byte)pixel.G;
-                    imageBytes[baseIndex] = (byte)pixel.B;
-                    imageBytes[baseIndex + 3] = (byte)pixel.A;
-                }
-            }
-
-            // Copied from http://mapw.elte.hu/elek/bmpinmemory.html
-            Bitmap b = new Bitmap(image.Width, image.Height, pf);
-            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
-            IntPtr ptr = bmpData.Scan0;
-            Int32 psize = bmpData.Stride * height;
-            System.Runtime.InteropServices.Marshal.Copy(imageBytes, 0, ptr, psize);
-            b.UnlockBits(bmpData);
-
-            // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
-            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-                b.GetHbitmap(),
-                IntPtr.Zero,
-                System.Windows.Int32Rect.Empty,
-                BitmapSizeOptions.FromWidthAndHeight(width, height));
-        }
-
         // Yup. Putting a field here. Deal with it.
         private HashSet<SimpleBlock> previouslyRenderedBlocks;
         private Bitmap renderedBitmap;
