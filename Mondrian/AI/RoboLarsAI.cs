@@ -183,6 +183,9 @@ namespace AI
             File.WriteAllLines($"{Guid.NewGuid}.sol", instructions);
             if (args.problemNum != -1)
             {
+                List<string> instructions = picasso.SerializeInstructions();
+                File.WriteAllLines($"{args.problemNum}_{rotation}.sol", instructions);
+
                 Rest.CacheBests();
                 int best = Rest.BestForProblem(args.problemNum);
                 int score = picasso.Score;
