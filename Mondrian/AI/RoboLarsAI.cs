@@ -43,6 +43,16 @@ namespace AI
             SubmitSolution(picasso, args, logger, corners, colors, args.rotation);
         }
 
+        public static void RoboRotator(Picasso picasso, AIArgs args, LoggerBase logger)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                List<Point> corners = GenerateInitialCorners(args.numPoints);
+                List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, i);
+                SubmitSolution(picasso, args, logger, corners, colors, i);
+            }
+        }
+
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             int rotation = ExtractRotation(logger.UserSelectedRectangles);
@@ -132,7 +142,7 @@ namespace AI
                 (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, args, logger, rotation);
             } while (Simplify(corners, rotatedImage, logger, totalScore));
             logger.LogMessage(sw.Elapsed.ToString());
-            return colors;
+            return ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, false).colors;
         }
 
         private static Image RotateImage(Image image, int rotation)
@@ -205,7 +215,7 @@ namespace AI
         private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image originalImage, Image rotatedImage, List<Point> corners, AIArgs args, LoggerBase logger, int rotation)
         {
             bool improved = true;
-            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage);
+            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, true);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
             int limit = args.limit;
@@ -227,7 +237,7 @@ namespace AI
                             corners[i] = modifiedPoint;
                             totalInstructionCost -= ComputeRectInstructionCost(curPoint);
                             totalInstructionCost += ComputeRectInstructionCost(modifiedPoint);
-                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage);
+                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, true);
                             int newScore = tempColors.score + totalInstructionCost;
                             
                             if (newScore < bestScore)
@@ -237,7 +247,7 @@ namespace AI
                                 curPoint = modifiedPoint;
                                 colors = tempColors;
 
-                                if (watch.Elapsed > TimeSpan.FromSeconds(3) || !renderedAtLeastOnce)
+                                if (watch.Elapsed > TimeSpan.FromSeconds(15) || !renderedAtLeastOnce)
                                 {
                                     renderedAtLeastOnce = true;
                                     Picasso leondardo = new Picasso(originalImage, true);
@@ -283,7 +293,7 @@ namespace AI
             {
                 Point p = corners[i];
                 corners.RemoveAt(i);
-                int newScore = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img).score;
+                int newScore = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img, true).score;
                 newScore += corners.Sum(ComputeRectInstructionCost);
                 if (newScore < bestScore)
                 {
@@ -539,7 +549,18 @@ namespace AI
 
         private static Point RandomPoint()
         {
-            return new Point(r.Next(1, 401), r.Next(1, 401));
+            return new Point(RollRandom(1, 401, 0), RollRandom(1, 401, 0));
+        }
+
+        private static int RollRandom(int min, int max, double percentDouble)
+        {
+            int result = r.Next(min, max);
+            if (r.NextDouble() < percentDouble)
+            {
+                result = Math.Max(result, r.Next(min, max));
+            }
+
+            return result;
         }
     }
 }

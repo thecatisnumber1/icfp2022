@@ -40,7 +40,7 @@
             return result;
         }
 
-        public static bool DISABLE_LARSE_CACHE = true;
+        public static bool DISABLE_LARSE_CACHE = false;
 
         private static Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>> nestedLarsCache = new Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>>();
 
@@ -56,7 +56,7 @@
             return currHash.ToHashCode();
         }
 
-        public static (List<RGBA?> colors, int score) ChooseColorsLars(List<Point> corners, Point start, Image target)
+        public static (List<RGBA?> colors, int score) ChooseColorsLars(List<Point> corners, Point start, Image target, bool fast)
         {
             if (start != Point.ORIGIN) throw new NotImplementedException();
 
@@ -79,13 +79,23 @@
                 currEdge = UpdateEdge(currEdge, currCorner);
                 currHash = HashEdge(currEdge);
 
-                var (newColorSum, newArea) = ComputeSum(currEdge, target);
-                int deltaArea = newArea - prevArea;
-                RGBA color = (newColorSum - prevColorSum) / deltaArea;
-                colors[i] = color;
+                RGBA color;
+                if (fast)
+                {
+                    var (newColorSum, newArea) = ComputeSum(currEdge, target);
+                    int deltaArea = newArea - prevArea;
+                    color = (newColorSum - prevColorSum) / deltaArea;
+                    colors[i] = color;
 
-                prevColorSum = newColorSum;
-                prevArea = newArea;
+                    prevColorSum = newColorSum;
+                    prevArea = newArea;
+                }
+                else
+                {
+                    color = GetMedianColor(prevEdge, currEdge, target);
+                    colors[i] = color;
+                }
+
 
                 double diff;
                 if (DISABLE_LARSE_CACHE)
@@ -116,6 +126,45 @@
             pixelCost += FastComputePixelDiffs(currEdge, new List<Point> { new(target.Width, target.Height) }, new RGBA(255, 255, 255, 255), target);
 
             return (colors, (int)Math.Round(pixelCost * 0.005));
+        }
+
+        private static RGBA GetMedianColor(List<Point> prevEdge, List<Point> currEdge, Image img)
+        {
+            List<int> rPixels = new List<int>();
+            List<int> gPixels = new List<int>();
+            List<int> bPixels = new List<int>();
+            List<int> aPixels = new List<int>();
+            int prevIndex = 0;
+            int currIndex = 0;
+            for (int x = 0; x < img.Width; x++)
+            {
+                while (prevEdge[prevIndex].X <= x)
+                {
+                    prevIndex++;
+                }
+
+                while (currEdge[currIndex].X <= x)
+                {
+                    currIndex++;
+                }
+
+                for (int y = prevEdge[prevIndex].Y; y < currEdge[currIndex].Y; y++)
+                {
+                    rPixels.Add(img[x, y].R);
+                    gPixels.Add(img[x, y].G);
+                    bPixels.Add(img[x, y].B);
+                    aPixels.Add(img[x, y].A);
+                }
+            }
+
+            int GetMedian(List<int> pixels)
+            {
+                pixels.Sort();
+                return pixels[pixels.Count / 2];
+            }
+
+            return new RGBA(GetMedian(rPixels), GetMedian(gPixels), GetMedian(bPixels), GetMedian(aPixels));
+
         }
 
         private static double FastComputePixelDiffs(List<Point> prevEdge, List<Point> currEdge, RGBA color, Image img)
