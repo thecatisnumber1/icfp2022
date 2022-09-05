@@ -38,19 +38,19 @@ namespace AI
 
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> corners = GenerateInitialCorners();
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, corners, 0);
+            List<Point> corners = GenerateInitialCorners(args.numPoints);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, corners, 0);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
-        private static List<RGBA?> DoSearch(Image img, LoggerBase logger, List<Point> corners, int rotation)
+        private static List<RGBA?> DoSearch(Image img, LoggerBase logger, AIArgs args, List<Point> corners, int rotation)
         {
             Image rotatedImage = RotateImage(img, rotation);
             List<RGBA?> colors;
@@ -58,7 +58,7 @@ namespace AI
             Stopwatch sw = Stopwatch.StartNew();
             do
             {
-                (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, logger, rotation);
+                (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, args, logger, rotation);
             } while (Simplify(corners, rotatedImage, logger, totalScore));
             logger.LogMessage(sw.Elapsed.ToString());
             return colors;
@@ -130,11 +130,7 @@ namespace AI
             new Point(1, 0)
         };
 
-<<<<<<< HEAD
-        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image img, List<Point> corners, AIArgs args, LoggerBase logger)
-=======
-        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image originalImage, Image rotatedImage, List<Point> corners, LoggerBase logger, int rotation)
->>>>>>> a48fa72 (Rotation getting closer.)
+        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image originalImage, Image rotatedImage, List<Point> corners, AIArgs args, LoggerBase logger, int rotation)
         {
             bool improved = true;
             var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage);
