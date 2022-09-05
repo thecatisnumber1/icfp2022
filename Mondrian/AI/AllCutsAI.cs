@@ -12,6 +12,8 @@ namespace AI
         private static LoggerBase Logger;
         private static Point MinRes = new Point(5, 5);
 
+        private static int ShortCutCount = 0;
+
         public static void Solve(Core.Picasso picasso, AIArgs args, LoggerBase logger)
         {
             Logger = logger;
@@ -42,6 +44,7 @@ namespace AI
             {
                 picasso.Color(block.ID, targetColor);
                 Logger.Render(picasso);
+                Logger.LogStatusMessage($"Shortcut {++ShortCutCount}");
                 return;
             }
 

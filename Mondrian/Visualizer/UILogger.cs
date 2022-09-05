@@ -18,6 +18,8 @@ namespace Visualizer
         private long _rendering = 0;
         private ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
 
+        private string _statusString;
+
         // Rendering stuff
         private List<SimpleBlock> _nextImage;
         private int _nextScore;
@@ -97,6 +99,12 @@ namespace Visualizer
                             _mainUi.LogMessage(string.Join(Environment.NewLine, messages));
                         }
 
+                        if (_statusString != null)
+                        {
+                            _mainUi.CustomStatusText.Text = _statusString;
+                            _statusString = null; // Null out so we don't constantly update.
+                        }
+
                         Interlocked.Exchange(ref _rendering, 0);
                     });
                 }
@@ -138,6 +146,12 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _skippedFrames);
             }
+        }
+
+        public override void LogStatusMessage(string logString)
+        {
+            // You only get one.
+            _statusString = logString;
         }
 
         public override void LogMessage(string logString)

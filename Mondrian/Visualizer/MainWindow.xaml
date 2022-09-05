@@ -107,6 +107,10 @@ RShift+WASD: Right/bottom</TextBox>
             <StatusBarItem>
                 <TextBlock x:Name="ScoreStatusText" />
             </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="CustomStatusText" />
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>

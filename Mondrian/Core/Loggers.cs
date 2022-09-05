@@ -13,6 +13,8 @@
         /// <remarks>If false, the visualizer will only block if the user has selected the Pause button.</remarks>
         public abstract void Break(bool immediate = false);
 
+        public abstract void LogStatusMessage(string logString);
+
         public abstract void LogMessage(string logString);
 
         public abstract void LogError(string logString);
@@ -31,6 +33,11 @@
         }
 
         public override void LogMessage(string logString)
+        {
+            Console.WriteLine(logString);
+        }
+
+        public override void LogStatusMessage(string logString)
         {
             Console.WriteLine(logString);
         }
