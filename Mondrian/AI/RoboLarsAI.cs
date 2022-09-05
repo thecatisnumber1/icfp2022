@@ -513,7 +513,7 @@ namespace AI
 
         private static Point RandomPoint()
         {
-            return new Point(r.Next(1, 399), r.Next(1, 399));
+            return new Point(r.Next(1, 401), r.Next(1, 401));
         }
     }
 }
