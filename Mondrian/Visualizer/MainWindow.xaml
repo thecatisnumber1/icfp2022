@@ -69,6 +69,7 @@
             <CheckBox x:Name="HideUnselectedRectsCheckbox" Content="Hide unselected rects" Checked="HideUnselectedRectsCheckbox_Toggled" Unchecked="HideUnselectedRectsCheckbox_Toggled" />
             <CheckBox x:Name="CrosshairOnBothCheckbox" Content="Crosshairs on both" />
             <CheckBox x:Name="RectsOnBothCheckbox" Content="Rects on both" Checked="RectsOnBothCheckbox_Toggled" Unchecked="RectsOnBothCheckbox_Toggled" />
+            <CheckBox x:Name="SelectedRectAndLowerCheckbox" Content="Show selected + older" Checked="SelectedRectAndLowerCheckbox_Toggled" Unchecked="SelectedRectAndLowerCheckbox_Toggled" />
             <CheckBox x:Name="UIDebugSpewCheckbox" Content="UI Debug Spew"/>
             <!-- Actually manual mode -->
             <Separator />

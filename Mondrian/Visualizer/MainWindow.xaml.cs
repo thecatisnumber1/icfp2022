@@ -149,6 +149,12 @@ namespace Visualizer
                     continue;
                 }
 
+                if (args[i].Equals("-selectedandlower", StringComparison.OrdinalIgnoreCase))
+                {
+                    SelectedRectAndLowerCheckbox.IsChecked = true;
+                    continue;
+                }
+
                 if (args[i].Equals("-larstest", StringComparison.OrdinalIgnoreCase))
                 {
                     // Lars mode. This may do horrible things. Good luck.
@@ -505,7 +511,7 @@ namespace Visualizer
             SelectedRectCanvasUser.Children.Clear();
         }
 
-        private void DrawShapeOnSelectedRectlCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
+        private void DrawShapeOnSelectRectCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
         {
             SelectedRectCanvasTarget.Children.Add(shape);
             if (showOnUserSide)
@@ -671,7 +677,7 @@ namespace Visualizer
             }
 
             ClearSelectedRectCanvas();
-            System.Windows.Shapes.Rectangle selectedRect = null;
+            bool foundSelected = false;
             foreach (Core.Rectangle rect in _selectedRects)
             {
                 // Draw a box
@@ -679,10 +685,14 @@ namespace Visualizer
 
                 if (selected == rect)
                 {
+                    foundSelected = true;
                     stackRect.Stroke = SelectedStackRectBorderBrush;
                     stackRect.Fill = SelectedStackRectFillBrush;
                     stackRect.Opacity = 0.8; // Hard code this
-                    selectedRect = stackRect;
+                    if (SelectedRectOnTopCheckbox.IsChecked.Value)
+                    {
+                        System.Windows.Controls.Canvas.SetZIndex(stackRect, int.MaxValue);
+                    }
                 }
                 else
                 {
@@ -698,22 +708,27 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetLeft(stackRect, rect.Left);
                 System.Windows.Controls.Canvas.SetTop(stackRect, _problemHeight - rect.Top);
 
-                // No value/false OR it's not the selected one
-                if ((!SelectedRectOnTopCheckbox.IsChecked.HasValue || !SelectedRectOnTopCheckbox.IsChecked.Value)
-                    || selected != rect)
+                // Always draw selected
+                if (selected == rect)
                 {
-                    if (HideUnselectedRectsCheckbox.IsChecked.HasValue && !HideUnselectedRectsCheckbox.IsChecked.Value)
-                    {
-                        DrawShapeOnSelectedRectlCanvas(stackRect, RectsOnBothCheckbox.IsChecked.Value);
-                    }
+                    DrawShapeOnSelectRectCanvas(stackRect, RectsOnBothCheckbox.IsChecked.Value);
+                    continue;
                 }
-            }
 
-            // One was selected AND we're told to render it on top
-            if (selectedRect != null && ((SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value)
-                || (HideUnselectedRectsCheckbox.IsChecked.HasValue && HideUnselectedRectsCheckbox.IsChecked.Value)))
-            {
-                DrawShapeOnSelectedRectlCanvas(selectedRect, RectsOnBothCheckbox.IsChecked.Value);
+                // If HideUnselected is true, just skip
+                if (HideUnselectedRectsCheckbox.IsChecked.Value)
+                {
+                    continue;
+                }
+
+                // If Show only lower is checked, and we haven't found the right rect, continue
+                if (SelectedRectAndLowerCheckbox.IsChecked.Value && !foundSelected)
+                {
+                    continue;
+                }
+
+                // No reason to hide; show it.
+                DrawShapeOnSelectRectCanvas(stackRect, RectsOnBothCheckbox.IsChecked.Value);
             }
 
             if (reloadList)
@@ -932,6 +947,11 @@ namespace Visualizer
         }
 
         private void RectsOnBothCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
+        }
+
+        private void SelectedRectAndLowerCheckbox_Toggled(object sender, RoutedEventArgs e)
         {
             DrawSelectedRects();
         }
