@@ -63,6 +63,7 @@ namespace AI
             List<RGBA?> colors;
             int totalScore;
             Stopwatch sw = Stopwatch.StartNew();
+            ColorOptimizer.ClearLarsCache();
             do
             {
                 (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, args, logger, rotation);

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core
+﻿namespace Core
 {
     public class ColorOptimizer
     {
@@ -46,6 +40,20 @@ namespace Core
             return result;
         }
 
+        private static Dictionary<int, Dictionary<int, Dictionary<int, double>>> nestedLarsCache = new Dictionary<int, Dictionary<int, Dictionary<int, double>>>();
+
+        public static void ClearLarsCache()
+        {
+            nestedLarsCache.Clear();
+        }
+
+        private static int HashEdge(List<Point> edge)
+        {
+            var currHash = new HashCode();
+            edge.ForEach(x => currHash.Add(x));
+            return currHash.ToHashCode();
+        }
+
         public static (List<RGBA?> colors, int score) ChooseColorsLars(List<Point> corners, Point start, Image target)
         {
             if (start != Point.ORIGIN) throw new NotImplementedException();
@@ -55,6 +63,7 @@ namespace Core
             colors.AddRange(Enumerable.Repeat<RGBA?>(null, corners.Count));
 
             List<Point> currEdge = new() { new Point(0, target.Height), new Point(target.Width, 0) };
+            var currHash = HashEdge(currEdge);
             IntRGB prevColorSum = IntRGB.ZERO;
             int prevArea = 0;
             for (int i = corners.Count - 1; i >= 0; i--)
@@ -64,7 +73,9 @@ namespace Core
                 if (!EdgeNeedsUpdating(currEdge, currCorner)) continue;
 
                 var prevEdge = currEdge;
+                var prevHash = currHash;
                 currEdge = UpdateEdge(currEdge, currCorner);
+                currHash = HashEdge(currEdge);
 
                 var (newColorSum, newArea) = ComputeSum(currEdge, target);
                 int deltaArea = newArea - prevArea;
@@ -74,7 +85,22 @@ namespace Core
                 prevColorSum = newColorSum;
                 prevArea = newArea;
 
-                pixelCost += FastComputePixelDiffs(prevEdge, currEdge, color, target);
+                // Awful Larse caching code
+                if (!nestedLarsCache.ContainsKey(color.GetHashCode()))
+                {
+                    nestedLarsCache[color.GetHashCode()] = new Dictionary<int, Dictionary<int, double>>();
+                }
+                if (!nestedLarsCache[color.GetHashCode()].ContainsKey(prevHash))
+                {
+                    nestedLarsCache[color.GetHashCode()][prevHash] = new Dictionary<int, double>();
+                }
+                if (!nestedLarsCache[color.GetHashCode()][prevHash].ContainsKey(currHash))
+                {
+                    nestedLarsCache[color.GetHashCode()][prevHash][currHash] = FastComputePixelDiffs(prevEdge, currEdge, color, target);
+                }
+
+                var diff = nestedLarsCache[color.GetHashCode()][prevHash][currHash];
+                pixelCost += diff;
             }
 
             pixelCost += FastComputePixelDiffs(currEdge, new List<Point> { new(target.Width, target.Height) }, new RGBA(255, 255, 255, 255), target);
