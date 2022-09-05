@@ -24,7 +24,7 @@ namespace AI
                 Rest.CacheBests();
 
                 int best = Rest.BestForProblem(args.problemNum);
-                if (picasso.Score < best)
+                if (score < best)
                 {
                     logger.LogMessage($"Woo new top score! Previous: {best}.");
                     logger.LogMessage($"{Math.Round(score / (double)best * 100, 2)}% of previous high");

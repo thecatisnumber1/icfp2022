@@ -30,7 +30,8 @@ namespace Mondrian
                 logger.LogMessage($"Considering problem #{problemNum}");
                 Image problem = Problems.GetProblem(problemNum);
                 InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
-                Core.Picasso picasso = new Picasso(problem, initialConfig);
+                Image initialPng = InitialPNGs.GetInitialPNG(problemNum);
+                Core.Picasso picasso = new Picasso(problem, initialConfig, initialPng);
                 solver(picasso, args.aiArgs, logger);
                 logger.LogMessage($"Score = {picasso.Score}, instructionCost = {(picasso.TotalInstructionCost / ((double)picasso.Score)).ToString("0.00")} = {watch.Elapsed}");
                 List<string> instructions = picasso.SerializeInstructions();

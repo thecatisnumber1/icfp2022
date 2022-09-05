@@ -15,9 +15,24 @@ namespace AI
         {
             if (picasso.AllBlocks.Count() > 0)
             {
-                RejoinAll(picasso);
+                AIUtils.RejoinAll(picasso);
             }
 
+            /*
+            int granularity = 40;
+            List<Rectangle> rects = new List<Rectangle>();
+            for (int col = granularity; col <= 400; col += granularity)
+            {
+                for (int row = granularity; row <= 400; row += granularity)
+                {
+                    rects.Add(new Rectangle(Point.ORIGIN, new Point(col, row)));
+                }
+            }
+
+            rects = rects.OrderByDescending(x => x.TopRight.ManhattanDist(Point.ORIGIN)).ToList();
+            */
+
+            picasso.Color(picasso.AllBlocks.First().ID, new RGBA(255, 255, 255, 255));
             List<Rectangle> rects = logger.UserSelectedRectangles.ToList();
             bool simplified = true;
             while (simplified)
@@ -50,37 +65,6 @@ namespace AI
             {
                 Rest.CacheBests();
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
-            }
-        }
-
-        private static void RejoinAll(Picasso picasso)
-        {
-            // Assume square.  Assume equal size.
-            Block first = picasso.AllBlocks.First();
-            int size = first.TopRight.X - first.BottomLeft.X;
-            if (400 % size != 0)
-            {
-                throw new Exception("I didn' think this could be true.");
-            }
-
-            Block[,] blocks = new Block[400 / size, 400 / size];
-
-            foreach (Block block in picasso.AllBlocks)
-            {
-                blocks[block.BottomLeft.X / size, block.BottomLeft.Y / size] = block;
-            }
-            
-            for (int row = 0; row < 400 / size; row++)
-            {
-                for (int col = 0; col < 400 / size - 1; col++)
-                {
-                    blocks[0, row] = picasso.Merge(blocks[0, row].ID, blocks[col + 1, row].ID);
-                }
-
-                if (row > 0)
-                {
-                    blocks[0, 0] = picasso.Merge(blocks[0, 0].ID, blocks[0, row].ID);
-                }
             }
         }
 
@@ -221,115 +205,6 @@ namespace AI
         private static Point RandomPoint()
         {
             return new Point(r.Next(0, 400), r.Next(0, 400));
-        }
-
-        abstract class RectMutation
-        {
-            public abstract bool CanMutate();
-            public abstract Rectangle Mutate();
-
-            public static List<RectMutation> AllMutations(int amount, Rectangle rect)
-            {
-                return new List<RectMutation>
-                {
-                    new TopMutation(amount, rect),
-                    new TopMutation(-amount, rect),
-                    new BottomMutation(amount, rect),
-                    new BottomMutation(-amount, rect),
-                    new RightMutation(amount, rect),
-                    new RightMutation(-amount, rect),
-                    new LeftMutation(amount, rect),
-                    new LeftMutation(-amount, rect),
-                };
-            }
-        }
-
-        class TopMutation : RectMutation
-        {
-            private int amount;
-            private Rectangle rect;
-
-            public TopMutation(int amount, Rectangle rect)
-            {
-                this.amount = amount;
-                this.rect = rect;
-            }
-
-            public override Rectangle Mutate()
-            {
-                return new Rectangle(rect.BottomLeft, new Point(rect.Right, rect.Top + amount));
-            }
-
-            public override bool CanMutate()
-            {
-                return rect.Top + amount > 0 && rect.Top + amount <= 400 && rect.Top + amount > rect.Bottom;
-            }
-        }
-
-        class BottomMutation : RectMutation
-        {
-            private int amount;
-            private Rectangle rect;
-
-            public BottomMutation(int amount, Rectangle rect)
-            {
-                this.amount = amount;
-                this.rect = rect;
-            }
-
-            public override Rectangle Mutate()
-            {
-                return new Rectangle(new Point(rect.Left, rect.Bottom + amount), rect.TopRight);
-            }
-
-            public override bool CanMutate()
-            {
-                return rect.Bottom + amount >= 0 && rect.Bottom + amount < 400 && rect.Bottom + amount < rect.Top;
-            }
-        }
-
-        class LeftMutation : RectMutation
-        {
-            private int amount;
-            private Rectangle rect;
-
-            public LeftMutation(int amount, Rectangle rect)
-            {
-                this.amount = amount;
-                this.rect = rect;
-            }
-
-            public override Rectangle Mutate()
-            {
-                return new Rectangle(new Point(rect.Left + amount, rect.Bottom), rect.TopRight);
-            }
-
-            public override bool CanMutate()
-            {
-                return rect.Left + amount >= 0 && rect.Left + amount < 400 && rect.Left + amount < rect.Right;
-            }
-        }
-
-        class RightMutation : RectMutation
-        {
-            private int amount;
-            private Rectangle rect;
-
-            public RightMutation(int amount, Rectangle rect)
-            {
-                this.amount = amount;
-                this.rect = rect;
-            }
-
-            public override Rectangle Mutate()
-            {
-                return new Rectangle(rect.BottomLeft, new Point(rect.Right + amount, rect.Top));
-            }
-
-            public override bool CanMutate()
-            {
-                return rect.Right + amount > 0 && rect.Right + amount <= 400 && rect.Right + amount > rect.Left;
-            }
         }
     }
 }

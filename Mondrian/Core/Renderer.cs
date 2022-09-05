@@ -55,12 +55,14 @@
             {
                 for (var x = block.BottomLeft.X; x < block.TopRight.X; x++)
                 {
-                    bool colorChanged = renderCanvas[x, y] != block.Color;
+                    var blockColor = block.GetColorAt(x, y);
+
+                    bool colorChanged = renderCanvas[x, y] != blockColor;
                     double pixelDiff = pixelCost[x, y];
 
                     if (colorChanged)
                     {
-                        renderCanvas[x, y] = block.Color;
+                        renderCanvas[x, y] = blockColor;
                         pixelDiff = -1;
                     }
 

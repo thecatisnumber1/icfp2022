@@ -12,6 +12,7 @@
         <CommandBinding Command="Undo" Executed="Execute_Undo" />
         <CommandBinding Command="Save" Executed="Execute_SaveStack" />
         <CommandBinding Command="Open" Executed="Execute_RestoreStack" />
+        <CommandBinding Command="Print" Executed="Execute_ExitMultiMode" />
     </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
@@ -22,7 +23,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="150"/>
         </Grid.ColumnDefinitions>
         <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2" >
             <Grid x:Name="ViewportContainer" Background="White"><!-- Right now they use white -->
@@ -30,15 +31,17 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="OutputImage" Grid.Column="0" Margin="10" />
-                <Image x:Name="ReferenceImage" Grid.Column="1" Margin="10" />
+                <Image x:Name="UserImage" Grid.Column="0" Margin="10" />
+                <Image x:Name="TargetImage" Grid.Column="1" Margin="10" />
                 <!-- We just put our manual cursor here on top of the image -->
-                <Canvas x:Name="SelectedRectCanvas" Grid.Column="1" Margin="10" />
-                <Canvas x:Name="ManualDrawCanvas" Grid.Column="1" Margin="10" />
-                <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
+                <Canvas x:Name="SelectedRectCanvasTarget" Grid.Column="1" Margin="10" />
+                <Canvas x:Name="SelectedRectCanvasUser" Grid.Column="0" Margin="10" />
+                <Canvas x:Name="ManualDrawCanvasTarget" Grid.Column="1" Margin="10" />
+                <Canvas x:Name="ManualDrawCanvasUser" Grid.Column="0" Margin="10" />
+                <Grid Background="Transparent" Grid.Column="1" x:Name="MouseLayerTarget" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
                     <Border BorderThickness=".5" BorderBrush="Black" />
                 </Grid>
-                <Grid Background="Transparent" Grid.Column="0" x:Name="UserMouseLayer" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
+                <Grid Background="Transparent" Grid.Column="0" x:Name="MouseLayerUser" ZIndex="10000" MouseMove="ManualMove_OnMouseMove" MouseLeftButtonUp="ManualMove_OnMouseLeftButtonUp" MouseLeftButtonDown="ManualMove_OnMouseLeftButtonDown" MouseLeave="ManualMove_OnMouseLeave">
                     <Border BorderThickness=".5" BorderBrush="Black" />
                 </Grid>
             </Grid>
@@ -63,19 +66,28 @@
             <Separator />
             <Label Content="UI Flags"/>
             <CheckBox x:Name="SelectedRectOnTopCheckbox" Content="Selected rect on top" Checked="SelectedRectOnTopCheckbox_Toggled" Unchecked="SelectedRectOnTopCheckbox_Toggled" />
+            <CheckBox x:Name="HideUnselectedRectsCheckbox" Content="Hide unselected rects" Checked="HideUnselectedRectsCheckbox_Toggled" Unchecked="HideUnselectedRectsCheckbox_Toggled" />
+            <CheckBox x:Name="CrosshairOnBothCheckbox" Content="Crosshairs on both" />
+            <CheckBox x:Name="RectsOnBothCheckbox" Content="Rects on both" Checked="RectsOnBothCheckbox_Toggled" Unchecked="RectsOnBothCheckbox_Toggled" />
             <CheckBox x:Name="UIDebugSpewCheckbox" Content="UI Debug Spew"/>
             <!-- Actually manual mode -->
             <Separator />
             <Label>Command Line Args</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">-a SolverName
 -p[roblem] ID
--sot (selected rect on top)
+-s (selected rect on top)
+-h (hide unselected rects)
+-c (crosshair on both boxes)
+-r (rects on both boxes)
+-op 0.0-1.0 (rect opacity)
 -vdbg (visualizer debug)</TextBox>
             <Separator />
             <Label>Rect Hotkeys</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">Ctrl+Z Undo
 Ctrl+S Quicksave
-Ctrl+O Quickload</TextBox>
+Ctrl+O Quickload
+LCtrl+Click MultiMode
+Ctrl+P Exit MultiMode</TextBox>
             <Label>While selected:</Label>
             <TextBox IsReadOnly="True" xml:space="preserve">WASD: Nudge
 LShift+WASD: Left/top
@@ -85,7 +97,7 @@ RShift+WASD: Right/bottom</TextBox>
                 <Button x:Name="OrderRectStackUp" Content="Move Up" Click="OrderRectStackUp_OnClick" Width="60" DockPanel.Dock="Left" IsEnabled="False"/>
                 <Button x:Name="OrderRectStackDown" Content="Move Down" Click="OrderRectStackDown_OnClick" Width="70" DockPanel.Dock="Right" IsEnabled="False"/>
             </DockPanel>
-            <ListBox x:Name="RectStack" Height="500" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
+            <ListBox x:Name="RectStack" Height="300" SelectionChanged="RectStack_SelectionChanged" KeyUp="RectStack_KeyUp"/>
         </StackPanel>
         <StatusBar x:Name="Status" Grid.Row="2" Grid.ColumnSpan="3">
             <StatusBarItem>
@@ -94,6 +106,10 @@ RShift+WASD: Right/bottom</TextBox>
             <Separator />
             <StatusBarItem>
                 <TextBlock x:Name="ScoreStatusText" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="CustomStatusText" />
             </StatusBarItem>
         </StatusBar>
     </Grid>

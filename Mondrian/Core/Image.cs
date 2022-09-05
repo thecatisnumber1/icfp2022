@@ -31,5 +31,30 @@
         {
             return summedAreaTable.GetSum(rect) / rect.Area;
         }
+
+        public IntRGB ColorSum(Rectangle rect)
+        {
+            return summedAreaTable.GetSum(rect);
+        }
+
+        public Image Extract(Point bottomLeft, Point size)
+        {
+            RGBA[,] cut = new RGBA[size.X, size.Y];
+
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    cut[x, y] = pixels[bottomLeft.X + x, bottomLeft.Y + y];
+                }
+            }
+
+            return new Image(cut);
+        }
+
+        public Image Clone()
+        {
+            return Extract(new Point(), new Point(Width, Height));
+        }
     }
 }

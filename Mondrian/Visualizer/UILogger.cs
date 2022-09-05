@@ -18,6 +18,8 @@ namespace Visualizer
         private long _rendering = 0;
         private ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
 
+        private string _statusString;
+
         // Rendering stuff
         private List<SimpleBlock> _nextImage;
         private int _nextScore;
@@ -65,7 +67,14 @@ namespace Visualizer
 
                         if (toRender != null)
                         {
-                            _mainUi.RenderImage(toRender, score, totalCost);
+                            if (_mainUi.UseOldRenderer)
+                            {
+                                _mainUi.RenderImage(toRender, score, totalCost);
+                            }
+                            else
+                            {
+                                _mainUi.RenderImageFast(toRender, score, totalCost);
+                            }
                             skippedFrames = Interlocked.Exchange(ref _skippedFrames, 0);
                         }
 
@@ -90,12 +99,22 @@ namespace Visualizer
                             _mainUi.LogMessage(string.Join(Environment.NewLine, messages));
                         }
 
+                        if (_statusString != null)
+                        {
+                            _mainUi.CustomStatusText.Text = _statusString;
+                            _statusString = null; // Null out so we don't constantly update.
+                        }
+
+                        _mainUi.CheckFaulted();
+
                         Interlocked.Exchange(ref _rendering, 0);
                     });
                 }
 
                 Task.Delay(20).Wait(); // Need something to stop us from constantly spamming the UI
             }
+
+            ;
         }
 
         public override void Break(bool immediate)
@@ -122,8 +141,8 @@ namespace Visualizer
             // Atomically update all data that's going to be rendered.
             lock (lockobj)
             {
-                _nextScore = image.Score;
-                _nextTotalInstructionCost = image.TotalInstructionCost;
+                _nextScore = _mainUi.HideScore ? 1 : image.Score;
+                _nextTotalInstructionCost = _mainUi.HideScore? 1 : image.TotalInstructionCost;
                 blocks = new List<SimpleBlock>(image.AllSimpleBlocks);
             }
 
@@ -131,6 +150,12 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _skippedFrames);
             }
+        }
+
+        public override void LogStatusMessage(string logString)
+        {
+            // You only get one.
+            _statusString = logString;
         }
 
         public override void LogMessage(string logString)

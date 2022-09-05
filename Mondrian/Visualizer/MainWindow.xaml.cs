@@ -1,26 +1,26 @@
-﻿using System;
+﻿using Core;
+using Mondrian;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Markup;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Path = System.IO.Path;
 using CoreImage = Core.Image;
+using DrawingPoint = System.Windows.Point;
+using Image = System.Drawing.Image;
+using Path = System.IO.Path;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Rectangle = System.Drawing.Rectangle;
-using Image = System.Drawing.Image;
-using DrawingPoint = System.Windows.Point;
-using System.Threading;
-using Mondrian;
-using System.Threading.Tasks;
-using Core;
-using System.Windows.Media;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Controls.Primitives;
 
 namespace Visualizer
 {
@@ -47,10 +47,23 @@ namespace Visualizer
         // Area select
         private DrawingPoint? _areaSelectOrigin;
         private bool _leftMouseDown;
+        private bool _multiClickMode;
 
-        // Options
-        private bool _showSelectedRectOnTop;
-        private bool _debugSpew;
+        private double _unselectedRectOpacity = 0.8;
+        internal bool UseOldRenderer;
+        private Stopwatch renderTimer = new Stopwatch();
+
+        // Score computation is REALLY expensive.
+        internal bool HideScore;
+
+        // Brushes for reusing
+        private static readonly SolidColorBrush CrosshairBrush = new SolidColorBrush(Colors.Purple);
+        private static readonly SolidColorBrush AreaSelectBorderBrush = new SolidColorBrush(Colors.Navy);
+        private static readonly SolidColorBrush AreaSelectFillBrush = new SolidColorBrush(Colors.LightSkyBlue);
+        private static readonly SolidColorBrush StackRectBorderBrush = new SolidColorBrush(Colors.Green);
+        private static readonly SolidColorBrush StackRectFillBrush = new SolidColorBrush(Colors.LightGreen);
+        private static readonly SolidColorBrush SelectedStackRectBorderBrush = new SolidColorBrush(Colors.Red);
+        private static readonly SolidColorBrush SelectedStackRectFillBrush = new SolidColorBrush(Colors.Salmon);
 
         public MainWindow(string[] args)
         {
@@ -82,9 +95,45 @@ namespace Visualizer
                     continue;
                 }
 
-                if (args[i].Equals("-sot", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-s", StringComparison.OrdinalIgnoreCase))
                 {
                     SelectedRectOnTopCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-h", StringComparison.OrdinalIgnoreCase))
+                {
+                    HideUnselectedRectsCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-c", StringComparison.OrdinalIgnoreCase))
+                {
+                    CrosshairOnBothCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-r", StringComparison.OrdinalIgnoreCase))
+                {
+                    RectsOnBothCheckbox.IsChecked = true;
+                }
+
+                if (args[i].Equals("-op", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!double.TryParse(args[++i], out double desiredOpacity))
+                    {
+                        LogMessage($"Invalid double [{args[i]}]");
+                        continue;
+                    }
+
+                    _unselectedRectOpacity = Math.Max(0.0, Math.Min(1.0, desiredOpacity));
+                }
+
+                if (args[i].Equals("-useoldrenderer", StringComparison.OrdinalIgnoreCase))
+                {
+                    UseOldRenderer = true;
+                }
+
+                if (args[i].Equals("-hidescore", StringComparison.OrdinalIgnoreCase))
+                {
+                    HideScore = true;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
@@ -143,72 +192,35 @@ namespace Visualizer
             b.UriSource = new Uri(filePath);
             b.EndInit();
 
-            ReferenceImage.Source = b;
+            TargetImage.Source = b;
 
             _problemId = int.Parse(ProblemSelector.SelectedItem.ToString());
             CoreImage ci = Problems.GetProblem(_problemId);
             InitialConfig initialConfig = InitialConfigs.GetInitialConfig(_problemId);
+            CoreImage initialPng = InitialPNGs.GetInitialPNG(_problemId);
             _problemWidth = ci.Width;
             _problemHeight = ci.Height;
 
-            _problem = new Picasso(ci, initialConfig);
+            _problem = new Picasso(ci, initialConfig, initialPng);
 
             if (clearSelectedRects)
             {
                 _selectedRects = new List<Core.Rectangle>();
                 RectStack.ItemsSource = _selectedRects;
-                SelectedRectCanvas.Children.Clear();
+                ClearSelectedRectCanvas();
             }
 
             RenderImage(_problem.AllSimpleBlocks.ToList(), 1, 1);
-        }
-
-        public void RenderImage(CoreImage image)
-        {
-            PixelFormat pf = PixelFormat.Format32bppArgb;
-            int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
-
-            int width = image.Width;
-            int height = image.Height;
-            // Convert the array into a pure byte array, 32bpp ARGB.
-            byte[] imageBytes = new byte[width * height * bitDepth];
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Core.RGBA pixel = image[x, y];
-
-                    int baseIndex = (x + y * height) * bitDepth;
-                    // TODO: Abuse struct
-                    imageBytes[baseIndex + 2] = (byte)pixel.R;
-                    imageBytes[baseIndex + 1] = (byte)pixel.G;
-                    imageBytes[baseIndex] = (byte)pixel.B;
-                    imageBytes[baseIndex + 3] = (byte)pixel.A;
-                }
-            }
-
-            // Copied from http://mapw.elte.hu/elek/bmpinmemory.html
-            Bitmap b = new Bitmap(image.Width, image.Height, pf);
-            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
-            IntPtr ptr = bmpData.Scan0;
-            Int32 psize = bmpData.Stride * height;
-            System.Runtime.InteropServices.Marshal.Copy(imageBytes, 0, ptr, psize);
-            b.UnlockBits(bmpData);
-
-            // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-                b.GetHbitmap(),
-                IntPtr.Zero,
-                System.Windows.Int32Rect.Empty,
-                BitmapSizeOptions.FromWidthAndHeight(width, height));
         }
 
         // Yup. Putting a field here. Deal with it.
         private HashSet<SimpleBlock> previouslyRenderedBlocks;
         private Bitmap renderedBitmap;
 
-        public void RenderImageFast(List<SimpleBlock> blocks)
+        public void RenderImageFast(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
+            renderTimer.Restart();
+
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
             int width = _problemWidth;
@@ -222,8 +234,6 @@ namespace Visualizer
             previouslyRenderedBlocks ??= new HashSet<SimpleBlock>();
             List<SimpleBlock> unrendered = blocks.Where(b => !previouslyRenderedBlocks.Contains(b)).ToList();
 
-            LogVisualizerMessage($"Full size: {blocks.Count}. Unrendered size: {unrendered.Count()}");
-
             BitmapData bmpData = renderedBitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, pf);
 
             foreach (SimpleBlock block in unrendered)
@@ -231,21 +241,23 @@ namespace Visualizer
                 // Render
                 unsafe
                 {
-                    // Get starting pointer
-                    // Pointer of 0,0 + X offset (w/ bitdepth) + Y offset (stride handles bit depth; it's width * bit depth)
-                    byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (block.BottomLeft.Y * bmpData.Stride);
-                    for (int x = 0; x < block.Size.X; x++)
+                    // Pointer is x * bitdepth + (height - top) * stride, then scan the block top to bottom left to right
+                    byte* ptr = (byte*)bmpData.Scan0 + (bitDepth * block.BottomLeft.X) + (bmpData.Stride * (height - block.TopRight.Y));
+                    for (int y = block.Size.Y - 1; y >= 0; y--)
                     {
                         byte* drawptr = ptr;
-                        for (int y = 0; y < block.Size.Y; y++)
+                        for (int x = 0; x < block.Size.X; x++)
                         {
-                            *(drawptr++) = (byte)block.Color.B;
-                            *(drawptr++) = (byte)block.Color.G;
-                            *(drawptr++) = (byte)block.Color.R;
-                            *(drawptr++) = (byte)block.Color.A;
+                            RGBA blockPixel = block.Image == null ? block.Color : block.Image[x, y];
+
+                            *(drawptr++) = (byte)blockPixel.B;
+                            *(drawptr++) = (byte)blockPixel.G;
+                            *(drawptr++) = (byte)blockPixel.R;
+                            *(drawptr++) = (byte)blockPixel.A;
                         }
                         ptr += bmpData.Stride;
                     }
+
                 }
             }
 
@@ -256,15 +268,23 @@ namespace Visualizer
             previouslyRenderedBlocks = blocks.ToHashSet();
 
             // While we can muck with it all we want, we still need to create a new source every time...
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 renderedBitmap.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
                 BitmapSizeOptions.FromWidthAndHeight(width, height));
+
+            // Make sure to copy this into other implementations.
+            ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
+
+            LogVisualizerMessage($"Render took {renderTimer.ElapsedMilliseconds} ms");
+            renderTimer.Stop();
         }
 
         public void RenderImage(List<SimpleBlock> blocks, int score, int totalInstructionCost)
         {
+            renderTimer.Restart();
+
             PixelFormat pf = PixelFormat.Format32bppArgb;
             int bitDepth = Image.GetPixelFormatSize(pf) / 8; // Bits -> bytes
             int width = _problemWidth;
@@ -292,7 +312,7 @@ namespace Visualizer
             b.UnlockBits(bmpData);
 
             // Copied from https://stackoverflow.com/questions/94456/load-a-wpf-bitmapimage-from-a-system-drawing-bitmap
-            OutputImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            UserImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                 b.GetHbitmap(),
                 IntPtr.Zero,
                 System.Windows.Int32Rect.Empty,
@@ -300,6 +320,9 @@ namespace Visualizer
 
             // Make sure to copy this into other implementations.
             ScoreStatusText.Text = $"Score: {score:n0}. Total instruction cost: {totalInstructionCost:n0}. Instruction % of score: {(totalInstructionCost / (double)score):P}";
+
+            LogVisualizerMessage($"Render took {renderTimer.ElapsedMilliseconds} ms");
+            renderTimer.Stop();
         }
 
         private static RGBA[] BlocksToRGBAArray(List<SimpleBlock> blocks, int width, int height)
@@ -314,7 +337,15 @@ namespace Visualizer
                 {
                     for (var x = frameTopLeft.X; x < frameBottomRight.X; x++)
                     {
-                        frame[y * width + x] = block.Color;
+                        if (block.Image == null)
+                        {
+                            frame[y * width + x] = block.Color;
+                        }
+                        else
+                        {
+                            // Extra - 1 on the Y axis because the top right Y is exclusive
+                            frame[y * width + x] = block.Image[block.BottomLeft.X + x, block.TopRight.Y - 1 - y];
+                        }
                     }
                 }
             }
@@ -397,6 +428,23 @@ namespace Visualizer
             });
         }
 
+        internal void CheckFaulted()
+        {
+            if (_solverTask.IsFaulted)
+            {
+                // Shut down the pump so we don't spam ourselves infinitely
+                _tokenSource.Cancel();
+
+                MessageBox.Show($"Your solver crashed somewhere!{Environment.NewLine}{Environment.NewLine}{_solverTask.Exception}", "OH GNOES", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                LogVisualizerMessage("You crashed!");
+                SolverSelector.IsEnabled = true;
+                ProblemSelector.IsEnabled = true;
+
+                ResetSolverButtons();
+            }
+        }
+
         private void ManualMove_OnMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (_leftMouseDown)
@@ -407,39 +455,44 @@ namespace Visualizer
             _leftMouseDown = true;
 
             // Necessary to deal with hit-testing and rounding garbage
-            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+            DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = $"{gridPosition} Mouse down";
 
+            _areaSelectOrigin ??= cursorPosition;
+        }
 
-            if (_areaSelectOrigin != null)
+        private void ClearManualDrawCanvas()
+        {
+            ManualDrawCanvasTarget.Children.Clear();
+            ManualDrawCanvasUser.Children.Clear();
+        }
+
+        private void DrawShapeOnManualCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
+        {
+            ManualDrawCanvasTarget.Children.Add(shape);
+            if (showOnUserSide)
             {
-                // We're in click-click mode.
-                // TODO: Refactor
-                Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
-                Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
-
-                // Also clamp
-                Core.Point bottomLeft = new Core.Point(
-                    Math.Min(_problemWidth, Math.Max(0, Math.Min(startPosition.X, endPosition.X))),
-                    Math.Min(_problemHeight, Math.Max(0, Math.Min(startPosition.Y, endPosition.Y))));
-                Core.Point topRight = new Core.Point(
-                    Math.Min(_problemWidth, Math.Max(0, Math.Max(startPosition.X, endPosition.X))),
-                    Math.Min(_problemHeight, Math.Max(0, Math.Max(startPosition.Y, endPosition.Y))));
-
-                Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
-
-                LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
-                LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
-
-                _selectedRects.Insert(0, result);
-                DrawSelectedRects(true);
-
-                _areaSelectOrigin = null;
+                // Clone and show
+                System.Windows.Shapes.Shape clone = (System.Windows.Shapes.Shape)XamlReader.Parse(XamlWriter.Save(shape));
+                ManualDrawCanvasUser.Children.Add(clone);
             }
-            else
+        }
+
+        private void ClearSelectedRectCanvas()
+        {
+            SelectedRectCanvasTarget.Children.Clear();
+            SelectedRectCanvasUser.Children.Clear();
+        }
+
+        private void DrawShapeOnSelectedRectlCanvas(System.Windows.Shapes.Shape shape, bool showOnUserSide)
+        {
+            SelectedRectCanvasTarget.Children.Add(shape);
+            if (showOnUserSide)
             {
-                _areaSelectOrigin = cursorPosition;
+                // Clone and show
+                System.Windows.Shapes.Shape clone = (System.Windows.Shapes.Shape)XamlReader.Parse(XamlWriter.Save(shape));
+                SelectedRectCanvasUser.Children.Add(clone);
             }
         }
 
@@ -450,9 +503,9 @@ namespace Visualizer
             if (_areaSelectOrigin != null)
             {
                 // Log area
-                ManualDrawCanvas.Children.Clear();
+                ClearManualDrawCanvas();
 
-                DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+                DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
 
                 Core.Point endPosition = cursorPosition.FromViewportToModel(_problemHeight);
                 Core.Point startPosition = _areaSelectOrigin.Value.FromViewportToModel(_problemHeight);
@@ -467,10 +520,11 @@ namespace Visualizer
 
                 Core.Rectangle result = new Core.Rectangle(bottomLeft, topRight);
 
-                if (result.Width == 0 && result.Height == 0)
+                if (result.Width == 0 && result.Height == 0 && Keyboard.IsKeyDown(Key.LeftCtrl))
                 {
                     // Consider this a click-click area select
                     LogVisualizerMessage("Entering click-click selection");
+                    _multiClickMode = true;
                     return;
                 }
                 else if (result.Width == 0 || result.Height == 0)
@@ -486,43 +540,48 @@ namespace Visualizer
                     DrawSelectedRects(true);
                 }
 
-                _areaSelectOrigin = null;
+                // Multi-click mode
+                if (!_multiClickMode)
+                {
+                    _areaSelectOrigin = null;
+                }
                 return;
             }
         }
 
         private void ManualMove_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            DrawingPoint cursorPosition = sender == MouseLayer ? e.GetPosition(ManualDrawCanvas) : e.GetPosition(OutputImage);
+            DrawingPoint cursorPosition = sender == MouseLayerTarget ? e.GetPosition(ManualDrawCanvasTarget) : e.GetPosition(UserImage);
 
             Core.Point gridPosition = cursorPosition.FromViewportToModel(_problemHeight);
             CursorPositionText.Text = gridPosition.ToString();
 
-            ManualDrawCanvas.Children.Clear();
+            ClearManualDrawCanvas();
 
             // Draw crosshairs
             // Horizontal
             var horizontalRect = new System.Windows.Shapes.Rectangle();
-            horizontalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            horizontalRect.Stroke = CrosshairBrush;
             horizontalRect.StrokeThickness = 0.5;
             horizontalRect.Opacity = 1.0;
-            horizontalRect.Width = ManualDrawCanvas.ActualWidth + 20;
+            horizontalRect.Width = ManualDrawCanvasTarget.ActualWidth + 20;
             horizontalRect.Height = 0.5;
             System.Windows.Controls.Canvas.SetLeft(horizontalRect, -10);
             System.Windows.Controls.Canvas.SetTop(horizontalRect, cursorPosition.Y - 0.25);
 
-            ManualDrawCanvas.Children.Add(horizontalRect);
+            DrawShapeOnManualCanvas(horizontalRect, CrosshairOnBothCheckbox.IsChecked.Value);
+
             // Vertical
             var verticalRect = new System.Windows.Shapes.Rectangle();
-            verticalRect.Stroke = new SolidColorBrush(Colors.Purple);
+            verticalRect.Stroke = CrosshairBrush;
             verticalRect.StrokeThickness = 0.5;
             verticalRect.Opacity = 1.0;
             verticalRect.Width = 0.5;
-            verticalRect.Height = ManualDrawCanvas.ActualHeight + 20;
+            verticalRect.Height = ManualDrawCanvasTarget.ActualHeight + 20;
             System.Windows.Controls.Canvas.SetLeft(verticalRect, cursorPosition.X - 0.25);
             System.Windows.Controls.Canvas.SetTop(verticalRect, -10);
 
-            ManualDrawCanvas.Children.Add(verticalRect);
+            DrawShapeOnManualCanvas(verticalRect, CrosshairOnBothCheckbox.IsChecked.Value);
 
 
             // Handle area select
@@ -531,9 +590,9 @@ namespace Visualizer
                 DrawingPoint origin = _areaSelectOrigin.Value;
                 // Draw a box
                 var selectionRect = new System.Windows.Shapes.Rectangle();
-                selectionRect.Stroke = new SolidColorBrush(Colors.Navy);
+                selectionRect.Stroke = AreaSelectBorderBrush;
                 selectionRect.StrokeThickness = 0.1;
-                selectionRect.Fill = new SolidColorBrush(Colors.LightSkyBlue);
+                selectionRect.Fill = AreaSelectFillBrush;
                 selectionRect.Opacity = 0.40;
                 // Be less stupid about this...
                 selectionRect.Width = Math.Abs(cursorPosition.X - origin.X);
@@ -541,7 +600,7 @@ namespace Visualizer
                 System.Windows.Controls.Canvas.SetLeft(selectionRect, Math.Min(cursorPosition.X, origin.X));
                 System.Windows.Controls.Canvas.SetTop(selectionRect, Math.Min(cursorPosition.Y, origin.Y));
 
-                ManualDrawCanvas.Children.Add(selectionRect);
+                DrawShapeOnManualCanvas(selectionRect, CrosshairOnBothCheckbox.IsChecked.Value);
                 return;
             }
         }
@@ -587,7 +646,7 @@ namespace Visualizer
                 selected = RectStack.SelectedItem as Core.Rectangle;
             }
 
-            SelectedRectCanvas.Children.Clear();
+            ClearSelectedRectCanvas();
             System.Windows.Shapes.Rectangle selectedRect = null;
             foreach (Core.Rectangle rect in _selectedRects)
             {
@@ -596,18 +655,19 @@ namespace Visualizer
 
                 if (selected == rect)
                 {
-                    stackRect.Stroke = new SolidColorBrush(Colors.Red);
-                    stackRect.Fill = new SolidColorBrush(Colors.Salmon);
+                    stackRect.Stroke = SelectedStackRectBorderBrush;
+                    stackRect.Fill = SelectedStackRectFillBrush;
+                    stackRect.Opacity = 0.8; // Hard code this
                     selectedRect = stackRect;
                 }
                 else
                 {
-                    stackRect.Stroke = new SolidColorBrush(Colors.Green);
-                    stackRect.Fill = new SolidColorBrush(Colors.LightGreen);
+                    stackRect.Stroke = StackRectBorderBrush;
+                    stackRect.Fill = StackRectFillBrush;
+                    stackRect.Opacity = _unselectedRectOpacity;
                 }
 
                 stackRect.StrokeThickness = 0.1;
-                stackRect.Opacity = 0.80;
                 // Be less stupid about this...
                 stackRect.Width = Math.Abs(rect.Width);
                 stackRect.Height = Math.Abs(rect.Height);
@@ -618,14 +678,18 @@ namespace Visualizer
                 if ((!SelectedRectOnTopCheckbox.IsChecked.HasValue || !SelectedRectOnTopCheckbox.IsChecked.Value)
                     || selected != rect)
                 {
-                    SelectedRectCanvas.Children.Add(stackRect);
+                    if (HideUnselectedRectsCheckbox.IsChecked.HasValue && !HideUnselectedRectsCheckbox.IsChecked.Value)
+                    {
+                        DrawShapeOnSelectedRectlCanvas(stackRect, RectsOnBothCheckbox.IsChecked.Value);
+                    }
                 }
             }
 
             // One was selected AND we're told to render it on top
-            if (selectedRect != null && (SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value))
+            if (selectedRect != null && ((SelectedRectOnTopCheckbox.IsChecked.HasValue && SelectedRectOnTopCheckbox.IsChecked.Value)
+                || (HideUnselectedRectsCheckbox.IsChecked.HasValue && HideUnselectedRectsCheckbox.IsChecked.Value)))
             {
-                SelectedRectCanvas.Children.Add(selectedRect);
+                DrawShapeOnSelectedRectlCanvas(selectedRect, RectsOnBothCheckbox.IsChecked.Value);
             }
 
             if (reloadList)
@@ -826,9 +890,26 @@ namespace Visualizer
             DrawSelectedRects();
         }
 
+        private void HideUnselectedRectsCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
+        }
+
         private void ManualMove_OnMouseLeave(object sender, MouseEventArgs e)
         {
-            ManualDrawCanvas.Children.Clear();
+            ClearManualDrawCanvas();
+        }
+
+        private void Execute_ExitMultiMode(object sender, ExecutedRoutedEventArgs e)
+        {
+            _multiClickMode = false;
+            _areaSelectOrigin = null;
+            ClearManualDrawCanvas();
+        }
+
+        private void RectsOnBothCheckbox_Toggled(object sender, RoutedEventArgs e)
+        {
+            DrawSelectedRects();
         }
     }
 }
