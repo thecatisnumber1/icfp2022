@@ -49,6 +49,8 @@ namespace Visualizer
         private bool _leftMouseDown;
         private bool _multiClickMode;
 
+        private List<string> _userArgs; // Anything we don't know about
+
         private double _unselectedRectOpacity = 0.8;
         internal bool UseOldRenderer;
         private Stopwatch renderTimer = new Stopwatch();
@@ -77,7 +79,7 @@ namespace Visualizer
             string[] solverList = Solvers.Names();
             SolverSelector.ItemsSource = solverList;
 
-            var otherArgs = new List<string>();
+            _userArgs = new List<string>();
             // Parse args
             for (int i = 0; i < args.Length; i++)
             {
@@ -85,6 +87,10 @@ namespace Visualizer
                 {
                     string problemId = args[++i];
                     SelectProblemFromId(problemStrings, problemId);
+
+                    // Specifically put into user args because AIArgs wants it
+                    _userArgs.Add("-p");
+                    _userArgs.Add(args[i]);
                     continue;
                 }
 
@@ -98,21 +104,25 @@ namespace Visualizer
                 if (args[i].Equals("-s", StringComparison.OrdinalIgnoreCase))
                 {
                     SelectedRectOnTopCheckbox.IsChecked = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-h", StringComparison.OrdinalIgnoreCase))
                 {
                     HideUnselectedRectsCheckbox.IsChecked = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-c", StringComparison.OrdinalIgnoreCase))
                 {
                     CrosshairOnBothCheckbox.IsChecked = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-r", StringComparison.OrdinalIgnoreCase))
                 {
                     RectsOnBothCheckbox.IsChecked = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-op", StringComparison.OrdinalIgnoreCase))
@@ -124,27 +134,31 @@ namespace Visualizer
                     }
 
                     _unselectedRectOpacity = Math.Max(0.0, Math.Min(1.0, desiredOpacity));
+                    continue;
                 }
 
                 if (args[i].Equals("-useoldrenderer", StringComparison.OrdinalIgnoreCase))
                 {
                     UseOldRenderer = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-hidescore", StringComparison.OrdinalIgnoreCase))
                 {
                     HideScore = true;
+                    continue;
                 }
 
                 if (args[i].Equals("-vdbg", StringComparison.OrdinalIgnoreCase))
                 {
                     UIDebugSpewCheckbox.IsChecked = true;
+                    continue;
                 }
 
-                otherArgs.Add(args[i]);
+                _userArgs.Add(args[i]);
             }
 
-            ArgumentsTextBox.Text = string.Join(' ', otherArgs);
+            ArgumentsTextBox.Text = string.Join(' ', _userArgs);
 
             // Have some default selected
             if (ProblemSelector.SelectedIndex < 0)
@@ -405,7 +419,7 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, new AI.AIArgs(_problemId, 0, 200), _loggerInstance);
+                solver.Invoke(_problem, AI.AIArgs.ParseArgs(_userArgs.ToArray()), _loggerInstance);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
