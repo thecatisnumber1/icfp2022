@@ -27,6 +27,13 @@ namespace AI
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
+        public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
+        {
+            List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
+            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
+            SubmitSolution(picasso, args, logger, corners, colors);
+        }
+
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
