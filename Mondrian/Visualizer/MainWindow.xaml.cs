@@ -151,6 +151,14 @@ namespace Visualizer
                     continue;
                 }
 
+                if (args[i].Equals("-larstest", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Lars mode. This may do horrible things. Good luck.
+                    RectStack.KeyUp -= RectStack_KeyUp;
+                    this.KeyUp += RectStack_KeyUp;
+                    continue;
+                }
+
                 _userArgs.Add(args[i]);
             }
 

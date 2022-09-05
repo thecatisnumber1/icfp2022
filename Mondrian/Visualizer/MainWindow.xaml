@@ -25,7 +25,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="150"/>
         </Grid.ColumnDefinitions>
-        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2" >
+        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" Grid.Column="0" Grid.RowSpan="2">
             <Grid x:Name="ViewportContainer" Background="White"><!-- Right now they use white -->
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
