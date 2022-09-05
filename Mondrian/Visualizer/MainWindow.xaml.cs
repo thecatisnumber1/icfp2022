@@ -87,10 +87,6 @@ namespace Visualizer
                 {
                     string problemId = args[++i];
                     SelectProblemFromId(problemStrings, problemId);
-
-                    // Specifically put into user args because AIArgs wants it
-                    _userArgs.Add("-p");
-                    _userArgs.Add(args[i]);
                     continue;
                 }
 
@@ -419,7 +415,12 @@ namespace Visualizer
             {
                 Interlocked.Increment(ref _runCount);
 
-                solver.Invoke(_problem, AI.AIArgs.ParseArgs(_userArgs.ToArray()), _loggerInstance);
+                // Manually inject problem ID. Use a copy so we can run multiple times
+                List<string> aiArgs = new List<string>(_userArgs);
+                aiArgs.Add("-p");
+                aiArgs.Add(_problemId.ToString());
+
+                solver.Invoke(_problem, AI.AIArgs.ParseArgs(aiArgs.ToArray()), _loggerInstance);
 
                 // This will totally screw me over later, but it lets a final Render call go through.
                 Task.Delay(50).Wait();
