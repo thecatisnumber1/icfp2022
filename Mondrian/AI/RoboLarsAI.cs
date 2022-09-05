@@ -20,38 +20,57 @@ namespace AI
             new Point(CANVAS_SIZE, CANVAS_SIZE)
         };
 
+        public delegate Point RotationFunction(Point other);
+        public static List<RotationFunction> ROTATIONS = new List<RotationFunction>
+        {
+            p => p,
+            p => new Point(CANVAS_SIZE - p.X, p.Y),
+            p => new Point(CANVAS_SIZE - p.X, CANVAS_SIZE - p.Y),
+            p => new Point(p.X, CANVAS_SIZE - p.Y)
+        };
+
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> corners = GenerateInitialCorners(args.numPoints);
-            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
-            SubmitSolution(picasso, args, logger, corners, colors);
-        }
-
-        public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
-        {
-            List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
-            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
+            List<Point> corners = GenerateInitialCorners();
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, corners, 1);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, corners, 0);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
-        private static List<RGBA?> DoSearch(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners)
+        private static List<RGBA?> DoSearch(Image img, LoggerBase logger, List<Point> corners, int rotation)
         {
+            Image rotatedImage = Rotate(img, rotation);
             List<RGBA?> colors;
             int totalScore;
             Stopwatch sw = Stopwatch.StartNew();
             do
             {
-                (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, args, logger);
-            } while (Simplify(corners, picasso.TargetImage, logger, totalScore));
+                (colors, totalScore) = ClimbThatHill(rotatedImage, corners, logger);
+            } while (Simplify(corners, rotatedImage, logger, totalScore));
             logger.LogMessage(sw.Elapsed.ToString());
             return colors;
+        }
+
+        private static Image Rotate(Image image, int rotation)
+        {
+            RGBA[,] rotated = new RGBA[image.Width, image.Height];
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    Point p = new Point(x, y);
+                    Point rot = ROTATIONS[rotation](p);
+                    rotated[rot.X, rot.Y] = image[p];
+                }
+            }
+
+            return new Image(rotated);
         }
 
         private static void SubmitSolution(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners, List<RGBA?> colors)
