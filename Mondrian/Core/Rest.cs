@@ -24,8 +24,16 @@ namespace Core
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", key);
-                var task = client.GetStringAsync("https://robovinci.xyz/api/submissions");
-                var rez = task.Result;
+                string rez;
+                try
+                {
+                    var task = client.GetStringAsync("https://robovinci.xyz/api/submissions");
+                    rez = task.Result;
+                } 
+                catch
+                {
+                    return;
+                }
                 var json = JsonConvert.DeserializeObject<Dictionary<String, List<Dictionary<String, dynamic>>>>(rez);
                 if (!json.ContainsKey("submissions")) return;
                 var list = json["submissions"];
