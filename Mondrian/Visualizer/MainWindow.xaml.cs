@@ -155,14 +155,6 @@ namespace Visualizer
                     continue;
                 }
 
-                if (args[i].Equals("-larstest", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Lars mode. This may do horrible things. Good luck.
-                    RectStack.KeyUp -= RectStack_KeyUp;
-                    this.KeyUp += RectStack_KeyUp;
-                    continue;
-                }
-
                 otherArgs.Add(args[i]);
             }
 
@@ -568,6 +560,8 @@ namespace Visualizer
                     RectStack.ItemsSource = null;
                     RectStack.ItemsSource = _selectedRects;
                     RectStack.SelectedIndex = targetIndex; // Automatically triggers a redraw
+                    // Put focus on the selector so that nudge "just works"
+                    RectStack.Focus();
                 }
 
                 // Multi-click mode
