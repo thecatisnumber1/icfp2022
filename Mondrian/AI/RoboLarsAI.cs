@@ -39,7 +39,7 @@ namespace AI
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = GenerateInitialCorners(args.numPoints);
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 1);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, args.rotation);
             SubmitSolution(picasso, args, logger, corners, colors, args.rotation);
         }
 
@@ -55,7 +55,7 @@ namespace AI
         public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, args.rotation);
             SubmitSolution(picasso, args, logger, corners, colors, args.rotation);
         }
 
