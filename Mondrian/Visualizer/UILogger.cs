@@ -105,12 +105,16 @@ namespace Visualizer
                             _statusString = null; // Null out so we don't constantly update.
                         }
 
+                        _mainUi.CheckFaulted();
+
                         Interlocked.Exchange(ref _rendering, 0);
                     });
                 }
 
                 Task.Delay(20).Wait(); // Need something to stop us from constantly spamming the UI
             }
+
+            ;
         }
 
         public override void Break(bool immediate)

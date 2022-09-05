@@ -44,7 +44,7 @@ namespace AI
             {
                 picasso.Color(block.ID, targetColor);
                 Logger.Render(picasso);
-                Logger.LogStatusMessage($"Shortcut {++ShortCutCount}");
+                //throw new Exception("lol");
                 return;
             }
 

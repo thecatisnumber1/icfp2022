@@ -428,6 +428,23 @@ namespace Visualizer
             });
         }
 
+        internal void CheckFaulted()
+        {
+            if (_solverTask.IsFaulted)
+            {
+                // Shut down the pump so we don't spam ourselves infinitely
+                _tokenSource.Cancel();
+
+                MessageBox.Show($"Your solver crashed somewhere!{Environment.NewLine}{Environment.NewLine}{_solverTask.Exception}", "OH GNOES", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                LogVisualizerMessage("You crashed!");
+                SolverSelector.IsEnabled = true;
+                ProblemSelector.IsEnabled = true;
+
+                ResetSolverButtons();
+            }
+        }
+
         private void ManualMove_OnMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (_leftMouseDown)
