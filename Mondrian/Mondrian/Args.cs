@@ -44,8 +44,6 @@ namespace Mondrian
                     case "--submit":
                         submit = true;
                         break;
-                    default:
-                        throw new ArgumentException($"Unrecognized argument: {args[i]}");
                 }
             }
 
@@ -60,7 +58,7 @@ namespace Mondrian
                 minProblemNumber,
                 maxProblemNumber,
                 submit,
-                new AIArgs(-1));
+                AIArgs.ParseArgs(args));
         }
     }
 }

@@ -78,6 +78,14 @@ namespace Core
         public Picasso(Image img, bool isFakePicasso) : this(img, null, null, isFakePicasso)
         { }
 
+        public void UndoUntilYouReachAColorInstructionThatWayTheScoreIsOptimal()
+        {
+            while (instructions.Peek().Instruction.Typ == InstructionType.Color)
+            {
+                Undo();
+            }
+        }
+
         public int Score
         {
             get

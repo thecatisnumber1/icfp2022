@@ -33,6 +33,7 @@ namespace Mondrian
                 Image initialPng = InitialPNGs.GetInitialPNG(problemNum);
                 Core.Picasso picasso = new Picasso(problem, initialConfig, initialPng);
                 solver(picasso, args.aiArgs, logger);
+                /*
                 logger.LogMessage($"Score = {picasso.Score}, instructionCost = {(picasso.TotalInstructionCost / ((double)picasso.Score)).ToString("0.00")} = {watch.Elapsed}");
                 List<string> instructions = picasso.SerializeInstructions();
                 File.WriteAllLines($"{problemNum}.sol", instructions);
@@ -40,7 +41,7 @@ namespace Mondrian
                 if (args.submit)
                 {
                     Rest.Upload(problemNum, String.Join("\n", instructions), picasso.Score);
-                }
+                }*/
             }
         }
     }

@@ -12,6 +12,14 @@ namespace AI
     {
         public static readonly int CANVAS_SIZE = 400;
         public static Random r = new Random();
+        public static int NUM_POINTS = 200;
+        public static List<Point> CORNERS = new List<Point>
+        {
+            new Point(0, 0),
+            new Point(CANVAS_SIZE, 0),
+            new Point(0, CANVAS_SIZE),
+            new Point(CANVAS_SIZE, CANVAS_SIZE)
+        };
 
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
@@ -43,7 +51,9 @@ namespace AI
         private static void SubmitSolution(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners, List<RGBA?> colors)
         {
             AIUtils.RejoinAll(picasso);
+            picasso.Color(picasso.AllBlocks.First().ID, new RGBA(255, 255, 255, 255));
             PlaceAllRectangles(picasso, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors, logger);
+            picasso.UndoUntilYouReachAColorInstructionThatWayTheScoreIsOptimal();
             logger.Render(picasso);
 
             logger.LogMessage(picasso.Score.ToString());
@@ -72,7 +82,7 @@ namespace AI
         private static List<Point> GenerateInitialCorners()
         {
             List<Point> corners = new List<Point>();
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < NUM_POINTS; i++)
             {
                 corners.Add(RandomPoint());
             }
@@ -235,12 +245,7 @@ namespace AI
             // Figure out which rectangles were created for this rect
             if (rect.Right != CANVAS_SIZE && rect.Top != CANVAS_SIZE)
             {
-                Rectangle rect1 = Rectangle.FromPoints(center, new Point(CANVAS_SIZE, 0));
-                Rectangle rect2 = Rectangle.FromPoints(center, new Point(CANVAS_SIZE, CANVAS_SIZE));
-                Rectangle rect3 = Rectangle.FromPoints(center, new Point(0, CANVAS_SIZE));
-                Rectangle rect12 = MergeRects(rect1, rect2);
-                Rectangle rect03 = MergeRects(rect, rect3);
-                return MergeCost(rect1, rect2) + MergeCost(rect, rect3) + MergeCost(rect12, rect03);
+                return OptimalMergeScore(center).score;
             }
             else if (rect.Right != CANVAS_SIZE && rect.Top == CANVAS_SIZE)
             {
@@ -256,6 +261,26 @@ namespace AI
             {
                 return 0;
             }
+        }
+
+        private static (bool vertical, int score) OptimalMergeScore(Point center)
+        {
+            return OptimalMergeScore(center, Point.ORIGIN);
+        }
+
+        private static (bool vertical, int score) OptimalMergeScore(Point opposite, Point corner)
+        {
+            Rectangle rect0 = Rectangle.FromPoints(corner, opposite);
+            Rectangle rect1 = Rectangle.FromPoints(opposite, new Point(CANVAS_SIZE, 0));
+            Rectangle rect2 = Rectangle.FromPoints(opposite, new Point(CANVAS_SIZE, CANVAS_SIZE));
+            Rectangle rect3 = Rectangle.FromPoints(opposite, new Point(0, CANVAS_SIZE));
+            Rectangle rect01 = MergeRects(rect0, rect1);
+            Rectangle rect32 = MergeRects(rect3, rect2);
+            Rectangle rect12 = MergeRects(rect1, rect2);
+            Rectangle rect03 = MergeRects(rect0, rect3);
+            int verticalCost =  MergeCost(rect1, rect2) + MergeCost(rect0, rect3) + MergeCost(rect12, rect03);
+            int horizontalCost = MergeCost(rect0, rect1) + MergeCost(rect3, rect2) + MergeCost(rect01, rect32);
+            return verticalCost < horizontalCost ? (true, verticalCost) : (false, horizontalCost);
         }
 
         private static Rectangle MergeRects(Rectangle bottomLeft, Rectangle topRight)
@@ -283,46 +308,81 @@ namespace AI
                 throw new Exception("Can't place a rectangle on a complex canvas!");
             }
 
-            FirstCut(picasso, rect, color);
+            NewCut(picasso, rect, picasso.AllBlocks.First(), color);
         }
 
-        private static void FirstCut(Picasso picasso, Rectangle rect, RGBA? color)
+        private static void NewCut(Picasso picasso, Rectangle r, Block block, RGBA? color)
         {
-            if (rect.Left != 0 && rect.Bottom != 0)
+            (Point corner, Point opposite) = FindCorner(r);
+            if (IsOnCorner(opposite))
             {
-                List<Block> blocks0 = picasso.PointCut(picasso.AllBlocks.First().ID, rect.BottomLeft).ToList();
-                Block zeroDotTwo = SecondCut(picasso, rect, blocks0[2], color);
-                Block firstMerge = picasso.Merge(zeroDotTwo.ID, blocks0[1].ID);
-                Block secondMerge = picasso.Merge(blocks0[0].ID, blocks0[3].ID);
-                picasso.Merge(firstMerge.ID, secondMerge.ID);
+                picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
             }
-            else if (rect.Left != 0 && rect.Bottom == 0)
+            else if (opposite.X > 0 && opposite.X < CANVAS_SIZE && opposite.Y > 0 && opposite.Y < CANVAS_SIZE)
             {
-                List<Block> blocks = picasso.VerticalCut(picasso.AllBlocks.First().ID, rect.Left).ToList();
-                Block right = SecondCut(picasso, rect, blocks[1], color);
-                picasso.Merge(right.ID, blocks[0].ID);
+                List<Block> blocks1 = picasso.PointCut(block.ID, opposite).ToList();
+                picasso.Color(blocks1[DirectionFrom(opposite, corner)].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                if (OptimalMergeScore(opposite, corner).vertical)
+                {
+                    Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
+                    Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
+                    picasso.Merge(firstMerge.ID, secondMerge.ID);
+                }
+                else
+                {
+                    Block firstMerge = picasso.Merge(blocks1[0].ID, blocks1[1].ID);
+                    Block secondMerge = picasso.Merge(blocks1[3].ID, blocks1[2].ID);
+                    picasso.Merge(firstMerge.ID, secondMerge.ID);
+                }
             }
-            else if (rect.Left == 0 && rect.Bottom != 0)
+            else if (opposite.X == CANVAS_SIZE || opposite.X == 0)
             {
-                List<Block> blocks = picasso.HorizontalCut(picasso.AllBlocks.First().ID, rect.Bottom).ToList();
-                Block top = SecondCut(picasso, rect, blocks[1], color);
-                picasso.Merge(top.ID, blocks[0].ID);
+                List<Block> blocks1 = picasso.HorizontalCut(block.ID, opposite.Y).ToList();
+                if (corner.X < opposite.X)
+                {
+                    picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                }
+                else
+                {
+                    picasso.Color(blocks1[1].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                }
+
+                picasso.Merge(blocks1[0].ID, blocks1[1].ID);
             }
-            else
+            else if (opposite.Y == CANVAS_SIZE || opposite.Y == 0)
             {
-                SecondCut(picasso, rect, picasso.AllBlocks.First(), color);
+                List<Block> blocks1 = picasso.VerticalCut(block.ID, opposite.X).ToList();
+                if (corner.Y < opposite.X)
+                {
+                    picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                }
+                else
+                {
+                    picasso.Color(blocks1[1].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                }
+
+                picasso.Merge(blocks1[0].ID, blocks1[1].ID);
             }
         }
 
-        private static Block SecondCut(Picasso picasso, Rectangle rect, Block block, RGBA? color)
+        private static Block Cut(Picasso picasso, Rectangle rect, Block block, RGBA? color)
         {
             if (rect.Right != 400 && rect.Top != 400)
             {
                 List<Block> blocks1 = picasso.PointCut(block.ID, rect.TopRight).ToList();
                 picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
-                Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
-                return picasso.Merge(firstMerge.ID, secondMerge.ID);
+                if (OptimalMergeScore(rect.TopRight).vertical)
+                {
+                    Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
+                    Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
+                    return picasso.Merge(firstMerge.ID, secondMerge.ID);
+                }
+                else
+                {
+                    Block firstMerge = picasso.Merge(blocks1[0].ID, blocks1[1].ID);
+                    Block secondMerge = picasso.Merge(blocks1[3].ID, blocks1[2].ID);
+                    return picasso.Merge(firstMerge.ID, secondMerge.ID);
+                }
             }
             else if (rect.Right != 400 && rect.Top == 400)
             {
@@ -341,6 +401,58 @@ namespace AI
                 picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
                 return block;
             }
+        }
+
+        private static int DirectionFrom(Point cutPoint, Point corner)
+        {
+            if (cutPoint.X > corner.X && cutPoint.Y > corner.Y)
+            {
+                return 0;
+            }
+            else if (cutPoint.X < corner.X && cutPoint.Y > corner.Y)
+            {
+                return 1;
+            }
+            else if (cutPoint.X < corner.X && cutPoint.Y < corner.Y)
+            {
+                return 2;
+            }
+            else if (cutPoint.X > corner.X && cutPoint.Y < corner.Y)
+            {
+                return 3;
+            }
+
+            throw new Exception("These two points don't have a direction.");
+        }
+
+        private static (Point corner, Point opposite) FindCorner(Rectangle rect)
+        {
+            foreach (Point p in CORNERS)
+            {
+                if (rect.BottomLeft == p)
+                {
+                    return (rect.BottomLeft, rect.TopRight);
+                }
+                else if (rect.BottomRight == p)
+                {
+                    return (rect.BottomRight, rect.TopLeft);
+                }
+                else if (rect.TopLeft == p)
+                {
+                    return (rect.TopLeft, rect.BottomRight);
+                }
+                else if (rect.TopRight == p)
+                {
+                    return (rect.TopRight, rect.BottomLeft);
+                }
+            }
+
+            throw new Exception("This rect isn't in a corner!");
+        }
+
+        private static bool IsOnCorner(Point p)
+        {
+            return CORNERS.Contains(p);
         }
 
         private static Point RandomPoint()
