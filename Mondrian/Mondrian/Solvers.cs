@@ -24,6 +24,7 @@ namespace Mondrian
             ["Swapmaster"] = Swapmaster5000.Solve,
             ["HillClimber"] = RoboLarsAI.InteractiveSolve,
             ["RoboLars"] = RoboLarsAI.NonInteractiveSolve,
+            ["BetterLars"] = RoboLarsAI.DetailSolve,
         };
 
         public static Solver GetSolver(string algorithm)

@@ -16,22 +16,22 @@ namespace AI
             List<double> detailSum = ComputeDetaiSum(img);
 
             rand ??= staticRand;
-            List<Point> result = new(numPoints);
+            List<Point> result = new(numPoints) { new Point(img.Width, img.Height) };
 
-            for (int i = 0; i < numPoints; i++)
+            for (int i = 1; i < numPoints; i++)
             {
                 int index = PickRandom(detailSum, rand);
                 result.Add(new Point(index / img.Height, index % img.Height));
             }
 
-            return result;
+            return result.OrderByDescending(x => x.ManhattanDist(Point.ORIGIN)).ToList();
         }
 
         private static int PickRandom(List<double> weightSum, Random rand)
         {
             double targetSum = rand.NextDouble() * weightSum[^1];
             int searchResult = weightSum.BinarySearch(targetSum);
-            
+
             if (searchResult >= 0)
                 return searchResult;
 
@@ -41,10 +41,10 @@ namespace AI
         private static List<double> ComputeDetaiSum(Image img)
         {
             List<double> detailSum = new(img.Width * img.Height + 1);
+            detailSum.Add(0.0);
 
             for (int x = 0; x < img.Width; x++)
             {
-                
                 for (int y = 0; y < img.Height; y++)
                 {
                     detailSum.Add(detailSum[^1] + DetailAt(img, x, y));
@@ -56,12 +56,12 @@ namespace AI
 
         private static double DetailAt(Image img, int x, int y)
         {
-            int xRight = Math.Min(x + 1, img.Width);
-            int xLeft = Math.Min(x - 1, 0);
+            int xRight = Math.Min(x + 1, img.Width - 1);
+            int xLeft = Math.Max(x - 1, 0);
             int deltaX = xRight - xLeft;
 
-            int yUp = Math.Min(y + 1, img.Height);
-            int yDown = Math.Min(y - 1, 0);
+            int yUp = Math.Min(y + 1, img.Height - 1);
+            int yDown = Math.Max(y - 1, 0);
             int deltaY = yUp - yDown;
 
             Point pRight = new Point(xRight, y);

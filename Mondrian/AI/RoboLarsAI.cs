@@ -20,31 +20,72 @@ namespace AI
             new Point(CANVAS_SIZE, CANVAS_SIZE)
         };
 
+        public delegate Point RotationFunction(Point other);
+        public static List<RotationFunction> IMG_ROTATIONS = new List<RotationFunction>
+        {
+            p => p,
+            p => new Point(CANVAS_SIZE - 1 - p.X, p.Y),
+            p => new Point(CANVAS_SIZE - 1 - p.X, CANVAS_SIZE - 1 - p.Y),
+            p => new Point(p.X, CANVAS_SIZE - 1 - p.Y)
+        };
+        public static List<RotationFunction> RECT_ROTATIONS = new List<RotationFunction>
+        {
+            p => p,
+            p => new Point(CANVAS_SIZE - p.X, p.Y),
+            p => new Point(CANVAS_SIZE - p.X, CANVAS_SIZE - p.Y),
+            p => new Point(p.X, CANVAS_SIZE - p.Y)
+        };
+
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = GenerateInitialCorners(args.numPoints);
-            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
         public static void InteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = logger.UserSelectedRectangles.Select(x => x.TopRight).ToList();
-            List<RGBA?> colors = DoSearch(picasso, args, logger, corners);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
-        private static List<RGBA?> DoSearch(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners)
+        public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
+            List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
+            SubmitSolution(picasso, args, logger, corners, colors);
+        }
+
+        private static List<RGBA?> DoSearch(Image img, LoggerBase logger, AIArgs args, List<Point> corners, int rotation)
+        {
+            Image rotatedImage = RotateImage(img, rotation);
             List<RGBA?> colors;
             int totalScore;
             Stopwatch sw = Stopwatch.StartNew();
+            ColorOptimizer.ClearLarsCache();
             do
             {
-                (colors, totalScore) = ClimbThatHill(picasso.TargetImage, corners, args, logger);
-            } while (Simplify(corners, picasso.TargetImage, logger, totalScore));
+                (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, args, logger, rotation);
+            } while (Simplify(corners, rotatedImage, logger, totalScore));
             logger.LogMessage(sw.Elapsed.ToString());
             return colors;
+        }
+
+        private static Image RotateImage(Image image, int rotation)
+        {
+            RGBA[,] rotated = new RGBA[image.Width, image.Height];
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    Point p = new Point(x, y);
+                    Point rot = IMG_ROTATIONS[rotation](p);
+                    rotated[rot.X, rot.Y] = image[p];
+                }
+            }
+
+            return new Image(rotated);
         }
 
         private static void SubmitSolution(Picasso picasso, AIArgs args, LoggerBase logger, List<Point> corners, List<RGBA?> colors)
@@ -97,10 +138,10 @@ namespace AI
             new Point(1, 0)
         };
 
-        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image img, List<Point> corners, AIArgs args, LoggerBase logger)
+        private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image originalImage, Image rotatedImage, List<Point> corners, AIArgs args, LoggerBase logger, int rotation)
         {
             bool improved = true;
-            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img);
+            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
             int limit = args.limit;
@@ -122,7 +163,7 @@ namespace AI
                             corners[i] = modifiedPoint;
                             totalInstructionCost -= ComputeRectInstructionCost(curPoint);
                             totalInstructionCost += ComputeRectInstructionCost(modifiedPoint);
-                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img);
+                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage);
                             int newScore = tempColors.score + totalInstructionCost;
                             
                             if (newScore < bestScore)
@@ -135,14 +176,16 @@ namespace AI
                                 if (watch.Elapsed > TimeSpan.FromSeconds(3) || !renderedAtLeastOnce)
                                 {
                                     renderedAtLeastOnce = true;
-                                    Picasso leondardo = new Picasso(img, true);
-                                    PlaceAllRectangles(leondardo, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
+                                    Picasso leondardo = new Picasso(originalImage, true);
+                                    List<Rectangle> orignial = corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList();
+                                    PlaceAllRectangles(leondardo, RotateAllRects(orignial, rotation), colors.colors, logger);
                                     watch.Restart();
 
                                     if (leondardo.Score != newScore)
                                     {
                                         throw new Exception("unpredicatble");
                                     }
+
                                     logger.Render(leondardo);
                                 }
                             }
@@ -194,6 +237,17 @@ namespace AI
 
             logger.LogMessage($"Simplified {simplificationCount} times.");
             return simplified;
+        }
+
+        private static List<Rectangle> RotateAllRects(List<Rectangle> rects, int rotation)
+        {
+            List<Rectangle> rectangles = new List<Rectangle>();
+            foreach (Rectangle rect in rects)
+            {
+                rectangles.Add(Rectangle.FromPoints(RECT_ROTATIONS[rotation](rect.BottomLeft), RECT_ROTATIONS[rotation](rect.TopRight)));
+            }
+
+            return rectangles;
         }
 
         private static int ComputeRectInstructionCost(Point topRight)
@@ -266,14 +320,9 @@ namespace AI
             }
         }
 
-        private static (bool vertical, int score) OptimalMergeScore(Point center)
+        private static (bool vertical, int score) OptimalMergeScore(Point opposite)
         {
-            return OptimalMergeScore(center, Point.ORIGIN);
-        }
-
-        private static (bool vertical, int score) OptimalMergeScore(Point opposite, Point corner)
-        {
-            Rectangle rect0 = Rectangle.FromPoints(corner, opposite);
+            Rectangle rect0 = Rectangle.FromPoints(Point.ORIGIN, opposite);
             Rectangle rect1 = Rectangle.FromPoints(opposite, new Point(CANVAS_SIZE, 0));
             Rectangle rect2 = Rectangle.FromPoints(opposite, new Point(CANVAS_SIZE, CANVAS_SIZE));
             Rectangle rect3 = Rectangle.FromPoints(opposite, new Point(0, CANVAS_SIZE));
@@ -288,7 +337,11 @@ namespace AI
 
         private static Rectangle MergeRects(Rectangle bottomLeft, Rectangle topRight)
         {
-            return Rectangle.FromPoints(bottomLeft.BottomLeft, topRight.TopRight);
+            int left = Math.Min(bottomLeft.Left, topRight.Left);
+            int right = Math.Max(bottomLeft.Right, topRight.Right);
+            int top = Math.Max(bottomLeft.Top, topRight.Top);
+            int bottom = Math.Min(bottomLeft.Bottom, topRight.Bottom);
+            return new Rectangle(new Point(left, bottom), new Point(right, top));
         }
 
         private static int MergeCost(Rectangle first, Rectangle second)
@@ -316,16 +369,16 @@ namespace AI
 
         private static void NewCut(Picasso picasso, Rectangle r, Block block, RGBA? color)
         {
-            (Point corner, Point opposite) = FindCorner(r);
-            if (IsOnCorner(opposite))
+            (Point corner, Point center) = FindCorner(r);
+            if (IsOnCorner(center))
             {
                 picasso.Color(block.ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
             }
-            else if (opposite.X > 0 && opposite.X < CANVAS_SIZE && opposite.Y > 0 && opposite.Y < CANVAS_SIZE)
+            else if (center.X > 0 && center.X < CANVAS_SIZE && center.Y > 0 && center.Y < CANVAS_SIZE)
             {
-                List<Block> blocks1 = picasso.PointCut(block.ID, opposite).ToList();
-                picasso.Color(blocks1[DirectionFrom(opposite, corner)].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
-                if (OptimalMergeScore(opposite, corner).vertical)
+                List<Block> blocks1 = picasso.PointCut(block.ID, center).ToList();
+                picasso.Color(blocks1[DirectionFrom(center, corner)].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
+                if (OptimalMergeScore(center).vertical)
                 {
                     Block firstMerge = picasso.Merge(blocks1[1].ID, blocks1[2].ID);
                     Block secondMerge = picasso.Merge(blocks1[0].ID, blocks1[3].ID);
@@ -338,10 +391,10 @@ namespace AI
                     picasso.Merge(firstMerge.ID, secondMerge.ID);
                 }
             }
-            else if (opposite.X == CANVAS_SIZE || opposite.X == 0)
+            else if (center.X == CANVAS_SIZE || center.X == 0)
             {
-                List<Block> blocks1 = picasso.HorizontalCut(block.ID, opposite.Y).ToList();
-                if (corner.X < opposite.X)
+                List<Block> blocks1 = picasso.HorizontalCut(block.ID, center.Y).ToList();
+                if (corner.X < center.X)
                 {
                     picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
                 }
@@ -352,10 +405,10 @@ namespace AI
 
                 picasso.Merge(blocks1[0].ID, blocks1[1].ID);
             }
-            else if (opposite.Y == CANVAS_SIZE || opposite.Y == 0)
+            else if (center.Y == CANVAS_SIZE || center.Y == 0)
             {
-                List<Block> blocks1 = picasso.VerticalCut(block.ID, opposite.X).ToList();
-                if (corner.Y < opposite.X)
+                List<Block> blocks1 = picasso.VerticalCut(block.ID, center.X).ToList();
+                if (corner.Y < center.Y)
                 {
                     picasso.Color(blocks1[0].ID, color == null ? new RGBA(125, 254, 227, 255) : color.Value);
                 }
