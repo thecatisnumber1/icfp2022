@@ -557,6 +557,8 @@ namespace Visualizer
                     // Insert above whatever's selected
                     int targetIndex = RectStack.SelectedIndex == -1 ? 0 : RectStack.SelectedIndex;
                     _selectedRects.Insert(targetIndex, result);
+                    LogVisualizerMessage($"There {(_selectedRects.Count > 1 ? "are" : "is")} now {_selectedRects.Count} rect{(_selectedRects.Count > 1 ? "s" : string.Empty)}");
+
                     RectStack.ItemsSource = null;
                     RectStack.ItemsSource = _selectedRects;
                     RectStack.SelectedIndex = targetIndex; // Automatically triggers a redraw
