@@ -50,6 +50,13 @@ namespace AI
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
+        public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
+        {
+            List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
+            SubmitSolution(picasso, args, logger, corners, colors);
+        }
+
         private static List<RGBA?> DoSearch(Image img, LoggerBase logger, AIArgs args, List<Point> corners, int rotation)
         {
             Image rotatedImage = RotateImage(img, rotation);
