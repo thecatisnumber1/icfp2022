@@ -164,7 +164,7 @@
                 //return FindMedian.Median(pixels);
             }
 
-            return new RGBA(GetMedian(rPixels), GetMedian(gPixels), GetMedian(bPixels), GetMedian(aPixels));
+            return new RGBA(GetMedian(rPixels), GetMedian(gPixels), GetMedian(bPixels), 255);
 
         }
 

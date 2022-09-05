@@ -14,6 +14,7 @@
                 for (int y = 0; y < Height; y++)
                 {
                     upgradedPixels[x, y] = pixels[x, y];
+                    if (pixels[x, y].A != 255) throw new Exception("shit! Alpha!!");
                 }
             }
             summedAreaTable = new SummedAreaTable<IntRGB>(upgradedPixels, IntRGB.MATH);
