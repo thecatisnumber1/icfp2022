@@ -49,8 +49,6 @@ namespace Visualizer
         private bool _leftMouseDown;
         private bool _multiClickMode;
 
-        private List<string> _userArgs; // Anything we don't know about
-
         private double _unselectedRectOpacity = 0.8;
         internal bool UseOldRenderer;
         private Stopwatch renderTimer = new Stopwatch();
@@ -79,7 +77,7 @@ namespace Visualizer
             string[] solverList = Solvers.Names();
             SolverSelector.ItemsSource = solverList;
 
-            _userArgs = new List<string>();
+            var otherArgs = new List<string>();
             // Parse args
             for (int i = 0; i < args.Length; i++)
             {
@@ -115,7 +113,7 @@ namespace Visualizer
                     continue;
                 }
 
-                if (args[i].Equals("-r", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("-rob", StringComparison.OrdinalIgnoreCase))
                 {
                     RectsOnBothCheckbox.IsChecked = true;
                     continue;
@@ -159,10 +157,10 @@ namespace Visualizer
                     continue;
                 }
 
-                _userArgs.Add(args[i]);
+                otherArgs.Add(args[i]);
             }
 
-            ArgumentsTextBox.Text = string.Join(' ', _userArgs);
+            ArgumentsTextBox.Text = string.Join(' ', otherArgs);
 
             // Have some default selected
             if (ProblemSelector.SelectedIndex < 0)
@@ -419,14 +417,13 @@ namespace Visualizer
             // This should probably happen *after* the task runs
             ResetProblem(); // Wipe all state.
 
+            List<string> aiArgs = ArgumentsTextBox.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            aiArgs.Add("-p");
+            aiArgs.Add(_problemId.ToString());
+
             _solverTask = Task.Run(() =>
             {
                 Interlocked.Increment(ref _runCount);
-
-                // Manually inject problem ID. Use a copy so we can run multiple times
-                List<string> aiArgs = new List<string>(_userArgs);
-                aiArgs.Add("-p");
-                aiArgs.Add(_problemId.ToString());
 
                 solver.Invoke(_problem, AI.AIArgs.ParseArgs(aiArgs.ToArray()), _loggerInstance);
 

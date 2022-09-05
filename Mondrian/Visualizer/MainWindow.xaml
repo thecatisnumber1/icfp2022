@@ -78,7 +78,7 @@
 -s (selected rect on top)
 -h (hide unselected rects)
 -c (crosshair on both boxes)
--r (rects on both boxes)
+-rob (rects on both boxes)
 -op 0.0-1.0 (rect opacity)
 -vdbg (visualizer debug)</TextBox>
             <Separator />
