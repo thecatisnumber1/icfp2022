@@ -47,7 +47,7 @@ namespace AI
                 
                 for (int y = 0; y < img.Height; y++)
                 {
-                    detailSum.Add(detailSum[^1] + DetailAt(img, x, y);
+                    detailSum.Add(detailSum[^1] + DetailAt(img, x, y));
                 }
             }
 

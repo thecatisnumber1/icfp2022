@@ -551,7 +551,9 @@ namespace Visualizer
                     LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
                     _selectedRects.Insert(0, result);
-                    DrawSelectedRects(true);
+                    RectStack.ItemsSource = null;
+                    RectStack.ItemsSource = _selectedRects;
+                    RectStack.SelectedIndex = 0; // Automatically triggers a redraw
                 }
 
                 // Multi-click mode
