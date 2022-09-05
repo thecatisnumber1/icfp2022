@@ -80,7 +80,7 @@ namespace Core
 
         public void UndoUntilYouReachAColorInstructionThatWayTheScoreIsOptimal()
         {
-            while (instructions.Peek().Instruction.Typ == InstructionType.Color)
+            while (instructions.Count > 0 && instructions.Peek().Instruction.Typ == InstructionType.Color)
             {
                 Undo();
             }

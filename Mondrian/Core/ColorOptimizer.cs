@@ -40,7 +40,7 @@
             return result;
         }
 
-        public static bool DISABLE_LARSE_CACHE = false;
+        public static bool DISABLE_LARSE_CACHE = true;
 
         private static Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>> nestedLarsCache = new Dictionary<RGBA, Dictionary<int, Dictionary<int, double>>>();
 
