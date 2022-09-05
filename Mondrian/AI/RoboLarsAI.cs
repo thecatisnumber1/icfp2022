@@ -39,7 +39,7 @@ namespace AI
         public static void NonInteractiveSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
             List<Point> corners = GenerateInitialCorners(args.numPoints);
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 0);
+            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, 1);
             SubmitSolution(picasso, args, logger, corners, colors);
         }
 
@@ -97,6 +97,7 @@ namespace AI
             logger.Render(picasso);
 
             logger.LogMessage(picasso.Score.ToString());
+            /*
             List<string> instructions = picasso.SerializeInstructions();
             File.WriteAllLines($"{Guid.NewGuid}.sol", instructions);
             if (args.problemNum != -1)
@@ -116,7 +117,7 @@ namespace AI
                 }
 
                 Rest.Upload(args.problemNum, string.Join("\n", picasso.SerializeInstructions()), picasso.Score);
-            }
+            }*/
         }
 
         private static List<Point> GenerateInitialCorners(int numPoints)
