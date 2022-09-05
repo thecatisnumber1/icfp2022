@@ -29,6 +29,7 @@ namespace Core
                 var task = client.GetStringAsync("https://robovinci.xyz/api/submissions");
                 var rez = task.Result;
                 var json = JsonConvert.DeserializeObject<Dictionary<String, List<Dictionary<String, dynamic>>>>(rez);
+                if (!json.ContainsKey("submissions")) return;
                 var list = json["submissions"];
 
                 foreach (var i in list)
