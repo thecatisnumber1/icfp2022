@@ -2,6 +2,7 @@ import requests
 import time
 
 api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoZWNhdGlzbnVtYmVyMUBnb29nbGVncm91cHMuY29tIiwiZXhwIjoxNjYyMzczMjk3LCJvcmlnX2lhdCI6MTY2MjI4Njg5N30.dhJtIgf1DSzfJTK82DihkTL7expJRwgF6Akr0ixRR3Q'
+api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoZWNhdGlzbnVtYmVyMUBnb29nbGVncm91cHMuY29tIiwiZXhwIjoxNjYyNDU5ODU3LCJvcmlnX2lhdCI6MTY2MjM3MzQ1N30.oLOwHGoWkXWqadEkQvjusk5E_ze8PbFHI7qAUkc2UyE'
 headers = {
   'Authorization': 'Bearer ' + api_key,
 }
@@ -80,26 +81,37 @@ def fill_buckets(rez=None):
 
 def main():
   fill_buckets()
-  for i in range(1, len(buckets) + 1):
+  rrrrr = range(1, len(buckets) + 1)
+  for i in rrrrr:
     sub = buckets[i]
+    print(sub)
     if False and recent[i]['id'] == sub['id']:
       print '%d Already best'%(i)
       continue
 
     file = get_file(sub['id'])
-    if i <= 25: 
-      merge = file.split('\n')
-      if merge[0] == 'color [0] [255, 255, 255, 255]':
-        print '%d Extra color'%(i)
-      last_color = -1
-      for i in xrange(len(merge)):
-        if merge[i].startswith('color'):
-          last_color = i
-      print (last_color, len(merge))
+    merge = file.split('\n')
+    last_color = -1
+    if merge[0].startswith('color') and merge[1].startswith('color'):
+      print (i, 'Double color')
+      print(merge[:3])
+      merge = merge[1:]
+    elif i <= 25 and merge[0] == 'color [0] [255, 255, 255, 255]':
+      print '%d Extra color'%(i)
+      print merge[:3]
+      merge = merge[1:]
+    for ii in xrange(len(merge)):
+      if merge[ii].startswith('color'):
+        last_color = ii
+    print (i, last_color, len(merge))
+    merge = merge[:last_color+1]
+    filee = '\n'.join(merge)
+    if len(file) == len(filee):
+      print (i, 'skipping')
+      continue
 
-
-    #rez = posts(i, file)
-    #print(rez.text)
+    rez = posts(i, filee)
+    print(rez.text)
     time.sleep(5)
 
 if __name__ == '__main__':
