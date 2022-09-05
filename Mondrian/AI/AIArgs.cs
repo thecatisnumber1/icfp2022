@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AI
 {
-    public record AIArgs(int problemNum, int rotation, int numPoints, int limit)
+    public record AIArgs(int problemNum, int rotation, int numPoints, int limit, int renderTime, bool fast)
     {
         public static AIArgs ParseArgs(string[] args)
         {
@@ -14,6 +14,8 @@ namespace AI
             int rotation = 0;
             int numPoints = 200;
             int limit = 7;
+            bool fast = true;
+            int renderTime = 10;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -36,6 +38,14 @@ namespace AI
                     case "-l":
                         limit = intArg();
                         break;
+                    case "--will":
+                    case "-w":
+                        fast = false;
+                        break;
+                    case "--time":
+                    case "-t":
+                        renderTime = intArg();
+                        break;
                 }
             }
 
@@ -44,7 +54,7 @@ namespace AI
                 throw new Exception("Need to specify a problem!");
             }
 
-            return new AIArgs(problemNum, rotation, numPoints, limit);
+            return new AIArgs(problemNum, rotation, numPoints, limit, renderTime, fast);
         }
     }
 }

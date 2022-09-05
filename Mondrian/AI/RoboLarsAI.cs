@@ -148,7 +148,7 @@ namespace AI
             do
             {
                 (colors, totalScore) = ClimbThatHill(img, rotatedImage, corners, args, logger, rotation);
-            } while (Simplify(corners, rotatedImage, logger, totalScore));
+            } while (Simplify(corners, rotatedImage, logger, totalScore, args));
             logger.LogMessage(sw.Elapsed.ToString());
             return ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, false).colors;
         }
@@ -223,7 +223,7 @@ namespace AI
         private static (List<RGBA?> colors, int totalScore) ClimbThatHill(Image originalImage, Image rotatedImage, List<Point> corners, AIArgs args, LoggerBase logger, int rotation)
         {
             bool improved = true;
-            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, true);
+            var colors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, args.fast);
             int totalInstructionCost = corners.Sum(ComputeRectInstructionCost);
             int bestScore = colors.score + totalInstructionCost;
             int limit = args.limit;
@@ -245,7 +245,7 @@ namespace AI
                             corners[i] = modifiedPoint;
                             totalInstructionCost -= ComputeRectInstructionCost(curPoint);
                             totalInstructionCost += ComputeRectInstructionCost(modifiedPoint);
-                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, true);
+                            var tempColors = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, rotatedImage, args.fast);
                             int newScore = tempColors.score + totalInstructionCost;
                             
                             if (newScore < bestScore)
@@ -255,7 +255,7 @@ namespace AI
                                 curPoint = modifiedPoint;
                                 colors = tempColors;
 
-                                if (watch.Elapsed > TimeSpan.FromSeconds(15) || !renderedAtLeastOnce)
+                                if (watch.Elapsed > TimeSpan.FromSeconds(args.renderTime) || !renderedAtLeastOnce)
                                 {
                                     renderedAtLeastOnce = true;
                                     Picasso leondardo = new Picasso(originalImage, true);
@@ -292,7 +292,7 @@ namespace AI
             return (colors.colors, totalInstructionCost + colors.score);
         }
 
-        private static bool Simplify(List<Point> corners, Image img, LoggerBase logger, int initialScore)
+        private static bool Simplify(List<Point> corners, Image img, LoggerBase logger, int initialScore, AIArgs args)
         {
             bool simplified = false;
             int bestScore = initialScore;
@@ -301,7 +301,7 @@ namespace AI
             {
                 Point p = corners[i];
                 corners.RemoveAt(i);
-                int newScore = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img, true).score;
+                int newScore = ColorOptimizer.ChooseColorsLars(corners, Point.ORIGIN, img, args.fast).score;
                 newScore += corners.Sum(ComputeRectInstructionCost);
                 if (newScore < bestScore)
                 {

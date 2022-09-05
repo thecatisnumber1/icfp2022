@@ -32,7 +32,7 @@ namespace Mondrian
                 InitialConfig? initialConfig = InitialConfigs.GetInitialConfig(problemNum);
                 Image initialPng = InitialPNGs.GetInitialPNG(problemNum);
                 Core.Picasso picasso = new Picasso(problem, initialConfig, initialPng);
-                solver(picasso, new AIArgs(problemNum, -1, 200, 10), logger);
+                solver(picasso, new AIArgs(problemNum, -1, 200, 10, 1000000, true), logger);
                 /*
                 logger.LogMessage($"Score = {picasso.Score}, instructionCost = {(picasso.TotalInstructionCost / ((double)picasso.Score)).ToString("0.00")} = {watch.Elapsed}");
                 List<string> instructions = picasso.SerializeInstructions();
