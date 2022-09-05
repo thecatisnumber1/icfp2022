@@ -651,13 +651,10 @@ namespace Visualizer
 
         private void Execute_Undo(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
-            if (_selectedRects != null)
+            if (RectStack.SelectedIndex != -1)
             {
-                if (_selectedRects.Count > 0)
-                {
-                    _selectedRects.RemoveAt(0);
-                    DrawSelectedRects(true);
-                }
+                _selectedRects.RemoveAt(RectStack.SelectedIndex);
+                DrawSelectedRects(true);
             }
         }
 
