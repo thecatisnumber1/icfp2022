@@ -24,7 +24,7 @@ under mono, but probably doesn't.
 AIs:
 * CheckerBoard
 * Scanner
-* AllCuts
+* AllCuts: Naively cuts down to the smallest chunks and fills things in. Mostly for stress-testing the visualizer.
 * LinePrinter[HV]: Emits colored lines using the average color of the line.
 * DotMatrix: Emits broken up colored lines. Perfect images, terrible scores.
 * Swapmaster:
