@@ -15,7 +15,7 @@ namespace Core
 
     public static class Rest
     {
-        static string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoZWNhdGlzbnVtYmVyMUBnb29nbGVncm91cHMuY29tIiwiZXhwIjoxNjYyMzk2MzMyLCJvcmlnX2lhdCI6MTY2MjMwOTkzMn0.BKrtP5Jp4wBGKpTqiszRnjGGdVEuDl7i-4LiUvlEWxA";
+        static string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoZWNhdGlzbnVtYmVyMUBnb29nbGVncm91cHMuY29tIiwiZXhwIjoxNjYyNDU5OTcwLCJvcmlnX2lhdCI6MTY2MjM3MzU3MH0.OWOg7-oKEwcGfTlecWIs9PXgB-NzHfSO_ruKVRTco-Q";
         static Dictionary<int, int>? best = new Dictionary<int, int>();
         static Dictionary<int, int>? current = new Dictionary<int, int>();
 
