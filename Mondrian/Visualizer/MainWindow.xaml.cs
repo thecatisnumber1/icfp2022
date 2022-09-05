@@ -728,7 +728,7 @@ namespace Visualizer
         {
             long now = DateTime.UtcNow.Ticks;
             string filePath = Path.Combine(@"..\..\quicksaves", $"{_problemId}_{now}.json");
-            LogVisualizerMessage($"Saving state to {filePath}");
+            LogMessage($"Saving state to {filePath}");
             Quicksave.SaveRects(_problemId.ToString(), _selectedRects, filePath);
         }
 
@@ -738,11 +738,11 @@ namespace Visualizer
 
             if (problemId == null || rects?.Count == 0)
             {
-                LogVisualizerMessage("Nothing to restore");
+                LogMessage("Nothing to restore");
                 return;
             }
 
-            LogVisualizerMessage($"Restoring from {fileName}");
+            LogMessage($"Restoring from {fileName}");
 
             _selectedRects = rects;
             DrawSelectedRects(true);
