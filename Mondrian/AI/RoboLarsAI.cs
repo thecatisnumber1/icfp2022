@@ -180,7 +180,7 @@ namespace AI
             logger.LogMessage(picasso.Score.ToString());
 
             List<string> instructions = picasso.SerializeInstructions();
-            File.WriteAllLines($"{Guid.NewGuid}.sol", instructions);
+            File.WriteAllLines($"{args.problemNum}_{rotation}.sol", instructions);
             if (args.problemNum != -1)
             {
                 Rest.CacheBests();
