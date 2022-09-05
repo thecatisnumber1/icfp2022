@@ -106,6 +106,7 @@ namespace AI
             int bestScore = colors.score + totalInstructionCost;
             int limit = 10;
             Stopwatch watch = Stopwatch.StartNew();
+            bool renderedAtLeastOnce = false;
             while (improved)
             {
                 improved = false;
@@ -132,8 +133,9 @@ namespace AI
                                 curPoint = modifiedPoint;
                                 colors = tempColors;
 
-                                if (watch.Elapsed > TimeSpan.FromSeconds(3))
+                                if (watch.Elapsed > TimeSpan.FromSeconds(3) || !renderedAtLeastOnce)
                                 {
+                                    renderedAtLeastOnce = true;
                                     Picasso leondardo = new Picasso(img, true);
                                     PlaceAllRectangles(leondardo, corners.Select(x => new Rectangle(Point.ORIGIN, x)).ToList(), colors.colors, logger);
                                     watch.Restart();
@@ -170,6 +172,7 @@ namespace AI
         {
             bool simplified = false;
             int bestScore = initialScore;
+            int simplificationCount = 0;
             for (int i = 0; i < corners.Count; i++)
             {
                 Point p = corners[i];
@@ -178,7 +181,7 @@ namespace AI
                 newScore += corners.Sum(ComputeRectInstructionCost);
                 if (newScore < bestScore)
                 {
-                    logger.LogMessage("Found a simplification!");
+                    simplificationCount++;
                     simplified = true;
                     bestScore = newScore;
                     i--;
@@ -190,6 +193,7 @@ namespace AI
                 }
             }
 
+            logger.LogMessage($"Simplified {simplificationCount} times.");
             return simplified;
         }
 
