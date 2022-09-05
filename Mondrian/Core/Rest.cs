@@ -16,13 +16,11 @@ namespace Core
     public static class Rest
     {
         static string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoZWNhdGlzbnVtYmVyMUBnb29nbGVncm91cHMuY29tIiwiZXhwIjoxNjYyMzk2MzMyLCJvcmlnX2lhdCI6MTY2MjMwOTkzMn0.BKrtP5Jp4wBGKpTqiszRnjGGdVEuDl7i-4LiUvlEWxA";
-        static Dictionary<int, int>? best;
-        static Dictionary<int, int>? current;
+        static Dictionary<int, int>? best = new Dictionary<int, int>();
+        static Dictionary<int, int>? current = new Dictionary<int, int>();
 
         public static void CacheBests()
         {
-            best = new Dictionary<int, int>();
-            current = new Dictionary<int, int>();
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", key);
@@ -31,6 +29,8 @@ namespace Core
                 var json = JsonConvert.DeserializeObject<Dictionary<String, List<Dictionary<String, dynamic>>>>(rez);
                 if (!json.ContainsKey("submissions")) return;
                 var list = json["submissions"];
+                best = new Dictionary<int, int>();
+                current = new Dictionary<int, int>();
 
                 foreach (var i in list)
                 {
