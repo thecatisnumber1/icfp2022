@@ -64,8 +64,16 @@ namespace AI
 
         public static void DetailSolve(Picasso picasso, AIArgs args, LoggerBase logger)
         {
-            List<Point> corners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
-            List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, args.rotation);
+            List<Point> origCorners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
+            Image target = picasso.TargetImage;
+            List<Point> corners = new List<Point>(origCorners.Count + 1) { new Point(target.Width, target.Height) };
+            for (int i = 0; i < origCorners.Count; i++)
+            {
+                corners.Add(RECT_ROTATIONS[args.rotation](origCorners[i]));
+            }
+            corners = corners.OrderByDescending(x => x.ManhattanDist(Point.ORIGIN)).ToList();
+
+            List<RGBA?> colors = DoSearch(target, logger, args, corners, args.rotation);
             SubmitSolution(picasso, args, logger, corners, colors, args.rotation);
         }
 

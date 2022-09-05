@@ -16,19 +16,19 @@ namespace AI
             List<double> detailSum = ComputeDetaiSum(img);
 
             rand ??= staticRand;
-            List<Point> result = new(numPoints) { new Point(img.Width, img.Height) };
+            List<Point> result = new(numPoints);
 
             while (result.Count < numPoints)
             {
                 int index = PickRandom(detailSum, rand);
                 Point p = new Point(index / img.Height, index % img.Height);
-                if (p.X > 0 && p.Y > 0)
+                if (p.X > 0 && p.Y > 0 && p.X < img.Width && p.Y < img.Height)
                 {
                     result.Add(p);
                 }
             }
 
-            return result.OrderByDescending(x => x.ManhattanDist(Point.ORIGIN)).ToList();
+            return result;
         }
 
         private static int PickRandom(List<double> weightSum, Random rand)
