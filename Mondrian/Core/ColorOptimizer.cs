@@ -60,6 +60,8 @@
         {
             if (start != Point.ORIGIN) throw new NotImplementedException();
 
+            HistogramMedian[] meds = new HistogramMedian[] { new(), new(), new() };
+
             double pixelCost = 0.0;
             List<RGBA?> colors = new(corners.Count);
             colors.AddRange(Enumerable.Repeat<RGBA?>(null, corners.Count));
@@ -92,7 +94,7 @@
                 }
                 else
                 {
-                    color = GetMedianColor(prevEdge, currEdge, target);
+                    color = GetMedianColor(prevEdge, currEdge, target, meds);
                     colors[i] = color;
                 }
 
@@ -128,12 +130,18 @@
             return (colors, (int)Math.Round(pixelCost * 0.005));
         }
 
-        private static RGBA GetMedianColor(List<Point> prevEdge, List<Point> currEdge, Image img)
+        private static RGBA GetMedianColor(List<Point> prevEdge, List<Point> currEdge, Image img, HistogramMedian[] meds)
         {
+            /*
             List<int> rPixels = new List<int>();
             List<int> gPixels = new List<int>();
             List<int> bPixels = new List<int>();
             List<int> aPixels = new List<int>();
+            */
+            var rPixels = meds[0];
+            var bPixels = meds[1];
+            var gPixels = meds[2];
+
             int prevIndex = 0;
             int currIndex = 0;
             for (int x = 0; x < img.Width; x++)
@@ -153,15 +161,19 @@
                     rPixels.Add(img[x, y].R);
                     gPixels.Add(img[x, y].G);
                     bPixels.Add(img[x, y].B);
-                    aPixels.Add(img[x, y].A);
+                    //aPixels.Add(img[x, y].A);
                 }
             }
 
-            int GetMedian(List<int> pixels)
+            //int GetMedian(List<int> pixels)
+            int GetMedian(HistogramMedian pixels)
             {
-                pixels.Sort();
-                return pixels[pixels.Count / 2];
+                //pixels.Sort();
+                //return pixels[pixels.Count / 2];
+
                 //return FindMedian.Median(pixels);
+
+                return pixels.GetMedianAndClear();
             }
 
             return new RGBA(GetMedian(rPixels), GetMedian(gPixels), GetMedian(bPixels), 255);
