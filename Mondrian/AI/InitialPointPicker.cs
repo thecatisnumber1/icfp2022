@@ -18,10 +18,14 @@ namespace AI
             rand ??= staticRand;
             List<Point> result = new(numPoints) { new Point(img.Width, img.Height) };
 
-            for (int i = 1; i < numPoints; i++)
+            while (result.Count < numPoints)
             {
                 int index = PickRandom(detailSum, rand);
-                result.Add(new Point(index / img.Height, index % img.Height));
+                Point p = new Point(index / img.Height, index % img.Height);
+                if (p.X > 0 && p.Y > 0)
+                {
+                    result.Add(p);
+                }
             }
 
             return result.OrderByDescending(x => x.ManhattanDist(Point.ORIGIN)).ToList();
