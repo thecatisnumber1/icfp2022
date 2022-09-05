@@ -557,7 +557,7 @@ namespace Visualizer
                     // Insert above whatever's selected
                     int targetIndex = RectStack.SelectedIndex == -1 ? 0 : RectStack.SelectedIndex;
                     _selectedRects.Insert(targetIndex, result);
-                    LogVisualizerMessage($"There {(_selectedRects.Count > 1 ? "are" : "is")} now {_selectedRects.Count} rect{(_selectedRects.Count > 1 ? "s" : string.Empty)}");
+                    PrintRectCount();
 
                     RectStack.ItemsSource = null;
                     RectStack.ItemsSource = _selectedRects;
@@ -573,6 +573,11 @@ namespace Visualizer
                 }
                 return;
             }
+        }
+
+        private void PrintRectCount()
+        {
+            LogVisualizerMessage($"There {(_selectedRects.Count != 1 ? "are" : "is")} now {_selectedRects.Count} rect{(_selectedRects.Count != 1 ? "s" : string.Empty)}");
         }
 
         private void ManualMove_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -656,6 +661,7 @@ namespace Visualizer
             if (RectStack.SelectedIndex != -1)
             {
                 _selectedRects.RemoveAt(RectStack.SelectedIndex);
+                PrintRectCount();
                 DrawSelectedRects(true);
             }
         }
@@ -776,7 +782,7 @@ namespace Visualizer
             if (e.Key == Key.Delete)
             {
                 _selectedRects.Remove(selected);
-
+                PrintRectCount();
                 DrawSelectedRects(true);
 
                 return;
