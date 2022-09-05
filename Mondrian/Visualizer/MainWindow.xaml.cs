@@ -556,10 +556,12 @@ namespace Visualizer
                     LogVisualizerMessage($"Selected from {startPosition} to {endPosition}");
                     LogVisualizerMessage($"Resulting rect: {result.BottomLeft}, {result.TopRight}");
 
-                    _selectedRects.Insert(0, result);
+                    // Insert above whatever's selected
+                    int targetIndex = RectStack.SelectedIndex == -1 ? 0 : RectStack.SelectedIndex;
+                    _selectedRects.Insert(targetIndex, result);
                     RectStack.ItemsSource = null;
                     RectStack.ItemsSource = _selectedRects;
-                    RectStack.SelectedIndex = 0; // Automatically triggers a redraw
+                    RectStack.SelectedIndex = targetIndex; // Automatically triggers a redraw
                 }
 
                 // Multi-click mode
