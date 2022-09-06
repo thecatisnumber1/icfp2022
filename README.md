@@ -1,9 +1,14 @@
 The Cat is #1!!'s submission is a combination of C# with some Python for scripting support.
 
-High level strategy:
+
+High level summary of out best strategy:
 * If starting blocks: Merge all the blocks into a single block
 * Regardless of initial state: Paint the canvas solid white
-* Solve the problem as if you added nothing to the spec since the lightning round. 
+* Paint rectangles that all have one corner in common at one of the corners of the canvas and overlap them so that you can get fine detail without having to have small blocks.
+* Painting a rectangle involves a single point cut, painting one of those blocks, and three merges to get the canvas back to a single block.
+* The color of a rectangle was chosen knowing what parts would show in the final painting. We found that median color gave a better result than average color.
+* For some problems we manually placed rectangles using our visualizer, other we randomly placed them.
+* We used hill climbing to improve these solutions
 
 Python scripts:
 * enrich.py: Updates the blocky problems to have new solutions when we solve earlier problem. Like, when we re-solve 5, it submits a merged 26 and a 40.
