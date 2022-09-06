@@ -30,7 +30,14 @@ be grabbing VS2022, opening the SLN and pressing compile. No idea if it works
 under mono, but probably doesn't.
 
 ## Visualizer Instructions
-* Lars: Please fill this in
+* Select a problem and solver from the dropdowns at the top right. HillClimber and BetterLars are the recommended solvers to run.
+* BetterLars should just work when you press Run
+* HillClimber requires you to place rectangles first
+  * All the mouse interactions here take place on the right side containing the target image
+  * First choose the corner from which all rectangles will be drawn by ctrl left clicking the desired corner in the region outside the image but inside of the black border
+  * All clicks from now on will place a rectangle from that point to the point you click. You can exit this mode with ctrl-p
+  * Every new rectangle you place will be drawn underneath the existing ones.
+  * Click run.
 
 ## Solvers:
 * CheckerBoard
