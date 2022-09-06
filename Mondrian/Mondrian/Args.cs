@@ -18,7 +18,7 @@ namespace Mondrian
         public static Args ParseArgs(string[] args)
         {
             string? algorithm = null;
-            string? user = null;
+            string user = "";
             int minProblemNumber = 1;
             int maxProblemNumber = Problems.ProblemCount();
             bool submit = false;
@@ -45,11 +45,6 @@ namespace Mondrian
                         submit = true;
                         break;
                 }
-            }
-
-            if (user == null)
-            {
-                throw new ArgumentException("--user argument is required");
             }
 
             return new Args(
