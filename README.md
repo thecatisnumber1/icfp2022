@@ -29,13 +29,13 @@ AIs:
 * DotMatrix: Emits broken up colored lines. Perfect images, terrible scores.
 * Swapmaster: For problems with multiple starting blocks. Swaps blocks to their best location.
 * HillClimber:
-* RoboLars:
-* BetterLars:
+* RoboLars: Attempts to place rectangles automatically for HillClimber.
+* BetterLars: RoboLars, but Better!
 * RoboRotator:
 
 
 How Solving Actually Worked:
-* Someone else needs to write this -- pat
+* Human-assisted solving started with selecting a small number of areas of interest in the visualizer for an AI to use, under the belief that a human would be much better at finding these than an AI. This initial approach wasn't especially effective. After an epiphany on the chessboard problem, the technique evolved into selecting hundreds of overlapping rectangles all anchored in the same corner, highest-priority first, slowly expanding outward. The non-overlapping portion of a newly placed rectangle would cover the largest similar-color area possible, generally only in the rectangle's corner. Because the cost of rectangles decrease the larger the rectangle is, more rectangles would be spent on details further from the starting corner.
 
 Thanks for the contest. We were worried about the whole organizational issues
 thing before hand, but this was a really solid contest, plus or minus some
