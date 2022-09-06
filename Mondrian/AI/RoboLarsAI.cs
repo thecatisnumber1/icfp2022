@@ -45,11 +45,18 @@ namespace AI
 
         public static void RoboRotator(Picasso picasso, AIArgs args, LoggerBase logger)
         {
+            for (int i = 0; i < 4; i++)
+            {
+                List<Point> corners = GenerateInitialCorners(args.numPoints);
+                List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, i);
+                SubmitSolution(picasso, args, logger, corners, colors, i);
+            }
+        }
+
+        public static void RoboRotator2(Picasso picasso, AIArgs args, LoggerBase logger)
+        {
             for (int rot = 0; rot < 4; rot++)
             {
-                /*List<Point> corners = GenerateInitialCorners(args.numPoints);
-                List<RGBA?> colors = DoSearch(picasso.TargetImage, logger, args, corners, i);
-                SubmitSolution(picasso, args, logger, corners, colors, i);*/
                 List<Point> origCorners = InitialPointPicker.PickPoints(picasso.TargetImage, args.numPoints, r);
                 Image target = picasso.TargetImage;
                 List<Point> corners = new List<Point>(origCorners.Count + 1) { new Point(target.Width, target.Height) };

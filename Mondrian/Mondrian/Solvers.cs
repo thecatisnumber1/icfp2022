@@ -26,6 +26,7 @@ namespace Mondrian
             ["RoboLars"] = RoboLarsAI.NonInteractiveSolve,
             ["BetterLars"] = RoboLarsAI.DetailSolve,
             ["RoboRotator"] = RoboLarsAI.RoboRotator,
+            ["RoboRotator2"] = RoboLarsAI.RoboRotator2,
         };
 
         public static Solver GetSolver(string algorithm)
