@@ -15,7 +15,7 @@ namespace AI
             int numPoints = 200;
             int limit = 7;
             bool fast = true;
-            int renderTime = 10;
+            int renderTime = 3;
 
             for (int i = 0; i < args.Length; i++)
             {
