@@ -33,10 +33,11 @@ AIs:
 * LinePrinter[HV]: Emits colored lines using the average color of the line.
 * DotMatrix: Emits broken up colored lines. Perfect images, terrible scores.
 * Swapmaster: For problems with multiple starting blocks. Swaps blocks to their best location.
-* HillClimber:
-* RoboLars: Attempts to place rectangles automatically for HillClimber.
-* BetterLars: RoboLars, but Better!
-* RoboRotator:
+* HillClimber: Uses manually placed rectangles as a starting spot for hill climbing.
+* RoboLars: Uses randomly placed rectangles and hill climbs
+* BetterLars: Uses gradient in the target imgage to weight the choice of points
+* RoboRotator: Runs RoboLars trying each of the 4 corners as anchors.
+* RoboRotator2: Same but uses BetterLars
 
 
 How Solving Actually Worked:
