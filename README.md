@@ -8,7 +8,7 @@ High level summary of out best strategy:
 * Painting a rectangle involves a single point cut, painting one of those blocks, and three merges to get the canvas back to a single block.
 * The color of a rectangle was chosen knowing what parts would show in the final painting. We found that median color gave a better result than average color.
 * For some problems we manually placed rectangles using our visualizer, other we randomly placed them.
-* We used hill climbing to improve these solutions
+* We used hill climbing to improve the rectangle placements and to remove rectangles.
 
 Python scripts:
 * enrich.py: Updates the blocky problems to have new solutions when we solve earlier problem. Like, when we re-solve 5, it submits a merged 26 and a 40.
