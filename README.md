@@ -1,7 +1,8 @@
+# The Cat Is #1!! ICFP 2022 Writeup
+
 The Cat is #1!!'s submission is a combination of C# with some Python for scripting support.
 
-
-High level summary of out best strategy:
+## High level summary of out best strategy:
 * If starting blocks: Merge all the blocks into a single block
 * Regardless of initial state: Paint the canvas solid white
 * Paint rectangles that all have one corner in common at one of the corners of the canvas and overlap them so that you can get fine detail without having to have small blocks.
@@ -10,12 +11,12 @@ High level summary of out best strategy:
 * For some problems we manually placed rectangles using our visualizer, other we randomly placed them.
 * We used hill climbing to improve the rectangle placements and to remove rectangles.
 
-Python scripts:
+## Python scripts:
 * enrich.py: Updates the blocky problems to have new solutions when we solve earlier problem. Like, when we re-solve 5, it submits a merged 26 and a 40.
 * report.py: Creates a report that points out higher value problems by comparing our current solutions to the known best ones.
 * bestof.py: Optimizes some solutions to remove dumb things. Was created due to not reading the spec carefully. Really nice of y'all to take the best solutions instead of the most recent.
 
-C# projects:
+## C# projects:
 * AI: Hosts the various AIs that will be documented below.
 * Core: Shared code between the various AIs. Handles the canvas and other tasks.
 * Modrian: Command line interface to run AIs on problems.
@@ -26,7 +27,10 @@ If you're going to run one program, I'd run Visualizer. Building should just
 be grabbing VS2022, opening the SLN and pressing compile. No idea if it works
 under mono, but probably doesn't.
 
-AIs:
+## Visualizer Instructions
+* Lars: Please fill this in
+
+## Solvers:
 * CheckerBoard
 * Scanner
 * AllCuts: Naively cuts down to the smallest chunks and fills things in. Mostly for stress-testing the visualizer.
@@ -40,9 +44,8 @@ AIs:
 * RoboRotator2: Same but uses BetterLars
 
 
-Our exploration into this problem:
-* Our intial ideas mostly involved just splitting the canvas down and painting regions without any merges or swaps. This was terrible because the cost of painting small areas is enormous. From there we moved to a paradigm of rectangle painting where we would do 2 point cuts, paint 1 block, merge all the blocks back together, and repeat for the next rectangle. One of the advantages of this approach is that rectangles can be painted on top of other rectangles and then colored according to what part doesn't get occluded. The optimal color choosing turned out to be difficult and for a long time we just used average color which was quick to compute using a summed area table.
-* Human-assisted solving started with selecting a small number of areas of interest in the visualizer for an AI to use, under the belief that a human would be much better at finding these than an AI. This initial approach wasn't especially effective. After an epiphany on the chessboard problem, the technique evolved into selecting hundreds of overlapping rectangles all anchored in the same corner, highest-priority first, slowly expanding outward. The non-overlapping portion of a newly placed rectangle would cover the largest similar-color area possible, generally only in the rectangle's corner. Because the cost of rectangles decrease the larger the rectangle is, more rectangles would be spent on details further from the starting corner.
+## Our exploration into this problem:
+Our intial ideas mostly involved just splitting the canvas down and painting regions without any merges or swaps. This was terrible because the cost of painting small areas is enormous. From there we moved to a paradigm of rectangle painting where we would do 2 point cuts, paint 1 block, merge all the blocks back together, and repeat for the next rectangle. One of the advantages of this approach is that rectangles can be painted on top of other rectangles and then colored according to what part doesn't get occluded. The optimal color choosing turned out to be difficult and for a long time we just used average color which was quick to compute using a summed area table. Human-assisted solving started with selecting a small number of areas of interest in the visualizer for an AI to use, under the belief that a human would be much better at finding these than an AI. This initial approach wasn't especially effective. After an epiphany on the chessboard problem, the technique evolved into selecting hundreds of overlapping rectangles all anchored in the same corner, highest-priority first, slowly expanding outward. The non-overlapping portion of a newly placed rectangle would cover the largest similar-color area possible, generally only in the rectangle's corner. Because the cost of rectangles decrease the larger the rectangle is, more rectangles would be spent on details further from the starting corner.
 
 Thanks for the contest. We were worried about the whole organizational issues
 thing before hand, but this was a really solid contest, plus or minus some
