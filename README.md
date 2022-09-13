@@ -1,4 +1,4 @@
-Note: At the time of this writting we have not yet made the repo public but we likely will so check https://github.com/thecatisnumber1/icfp2022/ for an updated version.
+![visualizer](https://user-images.githubusercontent.com/2817309/190023693-91f9a859-e24c-42bb-99a2-5da83a71e32c.png)
 
 # The Cat Is #1!! ICFP 2022 Writeup
 
